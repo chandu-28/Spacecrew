@@ -249,11 +249,11 @@
         <span class="rh-sep">:</span>
         <span class="rh-n n2c" id="rh-n2">1</span>
       </div>
-      <span class="rh-sub">O₂ : N₂</span>
+      <span class="rh-sub">Oxygen : Nitrogen</span>
     </div>
     <div class="cyl-row">
       <div class="cyl-col">
-        <div class="cyl-lbl o2c" id="lbl-o2">O₂</div>
+        <div class="cyl-lbl o2c" id="lbl-o2">OXYGEN</div>
         <div class="cyl-body o2-given" id="cyl-o2">
           <div class="cyl-fill" id="fill-o2" style="height:0%"></div>
           <div class="cyl-val" id="val-o2">—</div>
@@ -261,7 +261,7 @@
         <div class="cyl-given-badge" id="badge-o2">given</div>
       </div>
       <div class="cyl-col">
-        <div class="cyl-lbl n2c" id="lbl-n2">N₂</div>
+        <div class="cyl-lbl n2c" id="lbl-n2">NITROGEN</div>
         <div class="cyl-body n2-unk" id="cyl-n2">
           <div class="cyl-fill" id="fill-n2" style="height:0%"></div>
           <div class="cyl-val unknown" id="val-n2">?</div>
@@ -343,44 +343,44 @@
 <script>
 const LEVELS=[
   {id:1, name:"Equal Air",        ratio:[1,1],  q_type:'find_n2', given_o2:5,  answer:5,
-   question:"Ratio must be <strong>1:1</strong>. O₂ = <strong>5</strong> units. How many units of N₂?",
-   hint:"Equal parts — the answer equals O₂.",
+   question:"Both tanks must have the <strong>same</strong> amount. Oxygen = <strong>5</strong>. How much Nitrogen?",
+   hint:"Same amount! If Oxygen is 5, Nitrogen is also 5.",
    flavor:"The cabin is stuffy. Mix equal parts Oxygen and Nitrogen."},
   {id:2, name:"Double Nitrogen",  ratio:[1,2],  q_type:'find_n2', given_o2:4,  answer:8,
-   question:"Ratio must be <strong>1:2</strong>. O₂ = <strong>4</strong> units. How many units of N₂?",
-   hint:"N₂ is double O₂.  4 × 2 = ?",
+   question:"For every <strong>1</strong> Oxygen you need <strong>2</strong> Nitrogen. Oxygen = <strong>4</strong>. So Nitrogen = ?",
+   hint:"Nitrogen is double Oxygen. 4 × 2 = ?",
    flavor:"Entering low-orbit. We need more Nitrogen to stabilize."},
   {id:3, name:"Thin Air",         ratio:[1,4],  q_type:'find_n2', given_o2:2,  answer:8,
-   question:"Ratio must be <strong>1:4</strong>. O₂ = <strong>2</strong> units. How many units of N₂?",
-   hint:"N₂ is 4 times O₂.  2 × 4 = ?",
+   question:"For every <strong>1</strong> Oxygen you need <strong>4</strong> Nitrogen. Oxygen = <strong>2</strong>. So Nitrogen = ?",
+   hint:"Nitrogen is 4 times Oxygen. 2 × 4 = ?",
    flavor:"The crew is hyperventilating. Thin out the mix."},
   {id:4, name:"Regulator Lock",   ratio:[2,3],  q_type:'find_o2', given_n2:9,  answer:6,
-   question:"Ratio must be <strong>2:3</strong>. N₂ = <strong>9</strong> units. How many units of O₂?",
-   hint:"9 ÷ 3 = 3 (one part). O₂ needs 2 parts: 3 × 2 = ?",
+   question:"For every <strong>2</strong> Oxygen you need <strong>3</strong> Nitrogen. Nitrogen = <strong>9</strong>. So Oxygen = ?",
+   hint:"9 ÷ 3 = 3 (one share). Oxygen needs 2 shares: 3 × 2 = ?",
    flavor:"The regulator is locked. You need a precise 2:3 blend."},
   {id:5, name:"Mars Standard",    ratio:[1,9],  q_type:'find_o2', given_n2:18, answer:2,
-   question:"Ratio must be <strong>1:9</strong>. N₂ = <strong>18</strong> units. How many units of O₂?",
-   hint:"N₂ is 9× O₂.  18 ÷ 9 = ?",
+   question:"For every <strong>1</strong> Oxygen you need <strong>9</strong> Nitrogen. Nitrogen = <strong>18</strong>. So Oxygen = ?",
+   hint:"Nitrogen is 9 times Oxygen. 18 ÷ 9 = ?",
    flavor:"Simulating Mars atmosphere. Very little Oxygen needed."},
   {id:6, name:"Emergency Flush",  ratio:[3,1],  q_type:'find_n2', given_o2:6,  answer:2,
-   question:"Ratio must be <strong>3:1</strong>. O₂ = <strong>6</strong> units. How many units of N₂?",
-   hint:"O₂ is 3× N₂.  6 ÷ 3 = ?",
+   question:"For every <strong>3</strong> Oxygen you need <strong>1</strong> Nitrogen. Oxygen = <strong>6</strong>. So Nitrogen = ?",
+   hint:"Oxygen is 3 times Nitrogen. 6 ÷ 3 = ?",
    flavor:"Smoke in the cockpit! Flush with high Oxygen."},
   {id:7, name:"Plant Lab Mix",    ratio:[2,5],  q_type:'find_n2', given_o2:4,  answer:10,
-   question:"Ratio must be <strong>2:5</strong>. O₂ = <strong>4</strong> units. How many units of N₂?",
-   hint:"4 ÷ 2 = 2 (one part). N₂ needs 5 parts: 2 × 5 = ?",
+   question:"For every <strong>2</strong> Oxygen you need <strong>5</strong> Nitrogen. Oxygen = <strong>4</strong>. So Nitrogen = ?",
+   hint:"4 ÷ 2 = 2 (one share). Nitrogen needs 5 shares: 2 × 5 = ?",
    flavor:"The lab needs a precise 2:5 ratio for the space-plants."},
   {id:8, name:"Void Walk Prep",   ratio:[3,7],  q_type:'find_o2', given_n2:14, answer:6,
-   question:"Ratio must be <strong>3:7</strong>. N₂ = <strong>14</strong> units. How many units of O₂?",
-   hint:"14 ÷ 7 = 2 (one part). O₂ needs 3 parts: 2 × 3 = ?",
+   question:"For every <strong>3</strong> Oxygen you need <strong>7</strong> Nitrogen. Nitrogen = <strong>14</strong>. So Oxygen = ?",
+   hint:"14 ÷ 7 = 2 (one share). Oxygen needs 3 shares: 2 × 3 = ?",
    flavor:"Suit tanks need a 3:7 pressure balance for the spacewalk."},
   {id:9, name:"Tricky Totals",    ratio:[5,3],  q_type:'find_n2', given_o2:15, answer:9,
-   question:"Ratio must be <strong>5:3</strong>. O₂ = <strong>15</strong> units. How many units of N₂?",
-   hint:"15 ÷ 5 = 3 (one part). N₂ needs 3 parts: 3 × 3 = ?",
+   question:"For every <strong>5</strong> Oxygen you need <strong>3</strong> Nitrogen. Oxygen = <strong>15</strong>. So Nitrogen = ?",
+   hint:"15 ÷ 5 = 3 (one share). Nitrogen needs 3 shares: 3 × 3 = ?",
    flavor:"Engines overheating! Need a 5:3 coolant-oxygen mix."},
   {id:10,name:"Commander's Final",ratio:[7,13], q_type:'find_n2', given_o2:14, answer:26,
-   question:"Ratio must be <strong>7:13</strong>. O₂ = <strong>14</strong> units. How many units of N₂?",
-   hint:"14 ÷ 7 = 2 (one part). N₂ needs 13 parts: 2 × 13 = ?",
+   question:"For every <strong>7</strong> Oxygen you need <strong>13</strong> Nitrogen. Oxygen = <strong>14</strong>. So Nitrogen = ?",
+   hint:"14 ÷ 7 = 2 (one share). Nitrogen needs 13 shares: 2 × 13 = ?",
    flavor:"The whole ship's life support depends on this calibration!"},
 ];
 
@@ -488,7 +488,7 @@ function loadLevel(){
     $('val-n2').className     = 'cyl-val unknown';
     $('badge-n2').textContent = 'find this';
 
-    $('answer-prompt').textContent = 'Enter N₂ units:';
+    $('answer-prompt').textContent = 'Enter Nitrogen units:';
   } else {
     /* N₂ given → blue filled; O₂ unknown → empty */
     $('cyl-n2').className='cyl-body n2-given';
@@ -503,7 +503,7 @@ function loadLevel(){
     $('val-o2').className     = 'cyl-val unknown';
     $('badge-o2').textContent = 'find this';
 
-    $('answer-prompt').textContent = 'Enter O₂ units:';
+    $('answer-prompt').textContent = 'Enter Oxygen units:';
   }
 
   $('question-text').innerHTML = lv.question;
@@ -511,7 +511,9 @@ function loadLevel(){
   $('hint-box').classList.remove('show');
   $('hint-btn').textContent    = 'Show hint';
 
-  clearFeedback(); _resetDots(); _renderDigits(); buildDots(); ariaReact('idle');
+  clearFeedback(); _resetDots(); _renderDigits(); buildDots();
+  if(cur===0) ariaSetMsg('Tap a number on the pad, then press ✓ to confirm!');
+  else ariaReact('idle');
 }
 
 function pct(v){ return Math.min(v/_lvScale,1)*100; }
