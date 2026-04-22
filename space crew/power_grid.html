@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#06060f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Power Grid">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  <title>Power Grid — Space Crew</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg-deep:#06060f; --bg-panel:#0d0d1e; --bg-inset:#111122; --bg-raised:#161630;
+      --border-dim:rgba(80,80,160,0.18); --border-glow:rgba(100,100,220,0.4);
+      --text-bright:#eeeef8; --text-mid:#8888aa; --text-dim:#44445a;
+      --cyan:#00d4d4; --blue:#4488ff; --purple:#9f60ff; --magenta:#cc44ff;
+      --amber:#f0b040; --green:#44dd88; --red:#ff4455; --orange:#ff7040;
+      --r8:8px; --r10:10px; --r12:12px;
+    }
+    html { min-height:100%; width:100%; overflow-y:scroll; }
+    body {
+      min-height:100%; width:100%; overflow-x:hidden; overflow-y:auto;
+      background:var(--bg-deep); color:var(--text-bright);
+      font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-tap-highlight-color:transparent;
+      overscroll-behavior-x:none;
+    }
+    #app {
+      padding:10px; width:100%; max-width:600px; margin:0 auto;
+      padding-bottom:env(safe-area-inset-bottom, 24px);
+    }
+
+    /* ── Nav back ── */
+    .nav-back {
+      font-size:11px; color:var(--text-dim); text-decoration:none;
+      display:inline-flex; align-items:center; gap:4px; margin-bottom:8px;
+    }
+
+    /* ── HUD ── */
+    .hud {
+      background:var(--bg-panel); border:0.5px solid var(--border-dim);
+      border-radius:var(--r12); padding:10px 12px; margin-bottom:8px;
+      display:flex; gap:10px; align-items:flex-start;
+    }
+    .hud-main { flex:1; min-width:0; }
+    .hud-lbl { font-size:9px; color:var(--text-dim); letter-spacing:.08em; text-transform:uppercase; margin-bottom:2px; }
+    .hud-text { font-size:12px; color:var(--text-bright); font-weight:500; line-height:1.3; }
+    .hud-flavor { font-size:11px; color:var(--text-mid); font-style:italic; margin-top:2px; line-height:1.3; }
+    .hud-lvl { text-align:right; flex-shrink:0; }
+    .hud-lvl .hud-num { font-size:22px; font-weight:500; color:var(--orange); line-height:1; }
+
+    /* ── Power bar ── */
+    .power-wrap { margin-bottom:10px; }
+    .power-meta {
+      display:flex; justify-content:space-between;
+      font-size:9px; color:var(--text-dim); letter-spacing:.07em;
+      text-transform:uppercase; margin-bottom:3px;
+    }
+    .power-track { height:8px; background:var(--bg-inset); border:0.5px solid var(--border-dim); border-radius:4px; overflow:hidden; }
+    .power-fill { height:100%; width:0%; border-radius:4px; background:var(--orange); transition:width .6s ease; }
+    .power-fill.maxed {
+      background:linear-gradient(90deg,#cc4020,var(--orange),#ffa080,var(--orange),#cc4020);
+      background-size:300%; animation:shimmer 1.2s linear infinite;
+    }
+    @keyframes shimmer { 0%{background-position:300%} 100%{background-position:0%} }
+
+    /* ══ ARIA companion ══════════════════════════════════════════ */
+    :root{--aria-color:#ff7040;--aria-chest:rgba(255,112,64,.2);}
+    .aria-bar{display:flex;align-items:center;gap:10px;background:var(--bg-panel);border:0.5px solid var(--border-dim);border-radius:var(--r12);padding:8px 10px;margin-bottom:8px;}
+    .aria-wrap{width:52px;height:52px;flex-shrink:0;cursor:pointer;animation:aria-bob 2.2s ease-in-out infinite;}
+    @keyframes aria-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+    .aria-wrap.aria-happy{animation:aria-bounce .55s ease;}
+    @keyframes aria-bounce{0%,100%{transform:scale(1) translateY(0)}35%{transform:scale(1.2) translateY(-7px)}65%{transform:scale(.95) translateY(1px)}}
+    .aria-wrap.aria-sad{animation:aria-wag .4s ease;}
+    @keyframes aria-wag{0%,100%{transform:rotate(0)}30%{transform:rotate(-9deg)}70%{transform:rotate(9deg)}}
+    .aria-bubble{flex:1;position:relative;background:rgba(255,255,255,.04);border:0.5px solid rgba(255,255,255,.1);border-radius:var(--r10);padding:7px 10px;min-height:38px;}
+    .aria-bubble::before{content:'';position:absolute;left:-8px;top:50%;transform:translateY(-50%);border:5px solid transparent;border-right-color:rgba(255,255,255,.1);}
+    .aria-name{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--aria-color);display:block;margin-bottom:2px;}
+    .aria-msg{font-size:11.5px;color:var(--text-bright);line-height:1.4;}
+    #cel-canvas{position:fixed;inset:0;pointer-events:none;z-index:99;display:none;}
+    #cel-canvas.active{display:block;}
+    .ov-voss{display:flex;align-items:center;gap:10px;background:var(--bg-panel);border:1px solid rgba(255,112,64,.35);border-radius:var(--r12);padding:10px 13px;max-width:320px;width:90%;animation:ov-voss-in .45s ease;}
+    @keyframes ov-voss-in{from{transform:translateY(18px);opacity:0}to{transform:none;opacity:1}}
+    .ov-voss-face{width:44px;height:44px;flex-shrink:0;border-radius:50%;overflow:hidden;border:1.5px solid rgba(255,112,64,.4);}
+    .ov-voss-txt{font-size:11px;color:var(--text-mid);line-height:1.5;font-style:italic;}
+    .ov-voss-txt strong{color:var(--text-bright);font-style:normal;}
+
+    /* ── Breaker grid ── */
+    .panel-lbl { font-size:9px; color:var(--text-dim); letter-spacing:.08em; text-transform:uppercase; margin-bottom:6px; }
+    .breaker-grid { display:flex; flex-direction:column; gap:6px; margin-bottom:10px; }
+
+    .breaker {
+      background:var(--bg-panel); border:1.5px solid var(--border-dim);
+      border-radius:var(--r10); padding:12px 14px;
+      display:flex; align-items:center; gap:10px;
+      cursor:pointer; transition:border-color .15s, background .15s;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .breaker.active  { border-color:var(--orange); background:rgba(255,112,64,0.07); }
+    .breaker.correct { border-color:var(--green);  background:rgba(68,221,136,0.06); animation:spark .5s ease forwards; }
+    .breaker.wrong   { border-color:var(--red);    background:rgba(255,68,85,0.06);  animation:shake .3s ease; }
+
+    @keyframes shake {
+      0%,100%{transform:translateX(0)} 20%{transform:translateX(-5px)}
+      40%{transform:translateX(5px)} 60%{transform:translateX(-3px)} 80%{transform:translateX(3px)}
+    }
+    @keyframes spark {
+      0%  { box-shadow:0 0 0 0   rgba(68,221,136,0); }
+      30% { box-shadow:0 0 0 8px rgba(68,221,136,0.35); }
+      100%{ box-shadow:0 0 0 0   rgba(68,221,136,0); }
+    }
+
+    .breaker-letter {
+      font-size:10px; font-weight:600; color:var(--text-dim);
+      width:18px; flex-shrink:0; text-align:center;
+    }
+    .breaker-eq {
+      flex:1; font-size:clamp(16px,5vw,20px); font-weight:500;
+      color:var(--text-bright); letter-spacing:.02em;
+      display:flex; align-items:center; gap:4px; flex-wrap:wrap;
+    }
+    .breaker-blank {
+      display:inline-block; min-width:36px; text-align:center;
+      border-bottom:2px solid var(--orange); color:var(--orange);
+      padding:0 3px; line-height:1.5; font-weight:600;
+      transition:border-color .2s, color .2s;
+    }
+    .breaker.correct .breaker-blank { border-color:var(--green); color:var(--green); }
+    .breaker.wrong   .breaker-blank { border-color:var(--red);   color:var(--red); }
+
+    .breaker-tick {
+      width:20px; height:20px; border-radius:50%;
+      border:1.5px solid var(--border-dim);
+      display:flex; align-items:center; justify-content:center;
+      font-size:11px; flex-shrink:0; transition:all .2s;
+    }
+    .breaker.active  .breaker-tick { border-color:var(--orange); color:var(--orange); }
+    .breaker.correct .breaker-tick { border-color:var(--green); background:rgba(68,221,136,0.15); color:var(--green); }
+
+    /* ── Number pad ── */
+    .numpad-wrap {
+      background:var(--bg-panel); border:0.5px solid var(--border-dim);
+      border-radius:var(--r12); padding:10px;
+    }
+    .numpad-display {
+      background:var(--bg-inset); border:0.5px solid var(--border-dim);
+      border-radius:var(--r8); padding:8px 12px; margin-bottom:8px;
+      display:flex; align-items:center; justify-content:space-between; min-height:40px;
+    }
+    .numpad-val { font-size:22px; font-weight:500; color:var(--orange); font-variant-numeric:tabular-nums; }
+    .numpad-hint { font-size:10px; color:var(--text-dim); }
+    .numpad-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+    .nk {
+      background:var(--bg-inset); border:0.5px solid var(--border-dim);
+      border-radius:var(--r8); padding:14px 8px; text-align:center;
+      font-size:18px; font-weight:500; color:var(--text-bright);
+      cursor:pointer; user-select:none; -webkit-user-select:none;
+      transition:background .1s, transform .08s;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .nk:active { background:var(--bg-raised); transform:scale(0.94); }
+    .nk.del { font-size:14px; color:var(--text-mid); }
+    .nk.ok  { background:var(--orange); color:#fff; font-size:14px; font-weight:600; border-color:var(--orange); }
+    .nk.ok:active { background:#cc5030; }
+    .nk.ok.off { opacity:0.35; pointer-events:none; }
+
+    /* ── Level complete overlay ── */
+    .overlay {
+      display:none; position:fixed; inset:0;
+      background:rgba(6,6,15,0.88); z-index:100;
+      flex-direction:column; align-items:center; justify-content:center; gap:12px;
+    }
+    .overlay.show { display:flex; }
+    .ov-icon  { font-size:44px; }
+    .ov-title { font-size:20px; font-weight:500; color:var(--text-bright); text-align:center; padding:0 20px; }
+    .ov-sub   { font-size:13px; color:var(--text-mid); text-align:center; padding:0 24px; line-height:1.5; }
+    .ov-btn {
+      padding:12px 32px; background:var(--orange); color:#fff;
+      border:none; border-radius:var(--r10); font-size:14px; font-weight:600;
+      cursor:pointer; letter-spacing:.04em; margin-top:4px;
+    }
+    .ov-btn:active { background:#cc5030; }
+    .ov-btn.sec {
+      background:transparent; border:0.5px solid var(--border-glow);
+      color:var(--text-mid); margin-top:0;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <a class="nav-back" href="mission_select.html">← Fleet Commander</a>
+
+  <!-- ARIA companion -->
+  <div class="aria-bar">
+    <div class="aria-wrap" id="aria-wrap" onclick="ariaTap()">
+      <svg viewBox="-2 0 60 70" xmlns="http://www.w3.org/2000/svg">
+        <rect x="-2" y="32" width="12" height="8" rx="4" fill="#1e1e42"/>
+        <rect x="46" y="32" width="12" height="8" rx="4" fill="#1e1e42"/>
+        <rect x="8" y="28" width="40" height="30" rx="10" fill="#1e1e42"/>
+        <ellipse cx="28" cy="18" rx="16" ry="15" fill="#242454"/>
+        <rect x="12" y="10" width="32" height="14" rx="6" fill="rgba(0,8,28,.5)"/>
+        <circle cx="20" cy="17" r="4.5" fill="white"/><circle id="aria-el" cx="21" cy="18" r="2.8" fill="#111"/><circle cx="20.3" cy="15.8" r=".9" fill="white"/>
+        <circle cx="36" cy="17" r="4.5" fill="white"/><circle id="aria-er" cx="37" cy="18" r="2.8" fill="#111"/><circle cx="36.3" cy="15.8" r=".9" fill="white"/>
+        <path d="M22,25 Q28,29 34,25" stroke="var(--aria-color)" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <rect x="26" y="2" width="4" height="8" rx="2" fill="#242454"/>
+        <circle cx="28" cy="2" r="3.2" fill="var(--aria-color)"/>
+        <rect x="13" y="35" width="30" height="17" rx="5" fill="var(--aria-chest)"/>
+        <circle cx="21" cy="42" r="2.3" fill="var(--aria-color)" opacity=".9"/>
+        <circle cx="28" cy="42" r="2.3" fill="rgba(255,255,255,.35)"/>
+        <circle cx="35" cy="42" r="2.3" fill="var(--aria-color)" opacity=".9"/>
+        <rect x="16" y="48" width="24" height="2.5" rx="1.25" fill="var(--aria-color)" opacity=".4"/>
+        <rect x="13" y="56" width="12" height="12" rx="5" fill="#1e1e42"/>
+        <rect x="31" y="56" width="12" height="12" rx="5" fill="#1e1e42"/>
+      </svg>
+    </div>
+    <div class="aria-bubble">
+      <span class="aria-name">ARIA</span>
+      <span class="aria-msg" id="aria-msg">Reset those breakers — power up!</span>
+    </div>
+  </div>
+
+  <div class="hud">
+    <div class="hud-main">
+      <div class="hud-lbl">Mission 04 · Power Grid</div>
+      <div class="hud-text" id="hud-title">Breaker Panel A</div>
+      <div class="hud-flavor" id="hud-flavor">Loading…</div>
+    </div>
+    <div class="hud-lvl">
+      <div class="hud-lbl">Level</div>
+      <div class="hud-num" id="hud-level">21</div>
+    </div>
+  </div>
+
+  <div class="power-wrap">
+    <div class="power-meta">
+      <span>Power restored</span>
+      <span id="power-pct">0%</span>
+    </div>
+    <div class="power-track">
+      <div class="power-fill" id="power-fill"></div>
+    </div>
+  </div>
+
+  <div class="panel-lbl">Circuit breakers — find the missing load</div>
+  <div class="breaker-grid" id="breaker-grid"></div>
+
+  <div class="numpad-wrap">
+    <div class="numpad-display">
+      <span class="numpad-val" id="numpad-val">—</span>
+      <span class="numpad-hint" id="numpad-hint">tap a breaker to select</span>
+    </div>
+    <div class="numpad-grid" id="numpad-grid">
+      <div class="nk" data-k="7">7</div><div class="nk" data-k="8">8</div><div class="nk" data-k="9">9</div>
+      <div class="nk" data-k="4">4</div><div class="nk" data-k="5">5</div><div class="nk" data-k="6">6</div>
+      <div class="nk" data-k="1">1</div><div class="nk" data-k="2">2</div><div class="nk" data-k="3">3</div>
+      <div class="nk del" data-k="del">⌫</div>
+      <div class="nk" data-k="0">0</div>
+      <div class="nk ok off" id="ok-btn" data-k="ok">Enter</div>
+    </div>
+  </div>
+</div>
+
+<canvas id="cel-canvas"></canvas>
+<!-- Level complete overlay -->
+<div class="overlay" id="overlay">
+  <div class="ov-icon" id="ov-icon">⚡</div>
+  <div class="ov-title" id="ov-title">Panel Restored</div>
+  <div class="ov-sub" id="ov-sub"></div>
+  <button class="ov-btn" id="ov-next">Next Level →</button>
+  <button class="ov-btn sec" id="ov-home">← Fleet Commander</button>
+  <div class="ov-voss" id="ov-voss">
+    <div class="ov-voss-face">
+      <svg viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="22" cy="22" r="22" fill="#12103a"/>
+        <path d="M6,44 Q8,30 22,28 Q36,30 38,44 Z" fill="#201010"/>
+        <path d="M15,31 L22,28 L29,31 L22,35 Z" fill="#ff7040" opacity=".65"/>
+        <ellipse cx="22" cy="17" rx="11" ry="12" fill="#d4a870"/>
+        <path d="M11,13 Q12,4 22,4 Q32,4 33,13 Q28,7 22,7 Q16,7 11,13 Z" fill="#2a2a2a"/>
+        <ellipse cx="18" cy="17" rx="2" ry="2.2" fill="#2244cc"/>
+        <ellipse cx="26" cy="17" rx="2" ry="2.2" fill="#2244cc"/>
+        <path d="M18,25 Q22,28 26,25" stroke="#c4906a" stroke-width="1.2" fill="none"/>
+        <rect x="14" y="32" width="16" height="2.5" rx="1.25" fill="#ff7040" opacity=".7"/>
+        <circle cx="18" cy="33.25" r=".9" fill="#e8c840"/>
+        <circle cx="22" cy="33.25" r=".9" fill="#e8c840"/>
+        <circle cx="26" cy="33.25" r=".9" fill="#e8c840"/>
+      </svg>
+    </div>
+    <div class="ov-voss-txt" id="ov-voss-txt">"Power grid restored!"</div>
+  </div>
+</div>
+
+<script>
+// ── Level data ──
+// Equation types:
+//   mul:    A × __ = C   → answer = C/A
+//   mulL:   __ × B = C   → answer = C/B
+//   div:    A ÷ __ = C   → answer = A/C
+//   divL:   __ ÷ B = C   → answer = B*C
+//   triple: A × __ × C = D  → answer = D/(A*C)
+
+const LEVELS = [
+  {
+    id: 21,
+    title: 'Breaker Panel A',
+    flavor: 'Main bus tripped. Each circuit needs its missing load to come back online.',
+    breakers: [
+      { type:'mul',  a:4, c:16 },   // 4 × __ = 16  → 4
+      { type:'mul',  a:3, c:21 },   // 3 × __ = 21  → 7
+      { type:'mul',  a:5, c:20 },   // 5 × __ = 20  → 4
+    ]
+  },
+  {
+    id: 22,
+    title: 'Breaker Panel B',
+    flavor: 'Secondary grid offline. Unknown draw on each line — calculate to restore.',
+    breakers: [
+      { type:'mulL', b:7, c:56 },   // __ × 7 = 56  → 8
+      { type:'mul',  a:9, c:63 },   // 9 × __ = 63  → 7
+      { type:'mulL', b:8, c:48 },   // __ × 8 = 48  → 6
+    ]
+  },
+  {
+    id: 23,
+    title: 'Load Dividers',
+    flavor: 'Power split equally across devices. Divide to find each device\'s share.',
+    breakers: [
+      { type:'div',  a:36, c:4 },   // 36 ÷ __ = 4  → 9
+      { type:'divL', b:3,  c:6 },   // __ ÷ 3 = 6   → 18
+      { type:'div',  a:45, c:5 },   // 45 ÷ __ = 5  → 9
+    ]
+  },
+  {
+    id: 24,
+    title: 'Triple Circuits',
+    flavor: 'Three loads in series. Two known — find the one that\'s missing.',
+    breakers: [
+      { type:'triple', a:2, c:4, d:24 },  // 2 × __ × 4 = 24 → 3
+      { type:'triple', a:3, c:5, d:45 },  // 3 × __ × 5 = 45 → 3
+      { type:'triple', a:4, c:3, d:48 },  // 4 × __ × 3 = 48 → 4
+    ]
+  },
+  {
+    id: 25,
+    title: 'Factor Pairs',
+    flavor: 'All four circuits share the same total load: 24W. One number, four different pairs.',
+    breakers: [
+      { type:'mul', a:3, c:24 },   // 3 × __ = 24 → 8
+      { type:'mul', a:4, c:24 },   // 4 × __ = 24 → 6
+      { type:'mul', a:6, c:24 },   // 6 × __ = 24 → 4
+      { type:'mul', a:8, c:24 },   // 8 × __ = 24 → 3
+    ]
+  }
+];
+
+// ── State ──
+const SAVE_KEY    = 'spacecrew_progress_v1';
+const BASE_LEVEL  = 21;
+const TOTAL       = LEVELS.length;
+
+let levelIdx     = 0;
+let brkData      = [];   // {b, answer, solved, el, blankEl}
+let activeIdx    = -1;
+let inputVal     = '';
+
+// ── Persistence ──
+function loadSaved() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (raw) return JSON.parse(raw).power || 0;
+  } catch(e) {}
+  return 0;
+}
+function writeSaved(n) {
+  try {
+    const def = {o2:0, fuel:0, nav:0, power:0};
+    const raw = localStorage.getItem(SAVE_KEY);
+    const p   = raw ? Object.assign(def, JSON.parse(raw)) : def;
+    p.power   = Math.max(p.power||0, n);
+    localStorage.setItem(SAVE_KEY, JSON.stringify(p));
+  } catch(e) {}
+}
+
+// ── Compute answer ──
+function getAnswer(b) {
+  switch(b.type) {
+    case 'mul':    return b.c / b.a;
+    case 'mulL':   return b.c / b.b;
+    case 'div':    return b.a / b.c;
+    case 'divL':   return b.b * b.c;
+    case 'triple': return b.d / (b.a * b.c);
+    default: return 0;
+  }
+}
+
+// ── Build equation HTML (blank rendered as span) ──
+function eqHTML(b, idx) {
+  const bl = `<span class="breaker-blank" id="bb${idx}">?</span>`;
+  const x  = '×', d = '÷', eq = '=';
+  switch(b.type) {
+    case 'mul':    return `${b.a} ${x} ${bl} ${eq} ${b.c}`;
+    case 'mulL':   return `${bl} ${x} ${b.b} ${eq} ${b.c}`;
+    case 'div':    return `${b.a} ${d} ${bl} ${eq} ${b.c}`;
+    case 'divL':   return `${bl} ${d} ${b.b} ${eq} ${b.c}`;
+    case 'triple': return `${b.a} ${x} ${bl} ${x} ${b.c} ${eq} ${b.d}`;
+    default: return '';
+  }
+}
+
+// ── Build breakers for current level ──
+function buildBreakers() {
+  const lv   = LEVELS[levelIdx];
+  const grid = document.getElementById('breaker-grid');
+  grid.innerHTML = '';
+  brkData = [];
+
+  lv.breakers.forEach((b, i) => {
+    const ans = getAnswer(b);
+    const el  = document.createElement('div');
+    el.className = 'breaker';
+    el.innerHTML = `
+      <div class="breaker-letter">${String.fromCharCode(65+i)}</div>
+      <div class="breaker-eq">${eqHTML(b, i)}</div>
+      <div class="breaker-tick" id="bt${i}"></div>
+    `;
+    const onTap = (e) => { e.preventDefault(); selectBreaker(i); };
+    el.addEventListener('click', onTap);
+    el.addEventListener('touchstart', onTap, {passive:false});
+    grid.appendChild(el);
+    brkData.push({ b, answer: ans, solved: false, el });
+  });
+
+  selectBreaker(0);
+}
+
+// ── Select a breaker to answer ──
+function selectBreaker(i) {
+  if (brkData[i] && brkData[i].solved) return;
+  activeIdx = i;
+  inputVal  = '';
+  refreshPad();
+  brkData.forEach((br, j) => {
+    br.el.classList.toggle('active', j === i && !br.solved);
+  });
+}
+
+// ── Number pad rendering ──
+function refreshPad() {
+  const valEl  = document.getElementById('numpad-val');
+  const hintEl = document.getElementById('numpad-hint');
+  const okBtn  = document.getElementById('ok-btn');
+
+  if (activeIdx < 0) {
+    valEl.textContent  = '—';
+    hintEl.textContent = 'tap a breaker to select';
+    okBtn.classList.add('off');
+    return;
+  }
+
+  valEl.textContent  = inputVal || '—';
+  hintEl.textContent = 'breaker ' + String.fromCharCode(65 + activeIdx);
+  okBtn.classList.toggle('off', inputVal.length === 0);
+
+  // reflect typed value in the breaker blank
+  const blankEl = document.getElementById('bb' + activeIdx);
+  if (blankEl) blankEl.textContent = inputVal || '?';
+}
+
+// ── Key press handler ──
+function handleKey(k) {
+  if (activeIdx < 0) return;
+  if (k === 'del') {
+    inputVal = inputVal.slice(0, -1);
+  } else if (k === 'ok') {
+    submitAnswer();
+    return;
+  } else {
+    if (inputVal.length >= 3) return;
+    inputVal += k;
+  }
+  refreshPad();
+}
+
+// ── Submit answer ──
+function submitAnswer() {
+  if (!inputVal || activeIdx < 0) return;
+  const entered = parseInt(inputVal, 10);
+  const br      = brkData[activeIdx];
+
+  if (entered === br.answer) {
+    br.solved = true;
+    br.el.classList.remove('active', 'wrong');
+    br.el.classList.add('correct');
+    const tick = document.getElementById('bt' + activeIdx);
+    if (tick) tick.textContent = '✓';
+    playClick();
+    activeIdx = -1;
+    inputVal  = '';
+    refreshPad();
+
+    // auto-advance to next unsolved
+    const next = brkData.findIndex(x => !x.solved);
+    if (next >= 0) {
+      setTimeout(() => selectBreaker(next), 350);
+    } else {
+      setTimeout(() => finishLevel(), 450);
+    }
+  } else {
+    br.el.classList.add('wrong');
+    playBuzz();
+    ariaReact('wrong');
+    inputVal = '';
+    refreshPad();
+    const blankEl = document.getElementById('bb' + activeIdx);
+    if (blankEl) blankEl.textContent = '?';
+    setTimeout(() => {
+      br.el.classList.remove('wrong');
+      br.el.classList.add('active');
+    }, 600);
+  }
+}
+
+// ── Level complete ──
+function finishLevel() {
+  const solved = levelIdx + 1;
+  writeSaved(solved);
+  updatePowerBar(solved);
+  playWin();
+
+  const isLast  = levelIdx >= TOTAL - 1;
+  const ov      = document.getElementById('overlay');
+  const lv      = LEVELS[levelIdx];
+
+  document.getElementById('ov-title').textContent =
+    lv.title + ' — Restored';
+  document.getElementById('ov-sub').textContent = isLast
+    ? 'All 5 breaker panels online. Power Grid mission complete!'
+    : `Level ${BASE_LEVEL + levelIdx} complete. ${TOTAL - solved} panel${TOTAL-solved===1?'':'s'} remain.`;
+
+  const nextBtn = document.getElementById('ov-next');
+  if (isLast) {
+    nextBtn.textContent = 'Back to Fleet →';
+    nextBtn.onclick = () => { window.location.href = 'mission_select.html#power=' + solved; };
+  } else {
+    nextBtn.textContent = `Level ${BASE_LEVEL + solved} →`;
+    nextBtn.onclick = () => {
+      ov.classList.remove('show');
+      levelIdx++;
+      loadLevel();
+    };
+  }
+  ariaReact('correct');
+  launchCelebration();
+  document.getElementById('ov-voss-txt').textContent = VOSS_QUIPS_POWER[Math.floor(Math.random()*VOSS_QUIPS_POWER.length)];
+  ov.classList.add('show');
+}
+
+// ── Load level ──
+function loadLevel() {
+  const lv = LEVELS[levelIdx];
+  document.getElementById('hud-title').textContent  = lv.title;
+  document.getElementById('hud-flavor').textContent = lv.flavor;
+  document.getElementById('hud-level').textContent  = BASE_LEVEL + levelIdx;
+  buildBreakers();
+}
+
+// ── Power bar (mission-local) ──
+function updatePowerBar(solved) {
+  const pct  = Math.round(solved / TOTAL * 100);
+  const fill = document.getElementById('power-fill');
+  fill.style.width  = pct + '%';
+  fill.className    = 'power-fill' + (pct >= 100 ? ' maxed' : '');
+  document.getElementById('power-pct').textContent = pct + '%';
+}
+
+// ── Audio ──
+let _ctx = null;
+function ctx() {
+  if (!_ctx) _ctx = new (window.AudioContext||window.webkitAudioContext)();
+  if (_ctx.state === 'suspended') _ctx.resume();
+  return _ctx;
+}
+function playClick() {
+  try {
+    const c=ctx(), o=c.createOscillator(), g=c.createGain();
+    o.type='square'; o.frequency.setValueAtTime(880,c.currentTime);
+    o.frequency.exponentialRampToValueAtTime(440,c.currentTime+0.09);
+    g.gain.setValueAtTime(0.14,c.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.12);
+    o.connect(g); g.connect(c.destination);
+    o.start(); o.stop(c.currentTime+0.12);
+  }catch(e){}
+}
+function playBuzz() {
+  try {
+    const c=ctx(), o=c.createOscillator(), g=c.createGain();
+    o.type='sawtooth'; o.frequency.value=110;
+    g.gain.setValueAtTime(0.2,c.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.28);
+    o.connect(g); g.connect(c.destination);
+    o.start(); o.stop(c.currentTime+0.28);
+  }catch(e){}
+}
+function playWin() {
+  try {
+    const c=ctx(), notes=[523,659,784,1047];
+    notes.forEach((freq,i)=>{
+      const o=c.createOscillator(),g=c.createGain();
+      o.type='sine'; o.frequency.value=freq;
+      const t=c.currentTime+i*0.13;
+      g.gain.setValueAtTime(0,t);
+      g.gain.linearRampToValueAtTime(0.14,t+0.04);
+      g.gain.exponentialRampToValueAtTime(0.001,t+0.28);
+      o.connect(g); g.connect(c.destination);
+      o.start(t); o.stop(t+0.28);
+    });
+  }catch(e){}
+}
+
+// ── Wire numpad ──
+document.querySelectorAll('.nk').forEach(btn => {
+  const k = btn.dataset.k;
+  const onTap = (e) => { e.preventDefault(); handleKey(k); };
+  btn.addEventListener('click', onTap);
+  btn.addEventListener('touchstart', onTap, {passive:false});
+});
+
+// ── Home button ──
+document.getElementById('ov-home').addEventListener('click', () => {
+  window.location.href = 'mission_select.html#power=' + loadSaved();
+});
+
+// ══ ARIA companion ════════════════════════════════════════════════
+const ARIA_MSGS_POWER={idle:["Find the missing load!","Multiplication powers the ship!","×÷ are your tools — use them!","You're doing great, Commander!"],correct:["⭐ Breaker reset!","Circuit restored — brilliant!","Multiplication mastery!","Power surging — nice work!"],wrong:["Wrong load — try again!","Check: multiply or divide?","Think about the relationship!","Don't worry — try another!"]};
+let _ariaTimerP=null;
+function ariaSetMsg(msg){const el=document.getElementById('aria-msg');if(!el)return;clearTimeout(_ariaTimerP);el.textContent='';let i=0;(function t(){if(i<msg.length){el.textContent+=msg[i++];_ariaTimerP=setTimeout(t,20);}})();}
+function ariaReact(type){const w=document.getElementById('aria-wrap');if(!w)return;const pool=ARIA_MSGS_POWER[type]||ARIA_MSGS_POWER.idle;ariaSetMsg(pool[Math.floor(Math.random()*pool.length)]);w.className='aria-wrap';void w.offsetWidth;if(type==='correct'){w.className='aria-wrap aria-happy';setTimeout(()=>{w.className='aria-wrap';},700);}else if(type==='wrong'){w.className='aria-wrap aria-sad';setTimeout(()=>{w.className='aria-wrap';},500);}}
+function ariaTap(){const w=document.getElementById('aria-wrap');if(!w)return;w.className='aria-wrap';void w.offsetWidth;const msgs=["I'm ARIA — your AI navigator!","A × ? = C → ? = C ÷ A","Division undoes multiplication!","Math powers this ship!"];ariaSetMsg(msgs[Math.floor(Math.random()*msgs.length)]);w.style.transform='rotateY(360deg)';setTimeout(()=>{w.style.transform='';},500);}
+(function ariaIdle(){setTimeout(()=>{if(!document.getElementById('overlay').classList.contains('show'))ariaSetMsg(ARIA_MSGS_POWER.idle[Math.floor(Math.random()*ARIA_MSGS_POWER.idle.length)]);ariaIdle();},10000);})();
+
+// ══ Lightning celebration ══════════════════════════════════════════
+const VOSS_QUIPS_POWER=['"Circuit breakers reset! Power flowing!"','"Grid restored, Commander. Excellent!"','"The power is back online. Mission success!"','"Multiplication mastery on display!"','"That\'s the math we needed!"'];
+function launchCelebration(){
+  const canvas=document.getElementById('cel-canvas');if(!canvas)return;
+  canvas.width=window.innerWidth;canvas.height=window.innerHeight;canvas.classList.add('active');
+  const ctx=canvas.getContext('2d');let bolts=[];
+  function makeBolt(x){const pts=[{x,y:0}];let cx2=x,cy2=0;while(cy2<canvas.height*.7){cx2+=(Math.random()-.5)*40;cy2+=20+Math.random()*25;pts.push({x:cx2,y:cy2});}return{pts,life:1,d:.04+Math.random()*.03,w:1+Math.random()*3,c:Math.random()>.5?'#ff7040':'#f0b040'};}
+  for(let i=0;i<5;i++)setTimeout(()=>bolts.push(makeBolt(canvas.width*(.1+Math.random()*.8))),i*120);
+  const sparks=[];for(let i=0;i<80;i++){const a=Math.random()*Math.PI*2,sp=2+Math.random()*6;sparks.push({x:canvas.width/2+(-100+Math.random()*200),y:canvas.height/2,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-2,r:1.5+Math.random()*2,c:Math.random()>.5?'#ff7040':'#f0b040',life:1,d:.02+Math.random()*.015});}
+  (function frame(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    bolts.forEach(b=>{if(b.life<=0)return;ctx.save();ctx.globalAlpha=Math.max(0,b.life);ctx.strokeStyle=b.c;ctx.lineWidth=b.w;ctx.shadowBlur=14;ctx.shadowColor=b.c;ctx.beginPath();ctx.moveTo(b.pts[0].x,b.pts[0].y);b.pts.slice(1).forEach(p=>ctx.lineTo(p.x,p.y));ctx.stroke();ctx.restore();b.life-=b.d;});
+    sparks.forEach(p=>{if(p.life<=0)return;p.x+=p.vx;p.y+=p.vy;p.vy+=0.08;p.life-=p.d;ctx.save();ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.c;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();ctx.restore();});
+    const alive=bolts.some(b=>b.life>0)||sparks.some(p=>p.life>0);
+    if(alive)requestAnimationFrame(frame);else{canvas.classList.remove('active');ctx.clearRect(0,0,canvas.width,canvas.height);}
+  })();
+}
+
+// ── Init ──
+(function init() {
+  const saved = loadSaved();
+  levelIdx = Math.min(saved, TOTAL - 1);
+  updatePowerBar(saved);
+  loadLevel();
+})();
+if ('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js').catch(() => {}); }
+</script>
+<script src="./audio.js"></script>
+</body>
+</html>

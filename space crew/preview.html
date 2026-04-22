@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Space Crew — Final Preview</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg1:#0d0d1a;--bg2:#141428;--bg3:#0a0a14;
+  --t1:#e8e8f0;--t2:#9090a8;--t3:#505068;
+  --bd1:rgba(100,100,160,0.3);--bd2:rgba(100,100,160,0.15);
+  --cyan:#00d4d4;--magenta:#cc44ff;--amber:#f0b040;
+  --purple:#9f60ff;--green:#44dd88;--red:#ff4455;
+  --blue:#4488ff;--silver:#999aaa;
+  --r8:8px;--r12:12px;
+}
+html,body{
+  background:var(--bg3);color:var(--t1);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  min-height:100%;-webkit-tap-highlight-color:transparent;
+}
+.page{max-width:600px;margin:0 auto;padding:24px 14px 60px;display:flex;flex-direction:column;gap:40px;}
+
+/* ── HERO ── */
+.hero{text-align:center;padding:32px 16px 8px;}
+.hero-badge{display:inline-block;font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--purple);border:0.5px solid rgba(159,96,255,0.4);border-radius:20px;
+  padding:3px 10px;margin-bottom:16px;}
+.hero-title{font-size:28px;font-weight:600;letter-spacing:-.01em;color:var(--t1);margin-bottom:8px;}
+.hero-title span{color:var(--purple);}
+.hero-sub{font-size:13px;color:var(--t2);line-height:1.6;max-width:380px;margin:0 auto;}
+.hero-pills{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:16px;}
+.pill{font-size:9px;letter-spacing:.08em;text-transform:uppercase;
+  padding:3px 9px;border-radius:20px;border:0.5px solid var(--bd1);color:var(--t3);}
+
+/* ── SCREEN SECTION ── */
+.screen{display:flex;flex-direction:column;gap:10px;}
+.screen-header{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.screen-meta{flex:1;}
+.screen-num{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin-bottom:3px;}
+.screen-title{font-size:16px;font-weight:500;color:var(--t1);}
+.screen-desc{font-size:11px;color:var(--t2);margin-top:3px;line-height:1.5;}
+.play-btn{font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;
+  padding:7px 16px;border-radius:var(--r8);text-decoration:none;white-space:nowrap;flex-shrink:0;
+  transition:opacity .2s;}
+.play-btn:active{opacity:.7;}
+.play-btn.cyan  {border:1.5px solid var(--cyan);color:var(--cyan);background:rgba(0,212,212,0.08);}
+.play-btn.magenta{border:1.5px solid var(--magenta);color:var(--magenta);background:rgba(204,68,255,0.08);}
+.play-btn.amber {border:1.5px solid var(--amber);color:var(--amber);background:rgba(240,176,64,0.08);}
+.play-btn.purple{border:1.5px solid var(--purple);color:var(--purple);background:rgba(159,96,255,0.08);}
+.mockup{background:var(--bg2);border:0.5px solid var(--bd1);border-radius:var(--r12);padding:14px;
+  display:flex;flex-direction:column;gap:8px;}
+
+/* ── HUB MOCKUP ── */
+.hub-title-row{display:flex;align-items:center;justify-content:space-between;}
+.hub-name{font-size:14px;font-weight:500;}
+.hub-sub{font-size:10px;color:var(--t2);margin-top:2px;}
+.mission-cards{display:flex;flex-direction:column;gap:7px;}
+.mcard{background:var(--bg3);border:0.5px solid var(--bd1);border-radius:var(--r8);
+  padding:10px 12px;display:flex;align-items:center;gap:10px;}
+.mcard-accent{width:3px;border-radius:2px;align-self:stretch;flex-shrink:0;}
+.mcard-body{flex:1;min-width:0;}
+.mcard-name{font-size:12px;font-weight:500;color:var(--t1);}
+.mcard-desc{font-size:10px;color:var(--t2);margin-top:1px;}
+.mcard-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;}
+.mcard-lvls{font-size:9px;color:var(--t3);}
+.prog-dots{display:flex;gap:3px;}
+.pdot{width:7px;height:7px;border-radius:50%;border:1px solid var(--bd1);}
+.pdot.done{border-color:var(--green);background:var(--green);}
+.pdot.active{border-color:var(--purple);background:var(--purple);}
+.power-bar-wrap{background:var(--bg3);border:0.5px solid var(--bd1);border-radius:var(--r8);padding:8px 12px;}
+.pb-label{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;
+  display:flex;justify-content:space-between;}
+.pb-track{height:6px;background:rgba(100,100,160,0.15);border-radius:3px;overflow:hidden;}
+.pb-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#6a40cc,var(--purple),#c8a8ff);}
+
+/* ── O2 MOCKUP ── */
+.hud-row{display:flex;gap:8px;align-items:flex-start;}
+.hud-info{flex:1;}
+.hud-lv{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px;}
+.hud-name{font-size:12px;font-weight:500;color:var(--t1);}
+.hud-flavor{font-size:10px;color:var(--t2);font-style:italic;margin-top:2px;}
+.tank-section{display:flex;gap:6px;}
+.tank{background:var(--bg3);border:0.5px solid var(--bd1);border-radius:var(--r8);
+  padding:6px 8px;flex:1;display:flex;flex-direction:column;gap:5px;}
+.tank-lbl{font-size:8px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px;}
+.tank-bar-outer{height:8px;background:rgba(100,100,160,0.15);border-radius:4px;overflow:hidden;}
+.tank-bar{height:100%;border-radius:4px;}
+.tank-val{font-size:11px;font-weight:500;text-align:right;}
+.slider-row{display:flex;align-items:center;gap:8px;}
+.slider-lbl{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;width:22px;}
+.fake-slider{flex:1;height:4px;background:rgba(100,100,160,0.2);border-radius:2px;position:relative;}
+.fake-thumb{width:18px;height:18px;border-radius:50%;position:absolute;top:50%;transform:translateY(-50%);
+  border:2px solid var(--bg2);}
+
+/* ── FUEL MOCKUP ── */
+.reactor-row{display:flex;gap:10px;align-items:center;}
+.reactor-svg-wrap{flex-shrink:0;}
+.fuel-sliders{flex:1;display:flex;flex-direction:column;gap:7px;}
+.fuel-sr{display:flex;align-items:center;gap:6px;}
+.fuel-lbl{font-size:9px;color:var(--t3);width:18px;text-align:center;}
+.fuel-fake-slider{flex:1;height:4px;background:rgba(100,100,160,0.2);border-radius:2px;position:relative;}
+.fuel-thumb{width:16px;height:16px;border-radius:50%;position:absolute;top:50%;transform:translateY(-50%);
+  border:2px solid var(--bg2);}
+.needle-wrap{position:relative;height:20px;background:rgba(100,100,160,0.08);
+  border:0.5px solid var(--bd1);border-radius:4px;overflow:hidden;}
+.needle-green{position:absolute;top:0;bottom:0;left:33%;width:34%;background:rgba(68,221,136,0.1);
+  border-left:1px solid var(--green);border-right:1px solid var(--green);}
+.needle-bar{position:absolute;top:4px;bottom:4px;width:3px;background:var(--green);border-radius:2px;left:49%;}
+
+/* ── NAV MOCKUP ── */
+.coord-row{display:flex;gap:6px;}
+.coord-box{background:var(--bg3);border:0.5px solid var(--bd1);border-radius:var(--r8);
+  padding:5px 8px;text-align:center;flex:1;}
+.coord-lbl{font-size:8px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;}
+.coord-val{font-size:13px;font-weight:500;font-variant-numeric:tabular-nums;}
+.radar-mockup{background:#08081a;border-radius:6px;position:relative;overflow:hidden;aspect-ratio:1;
+  max-width:200px;margin:0 auto;}
+.grid-lines-h,.grid-lines-v{position:absolute;inset:0;
+  background-image:repeating-linear-gradient(transparent,transparent calc(10% - 0.5px),rgba(60,60,120,0.35) calc(10% - 0.5px),rgba(60,60,120,0.35) 10%);
+  background-size:10% 10%;}
+.grid-lines-v{background-image:repeating-linear-gradient(90deg,transparent,transparent calc(10% - 0.5px),rgba(60,60,120,0.35) calc(10% - 0.5px),rgba(60,60,120,0.35) 10%);}
+.axis-h{position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(120,120,200,0.6);}
+.axis-v{position:absolute;top:0;bottom:0;left:50%;width:1px;background:rgba(120,120,200,0.6);}
+.radar-ship{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:0;height:0;
+  border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:10px solid #c8c8e8;}
+.radar-target{position:absolute;width:14px;height:14px;
+  border:1.5px dashed var(--amber);border-radius:50%;
+  top:20%;left:75%;transform:translate(-50%,-50%);}
+.radar-target::before,.radar-target::after{content:'';position:absolute;background:var(--amber);}
+.radar-target::before{width:1.5px;height:8px;top:50%;left:50%;transform:translate(-50%,-50%);}
+.radar-target::after{width:8px;height:1.5px;top:50%;left:50%;transform:translate(-50%,-50%);}
+.radar-cursor{position:absolute;width:14px;height:14px;
+  border:2px solid var(--cyan);border-radius:50%;
+  top:20%;left:75%;transform:translate(-50%,-50%);}
+.radar-path{position:absolute;top:50%;left:50%;width:1px;height:1px;}
+.jump-btn-mock{font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;
+  padding:8px 24px;border-radius:var(--r8);border:1.5px solid var(--purple);
+  color:var(--purple);background:transparent;width:100%;cursor:default;
+  box-shadow:0 0 10px rgba(159,96,255,0.25);}
+
+/* ── TICKER (shared) ── */
+.ticker{border:0.5px solid var(--bd1);border-radius:var(--r12);padding:8px 12px;
+  display:flex;align-items:center;gap:8px;}
+.tki{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:10px;flex-shrink:0;}
+.tkt{font-size:11px;color:var(--t2);flex:1;line-height:1.4;}
+.tkt strong{color:var(--t1);}
+
+/* ── LEVEL DOTS ── */
+.lnav{display:flex;gap:5px;align-items:center;justify-content:center;}
+.ldot{width:9px;height:9px;border-radius:50%;border:1px solid var(--bd1);background:transparent;}
+.ldot.done{background:var(--green);border-color:var(--green);}
+.ldot.cur{background:var(--purple);border-color:var(--purple);}
+
+/* ── DIVIDER ── */
+.divider{border:none;border-top:0.5px solid var(--bd2);margin:0;}
+
+/* ── AUDIO CHIPS ── */
+.audio-row{display:flex;flex-wrap:wrap;gap:6px;}
+.achip{font-size:9px;color:var(--t3);background:var(--bg2);
+  border:0.5px solid var(--bd1);border-radius:20px;padding:3px 9px;letter-spacing:.04em;}
+
+/* ── COMPLETION ── */
+.complete-card{background:var(--bg2);border:1.5px solid var(--purple);border-radius:var(--r12);
+  padding:24px;text-align:center;}
+.complete-icon{font-size:32px;margin-bottom:12px;}
+.complete-title{font-size:18px;font-weight:500;color:var(--purple);margin-bottom:6px;}
+.complete-body{font-size:12px;color:var(--t2);line-height:1.7;}
+.complete-stats{display:flex;gap:12px;justify-content:center;margin-top:16px;flex-wrap:wrap;}
+.stat{text-align:center;}
+.stat-val{font-size:20px;font-weight:600;color:var(--t1);}
+.stat-lbl{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-top:2px;}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-badge">Fleet Commander HQ</div>
+    <h1 class="hero-title">Project <span>Space Crew</span></h1>
+    <p class="hero-sub">Three math missions disguised as a space emergency sim. Ratios, equilibrium, and coordinate geometry.</p>
+    <div class="hero-pills">
+      <span class="pill">20 levels</span>
+      <span class="pill">Offline PWA</span>
+      <span class="pill">Vanilla JS</span>
+      <span class="pill">~135 KB</span>
+      <span class="pill">No accounts</span>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ── MISSION SELECT ── -->
+  <div class="screen">
+    <div class="screen-header">
+      <div class="screen-meta">
+        <div class="screen-num">Hub Screen</div>
+        <div class="screen-title">Fleet Commander</div>
+        <div class="screen-desc">Mission select, progress tracking, final unlock at 20/20 levels.</div>
+      </div>
+      <a href="mission_select.html" class="play-btn purple">Open →</a>
+    </div>
+    <div class="mockup">
+      <div class="hub-title-row">
+        <div>
+          <div class="hub-name">Fleet Commander</div>
+          <div class="hub-sub" style="color:var(--t2)">3 active emergencies — deploy your crew</div>
+        </div>
+        <div style="font-size:9px;color:var(--t3);text-align:right;">CREW<br><span style="font-size:16px;color:var(--t1);font-weight:500;">12/20</span></div>
+      </div>
+      <div class="mission-cards">
+        <!-- O2 card -->
+        <div class="mcard">
+          <div class="mcard-accent" style="background:var(--cyan);"></div>
+          <div class="mcard-body">
+            <div class="mcard-name">O2 Regulator</div>
+            <div class="mcard-desc">Gas ratio emergency — 10 levels</div>
+          </div>
+          <div class="mcard-right">
+            <div class="mcard-lvls" style="color:var(--cyan);">8/10</div>
+            <div class="prog-dots">
+              <div class="pdot done"></div><div class="pdot done"></div><div class="pdot done"></div>
+              <div class="pdot done"></div><div class="pdot done"></div><div class="pdot done"></div>
+              <div class="pdot done"></div><div class="pdot done"></div>
+              <div class="pdot active"></div><div class="pdot"></div>
+            </div>
+          </div>
+        </div>
+        <!-- Fuel card -->
+        <div class="mcard">
+          <div class="mcard-accent" style="background:var(--magenta);"></div>
+          <div class="mcard-body">
+            <div class="mcard-name">Fuel Reactor</div>
+            <div class="mcard-desc">Three-part equilibrium — 5 levels</div>
+          </div>
+          <div class="mcard-right">
+            <div class="mcard-lvls" style="color:var(--magenta);">3/5</div>
+            <div class="prog-dots">
+              <div class="pdot done"></div><div class="pdot done"></div><div class="pdot done"></div>
+              <div class="pdot active"></div><div class="pdot"></div>
+            </div>
+          </div>
+        </div>
+        <!-- Nav card -->
+        <div class="mcard">
+          <div class="mcard-accent" style="background:var(--amber);"></div>
+          <div class="mcard-body">
+            <div class="mcard-name">Nav Computer</div>
+            <div class="mcard-desc">Coordinate navigation — 5 levels</div>
+          </div>
+          <div class="mcard-right">
+            <div class="mcard-lvls" style="color:var(--amber);">1/5</div>
+            <div class="prog-dots">
+              <div class="pdot done"></div><div class="pdot active"></div>
+              <div class="pdot"></div><div class="pdot"></div><div class="pdot"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="power-bar-wrap">
+        <div class="pb-label">
+          <span>Deep Space Power</span>
+          <span style="color:var(--t2);">12 / 20</span>
+        </div>
+        <div class="pb-track">
+          <div class="pb-fill" style="width:60%;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="audio-row">
+      <span class="achip">55hz engine hum on first tap</span>
+      <span class="achip">Star-warp cinematic at 20/20</span>
+      <span class="achip">localStorage persistence</span>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ── O2 REGULATOR ── -->
+  <div class="screen">
+    <div class="screen-header">
+      <div class="screen-meta">
+        <div class="screen-num">Mission 1 · Levels 1–10</div>
+        <div class="screen-title" style="color:var(--cyan);">O2 Regulator</div>
+        <div class="screen-desc">Match a target gas ratio and volume. Scales from 1:1 at 10 units to 7:13 at 40 units.</div>
+      </div>
+      <a href="o2_regulator.html" class="play-btn cyan">Play →</a>
+    </div>
+    <div class="mockup">
+      <div class="hud-row">
+        <div class="hud-info">
+          <div class="hud-lv">Level 4 — Breathing Mix</div>
+          <div class="hud-name">Adjust the gas mix to the correct ratio and fill the tank.</div>
+          <div class="hud-flavor">O₂ : N₂ = 2 : 3 · Target: 15 units</div>
+        </div>
+      </div>
+      <div class="tank-section">
+        <div class="tank">
+          <div class="tank-lbl" style="color:var(--blue);">N₂ Nitrogen</div>
+          <div class="tank-bar-outer"><div class="tank-bar" style="width:60%;background:rgba(68,136,255,0.6);"></div></div>
+          <div class="tank-val" style="color:var(--blue);">9</div>
+          <div class="slider-row">
+            <span class="slider-lbl">N₂</span>
+            <div class="fake-slider">
+              <div class="fake-thumb" style="left:calc(60% - 9px);background:var(--blue);box-shadow:0 0 8px rgba(68,136,255,0.5);"></div>
+            </div>
+          </div>
+        </div>
+        <div class="tank">
+          <div class="tank-lbl" style="color:var(--cyan);">O₂ Oxygen</div>
+          <div class="tank-bar-outer"><div class="tank-bar" style="width:40%;background:rgba(0,212,212,0.6);"></div></div>
+          <div class="tank-val" style="color:var(--cyan);">6</div>
+          <div class="slider-row">
+            <span class="slider-lbl">O₂</span>
+            <div class="fake-slider">
+              <div class="fake-thumb" style="left:calc(40% - 9px);background:var(--cyan);box-shadow:0 0 8px rgba(0,212,212,0.5);"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ticker" style="border-color:var(--green);">
+        <div class="tki" style="background:rgba(68,221,136,0.12);color:var(--green);">✓</div>
+        <div class="tkt"><strong>Ratio locked.</strong> Scale up to 15 units to complete.</div>
+      </div>
+      <div class="lnav">
+        <div class="ldot done"></div><div class="ldot done"></div><div class="ldot done"></div>
+        <div class="ldot cur"></div><div class="ldot"></div><div class="ldot"></div>
+        <div class="ldot"></div><div class="ldot"></div><div class="ldot"></div><div class="ldot"></div>
+      </div>
+    </div>
+    <div class="audio-row">
+      <span class="achip">Reactive hum + rumble</span>
+      <span class="achip">Hiss → chunk → chime on win</span>
+      <span class="achip">3-frame stability counter</span>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ── FUEL REACTOR ── -->
+  <div class="screen">
+    <div class="screen-header">
+      <div class="screen-meta">
+        <div class="screen-num">Mission 2 · Levels 11–15</div>
+        <div class="screen-title" style="color:var(--magenta);">Fuel Reactor</div>
+        <div class="screen-desc">Balance H₂, Plasma, and Coolant in a 3-part ratio. Hold the green zone for 5 seconds.</div>
+      </div>
+      <a href="fuel_reactor.html" class="play-btn magenta">Play →</a>
+    </div>
+    <div class="mockup">
+      <div class="hud-row">
+        <div class="hud-info">
+          <div class="hud-lv">Level 13 — The Safety Buffer</div>
+          <div class="hud-name">Coolant must equal both fuels combined.</div>
+          <div class="hud-flavor">H : P : C = 2 : 2 : 4 · Target: 16 units</div>
+        </div>
+      </div>
+      <div class="reactor-row">
+        <div class="reactor-svg-wrap">
+          <svg width="90" height="90" viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="42" fill="#141428" stroke="rgba(100,100,180,0.25)" stroke-width="1"/>
+            <circle cx="60" cy="60" r="42" fill="none" stroke="#97C459" stroke-width="5"
+              stroke-dasharray="180 252" stroke-dashoffset="-36" stroke-linecap="round"/>
+            <circle cx="60" cy="60" r="22" fill="#EEEDFE" stroke="#7F77DD" stroke-width="1.5"/>
+            <text x="60" y="57" text-anchor="middle" font-size="13" fill="#534AB7" font-weight="600">12</text>
+            <text x="60" y="69" text-anchor="middle" font-size="9" fill="#7F77DD">/ 16</text>
+            <!-- pipes -->
+            <line x1="60" y1="60" x2="60" y2="22" stroke="#4488ff" stroke-width="3" stroke-linecap="round"/>
+            <line x1="60" y1="60" x2="24" y2="84" stroke="#cc44ff" stroke-width="3" stroke-linecap="round"/>
+            <line x1="60" y1="60" x2="96" y2="84" stroke="#999aaa" stroke-width="3" stroke-linecap="round"/>
+            <!-- nodes -->
+            <circle cx="60" cy="16" r="7" fill="#4488ff"/><text x="60" y="20" text-anchor="middle" font-size="8" fill="white">H</text>
+            <circle cx="18" cy="88" r="7" fill="#cc44ff"/><text x="18" y="92" text-anchor="middle" font-size="8" fill="white">P</text>
+            <circle cx="102" cy="88" r="7" fill="#999aaa"/><text x="102" y="92" text-anchor="middle" font-size="8" fill="white">C</text>
+          </svg>
+        </div>
+        <div class="fuel-sliders">
+          <div class="fuel-sr">
+            <span class="fuel-lbl" style="color:var(--blue);">H</span>
+            <div class="fuel-fake-slider">
+              <div class="fuel-thumb" style="left:calc(25% - 8px);background:var(--blue);box-shadow:0 0 6px rgba(68,136,255,0.5);"></div>
+            </div>
+            <span style="font-size:10px;color:var(--blue);width:16px;text-align:right;">4</span>
+          </div>
+          <div class="fuel-sr">
+            <span class="fuel-lbl" style="color:var(--magenta);">P</span>
+            <div class="fuel-fake-slider">
+              <div class="fuel-thumb" style="left:calc(25% - 8px);background:var(--magenta);box-shadow:0 0 6px rgba(204,68,255,0.5);"></div>
+            </div>
+            <span style="font-size:10px;color:var(--magenta);width:16px;text-align:right;">4</span>
+          </div>
+          <div class="fuel-sr">
+            <span class="fuel-lbl" style="color:var(--silver);">C</span>
+            <div class="fuel-fake-slider">
+              <div class="fuel-thumb" style="left:calc(50% - 8px);background:var(--silver);box-shadow:0 0 4px rgba(153,154,170,0.4);"></div>
+            </div>
+            <span style="font-size:10px;color:var(--silver);width:16px;text-align:right;">4</span>
+          </div>
+          <div class="needle-wrap">
+            <div class="needle-green"></div>
+            <div class="needle-bar"></div>
+          </div>
+          <div style="font-size:9px;color:var(--t3);display:flex;justify-content:space-between;">
+            <span>H-heavy</span><span>balanced</span><span>P-heavy</span>
+          </div>
+        </div>
+      </div>
+      <div class="ticker" style="border-color:var(--green);">
+        <div class="tki" style="background:rgba(68,221,136,0.12);color:var(--green);">✓</div>
+        <div class="tkt"><strong>Green zone!</strong> Hold steady — jump countdown initiated.</div>
+      </div>
+      <div style="background:var(--bg3);border-radius:4px;height:6px;overflow:hidden;">
+        <div style="width:42%;height:100%;background:var(--green);border-radius:4px;"></div>
+      </div>
+      <div class="lnav">
+        <div class="ldot done"></div><div class="ldot done"></div>
+        <div class="ldot cur"></div><div class="ldot"></div><div class="ldot"></div>
+      </div>
+    </div>
+    <div class="audio-row">
+      <span class="achip">Reactor rumble scales with fill</span>
+      <span class="achip">Thermal alarm on runaway</span>
+      <span class="achip">4-note win chime</span>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ── NAV COMPUTER ── -->
+  <div class="screen">
+    <div class="screen-header">
+      <div class="screen-meta">
+        <div class="screen-num">Mission 3 · Levels 16–20</div>
+        <div class="screen-title" style="color:var(--amber);">Nav Computer</div>
+        <div class="screen-desc">Drag the crosshair to integer grid coordinates. Avoid red obstacle zones.</div>
+      </div>
+      <a href="nav_computer.html" class="play-btn amber">Play →</a>
+    </div>
+    <div class="mockup">
+      <div class="hud-row">
+        <div class="hud-info">
+          <div class="hud-lv">Level 19 — Gravity Well</div>
+          <div class="hud-name">Sling-shotting around a black hole.</div>
+          <div class="hud-flavor">Plot into the deep South-West.</div>
+        </div>
+      </div>
+      <div class="coord-row">
+        <div class="coord-box">
+          <div class="coord-lbl">Target</div>
+          <div class="coord-val" style="color:var(--amber);">−4, −7</div>
+        </div>
+        <div class="coord-box">
+          <div class="coord-lbl">Vector</div>
+          <div class="coord-val" style="color:var(--cyan);">−4, −7</div>
+        </div>
+        <div class="coord-box">
+          <div class="coord-lbl">Distance</div>
+          <div class="coord-val" style="color:var(--green);font-size:12px;">8.1 LY</div>
+        </div>
+      </div>
+      <div class="radar-mockup">
+        <div class="grid-lines-h"></div>
+        <div class="grid-lines-v"></div>
+        <div class="axis-h"></div>
+        <div class="axis-v"></div>
+        <!-- Ship at origin -->
+        <div class="radar-ship"></div>
+        <!-- Target at (-4,-7) → left 40%, down 70% from center -->
+        <div style="position:absolute;top:calc(50% + 32%);left:calc(50% - 18%);transform:translate(-50%,-50%);">
+          <div style="width:14px;height:14px;border:1.5px dashed var(--amber);border-radius:50%;position:relative;">
+            <div style="position:absolute;width:1.5px;height:8px;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--amber);"></div>
+            <div style="position:absolute;width:8px;height:1.5px;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--amber);"></div>
+          </div>
+        </div>
+        <!-- Cursor on target -->
+        <div style="position:absolute;top:calc(50% + 32%);left:calc(50% - 18%);transform:translate(-50%,-50%);">
+          <div style="width:14px;height:14px;border:2px solid var(--purple);border-radius:50%;"></div>
+        </div>
+        <!-- Path line -->
+        <svg style="position:absolute;inset:0;width:100%;height:100%;" viewBox="0 0 200 200">
+          <line x1="100" y1="100" x2="64" y2="164" stroke="rgba(159,96,255,0.7)" stroke-width="1.5" stroke-dasharray="4 3"/>
+        </svg>
+        <!-- Obstacle at (0,-3) -->
+        <div style="position:absolute;top:calc(50% + 15%);left:50%;transform:translate(-50%,-50%);">
+          <div style="width:16px;height:16px;border:1.5px solid rgba(255,80,80,0.8);border-radius:50%;background:rgba(255,50,50,0.2);"></div>
+        </div>
+      </div>
+      <div class="ticker" style="border-color:var(--purple);">
+        <div class="tki" style="background:rgba(159,96,255,0.2);color:var(--purple);">✓</div>
+        <div class="tkt"><strong>Course locked.</strong> Jump gate in range — engage when ready.</div>
+      </div>
+      <button class="jump-btn-mock">Engage Jump</button>
+      <div class="lnav">
+        <div class="ldot done"></div><div class="ldot done"></div>
+        <div class="ldot done"></div><div class="ldot cur"></div><div class="ldot"></div>
+      </div>
+    </div>
+    <div class="audio-row">
+      <span class="achip">Deep space void ambient</span>
+      <span class="achip">Buzz on obstacle hit</span>
+      <span class="achip">Star-streak warp on win</span>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ── COMPLETION ── -->
+  <div class="complete-card">
+    <div class="complete-icon">🚀</div>
+    <div class="complete-title">All Systems Go</div>
+    <div class="complete-body">
+      Complete all 20 levels to fill the Deep Space Power bar.<br>
+      The Final Mission unlocks a full-screen star-warp cinematic.
+    </div>
+    <div class="complete-stats">
+      <div class="stat"><div class="stat-val" style="color:var(--cyan);">10</div><div class="stat-lbl">O2 Levels</div></div>
+      <div class="stat"><div class="stat-val" style="color:var(--magenta);">5</div><div class="stat-lbl">Fuel Levels</div></div>
+      <div class="stat"><div class="stat-val" style="color:var(--amber);">5</div><div class="stat-lbl">Nav Levels</div></div>
+      <div class="stat"><div class="stat-val" style="color:var(--purple);">20</div><div class="stat-lbl">Total</div></div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

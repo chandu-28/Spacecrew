@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#7F77DD">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="O2-Reg">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet">
+  <title>O2-Reg — Space Crew Oxygen Regulator</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-deep:#06060f;--bg-panel:#0d0d1e;--bg-inset:#111122;--bg-raised:#161630;
+      --border-dim:rgba(80,80,160,0.18);--border-glow:rgba(100,100,220,0.4);
+      --text-bright:#eeeef8;--text-mid:#8888aa;--text-dim:#44445a;
+      --cyan:#00d4d4;--blue:#4488ff;--purple:#9f60ff;--magenta:#cc44ff;
+      --amber:#f0b040;--green:#44dd88;--red:#ff4455;--silver:#999aaa;
+      --r8:8px;--r10:10px;--r12:12px;
+      --cyl-w:clamp(44px,16vw,70px);--cyl-h:clamp(100px,30vw,170px);
+      --mix-w:clamp(56px,20vw,88px);--mix-h:clamp(128px,38vw,210px);
+    }
+
+    html { min-height: 100%; width: 100%; overflow-y: scroll; }
+    body {
+      min-height: 100%; width: 100%; overflow-x: hidden; overflow-y: auto;
+      background: var(--bg-deep); color: var(--text-bright);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior-x: none;
+    }
+
+    #app {
+      padding: 10px; width: 100%; max-width: 600px; margin: 0 auto;
+      padding-bottom: env(safe-area-inset-bottom, 24px);
+    }
+
+    /* ── HUD ── */
+    .hud {
+      background: var(--bg-panel); border: 0.5px solid var(--border-dim);
+      border-radius: var(--r12); padding: 10px 12px; margin-bottom: 8px;
+      display: flex; gap: 10px; align-items: flex-start;
+    }
+    .hud-section { flex: 1; min-width: 0; }
+    .hud-lbl { font-size: 9px; color: var(--text-dim); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 2px; }
+    .hud-text { font-size: 12px; color: var(--text-bright); font-weight: 500; line-height: 1.3; }
+    .hud-flavor { font-size: 11px; color: var(--text-mid); font-style: italic; margin-top: 2px; line-height: 1.3; }
+    .hint-row { display: flex; align-items: flex-start; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+    .hint-btn { font-size: 10px; color: var(--text-dim); cursor: pointer; text-decoration: underline; border: none; background: none; white-space: nowrap; flex-shrink: 0; }
+    .hint-box { font-size: 10px; color: var(--text-mid); background: var(--bg-inset); border: 0.5px solid var(--border-dim); border-radius: var(--r8); padding: 4px 8px; display: none; }
+    .hint-box.show { display: block; }
+
+    /* ── Power bar ── */
+    .power-wrap { margin-bottom: 8px; }
+    .power-meta { display: flex; justify-content: space-between; font-size: 9px; color: var(--text-dim); letter-spacing: .07em; text-transform: uppercase; margin-bottom: 3px; }
+    .power-track { height: 8px; background: var(--bg-inset); border: 0.5px solid var(--border-dim); border-radius: 4px; overflow: hidden; }
+    .power-fill { height: 100%; width: 0%; border-radius: 4px; background: var(--green); transition: none; }
+    .power-fill.charging { background: linear-gradient(90deg,var(--cyan),var(--green),var(--cyan)); background-size: 200%; animation: shimmer .7s linear infinite; }
+    .power-fill.maxed { background: linear-gradient(90deg,#22aa66,var(--green),#aaffd4,var(--green),#22aa66); background-size: 300%; animation: shimmer-max 1.2s linear infinite; box-shadow: 0 0 8px 2px rgba(68,221,136,0.4); }
+    @keyframes shimmer { 0%{background-position:200%} 100%{background-position:0%} }
+    @keyframes shimmer-max { 0%{background-position:300%} 100%{background-position:0%} }
+
+    /* ── Tanks ── */
+    .tanks-row { display: flex; gap: 6px; align-items: flex-end; margin-bottom: 8px; width: 100%; }
+    .tank-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; }
+    .tank-lbl { font-size: 9px; font-weight: 600; letter-spacing: .07em; }
+
+    .cyl-outer { border: 2px solid; border-radius: 8px; position: relative; overflow: visible; background: var(--bg-inset); width: var(--cyl-w); height: var(--cyl-h); flex-shrink: 0; }
+    .cyl-inner { width: 100%; height: 100%; border-radius: 6px; overflow: hidden; position: relative; }
+    .cyl-outer.n2  { border-color: var(--blue); }
+    .cyl-outer.o2  { border-color: var(--cyan); }
+    .cyl-outer.mix { border-color: var(--purple); width: var(--mix-w); height: var(--mix-h); }
+    .cyl-fill { position: absolute; bottom: 0; left: 0; right: 0; transition: height .07s; }
+    .n2  .cyl-fill { background: rgba(68,136,255,0.5); }
+    .o2  .cyl-fill { background: rgba(0,212,212,0.5); }
+    .mix .cyl-fill { background: rgba(159,96,255,0.45); transition: height .07s, background .35s; }
+    .mix .cyl-fill.good { background: rgba(68,221,136,0.55); }
+
+    .controls-locked { pointer-events: none; opacity: .82; }
+
+    .pulse-overlay { position: absolute; inset: 0; border-radius: 6px; pointer-events: none; opacity: 0; background: rgba(68,221,136,0.25); }
+    @keyframes pulse-up { 0%{opacity:0} 12%{opacity:1} 55%{opacity:.4} 100%{opacity:0} }
+    .pulse-overlay.fire { animation: pulse-up 1.4s ease-out forwards; }
+    .energy-beam { position: absolute; left: 50%; top: -2px; width: 4px; transform: translateX(-50%); border-radius: 2px; background: var(--green); pointer-events: none; opacity: 0; height: 0; box-shadow: 0 0 6px var(--green); }
+    @keyframes beam { 0%{opacity:0;height:0} 20%{opacity:1;height:44px} 65%{opacity:.5;height:88px} 100%{opacity:0;height:0} }
+    .energy-beam.fire { animation: beam 1.2s ease-out forwards; }
+
+    .tgt-line { position: absolute; left: -6px; right: -6px; height: 3px; background: var(--green); z-index: 10; pointer-events: none; border-radius: 2px; bottom: 100%; transition: box-shadow .15s; }
+    .tgt-line.glow { box-shadow: 0 0 10px 4px rgba(68,221,136,0.5); }
+    .tgt-tick { position: absolute; right: -26px; top: -7px; font-size: 8px; color: var(--green); font-weight: 500; white-space: nowrap; }
+
+    .shake { animation: shake .22s infinite; }
+    @keyframes shake { 0%,100%{transform:translateX(0)} 30%{transform:translateX(-3px)} 70%{transform:translateX(3px)} }
+    @keyframes flicker { 0%,100%{opacity:1} 45%{opacity:.88} 50%{opacity:.78} 55%{opacity:.9} }
+    .flicker { animation: flicker 1.6s ease-in-out infinite; }
+
+    .badge { font-size: 13px; font-weight: 500; color: var(--text-bright); font-family: "SF Mono","Fira Code",monospace; }
+
+    /* ── Sliders ── */
+    .slider-zone { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    .slider-row { display: flex; align-items: center; gap: 4px; width: 100%; }
+    input[type=range].hslider {
+      flex: 1; min-width: 0; height: 36px; cursor: pointer; touch-action: manipulation;
+      -webkit-appearance: none; appearance: none; background: transparent;
+    }
+    input[type=range].hslider::-webkit-slider-runnable-track {
+      height: 4px; border-radius: 2px; background: var(--bg-raised); border: 0.5px solid var(--border-glow);
+    }
+    input[type=range].hslider::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%;
+      background: var(--text-bright); border: 2px solid var(--bg-deep);
+      margin-top: -7px; cursor: pointer;
+    }
+    input[type=range].hslider.n2-slider::-webkit-slider-thumb { background: var(--blue); box-shadow: 0 0 8px rgba(68,136,255,0.5); }
+    input[type=range].hslider.o2-slider::-webkit-slider-thumb { background: var(--cyan); box-shadow: 0 0 8px rgba(0,212,212,0.5); }
+    .vent-inline { font-size: 11px; padding: 6px 8px; border: 0.5px solid var(--border-glow); border-radius: var(--r8); background: transparent; color: var(--text-mid); cursor: pointer; white-space: nowrap; flex-shrink: 0; min-width: 34px; text-align: center; }
+    .vent-inline:active { background: var(--bg-raised); }
+    .vent-all-btn { font-size: 11px; padding: 5px 12px; border: 0.5px solid var(--border-glow); border-radius: var(--r8); background: transparent; color: var(--text-mid); cursor: pointer; margin-top: 2px; }
+    .vent-all-btn:active { background: var(--bg-raised); }
+    .mix-wrap { flex: 1.3; }
+
+    /* ── Ratio panel ── */
+    .ratio-panel { background: var(--bg-panel); border: 0.5px solid var(--border-dim); border-radius: var(--r8); padding: 7px 10px; margin-bottom: 8px; }
+    .r-row { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+    .r-row:last-child { margin-bottom: 0; }
+    .r-lbl { font-size: 9px; width: 36px; flex-shrink: 0; }
+    .rblocks { display: flex; gap: 2px; flex-wrap: wrap; flex: 1; min-height: 12px; align-items: center; }
+    .rb { border-radius: 2px; flex-shrink: 0; }
+    .rb.tgt { width: 13px; height: 13px; }
+    .rb.cur { width: 10px; height: 10px; }
+    .rb.o2  { background: rgba(0,212,212,0.4); }  .rb.o2.hi  { background: var(--cyan); }
+    .rb.n2  { background: rgba(68,136,255,0.4); } .rb.n2.hi  { background: var(--blue); }
+    .rb.empty { background: var(--border-dim); }
+    .rb.gap { width: 5px; height: 13px; background: transparent; border-left: 1.5px solid var(--border-glow); }
+    .rmatch { font-size: 9px; padding: 2px 6px; border-radius: 10px; font-weight: 500; margin-left: 4px; }
+    .rmatch.yes { background: rgba(68,221,136,0.12); color: var(--green); }
+    .rmatch.no  { background: var(--bg-inset); color: var(--text-dim); border: 0.5px solid var(--border-dim); }
+
+    /* ── Ticker ── */
+    .ticker { border: 0.5px solid var(--border-dim); border-radius: var(--r12); padding: 9px 12px; margin-bottom: 8px; min-height: 48px; display: flex; align-items: center; gap: 8px; transition: border-color .25s; }
+    .tk-icon { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; transition: background .25s, color .25s; }
+    .tk-text { font-size: 12px; line-height: 1.45; color: var(--text-mid); flex: 1; }
+    .tk-text strong { color: var(--text-bright); }
+
+    /* ── Level nav ── */
+    .level-nav { display: flex; gap: 6px; align-items: center; justify-content: space-between; }
+    .nav-btn { font-size: 12px; padding: 6px 12px; border: 0.5px solid var(--border-glow); border-radius: var(--r8); background: transparent; color: var(--text-bright); cursor: pointer; white-space: nowrap; }
+    .nav-btn:active { background: var(--bg-raised); }
+    .dots { display: flex; gap: 5px; flex-wrap: wrap; justify-content: center; flex: 1; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; border: 1px solid var(--border-glow); background: transparent; cursor: pointer; }
+    .dot.active { background: var(--purple); border-color: var(--purple); }
+    .dot.solved { background: var(--green);  border-color: var(--green); }
+
+    @keyframes ring-out { 0%{opacity:.9;transform:translate(-50%,-50%) scale(.3)} 100%{opacity:0;transform:translate(-50%,-50%) scale(3)} }
+    .chime-ring { position: absolute; top: 50%; left: 50%; width: 60px; height: 60px; border: 3px solid var(--green); border-radius: 50%; opacity: 0; pointer-events: none; display: none; }
+
+    /* ── Modal ── */
+    .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0); pointer-events: none; z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; transition: background .3s; }
+    .modal-bg.show { background: rgba(0,0,0,.65); pointer-events: all; }
+    .modal-card { background: var(--bg-panel); border: 1.5px solid var(--green); border-radius: var(--r12); padding: 22px 24px; text-align: center; max-width: 300px; width: 100%; opacity: 0; transform: scale(.82); transition: opacity .3s, transform .3s; pointer-events: none; box-shadow: 0 0 32px rgba(68,221,136,0.1); }
+    .modal-bg.show .modal-card { opacity: 1; transform: scale(1); pointer-events: all; }
+    .modal-title { font-size: 16px; font-weight: 500; color: var(--green); margin-bottom: 7px; }
+    .modal-body { font-size: 13px; color: var(--text-mid); line-height: 1.6; margin-bottom: 16px; }
+    .modal-next { font-size: 13px; padding: 8px 20px; border: 0.5px solid var(--green); border-radius: var(--r8); background: rgba(68,221,136,0.08); color: var(--green); cursor: pointer; font-weight: 500; }
+    .modal-next:active { background: rgba(68,221,136,0.18); }
+    .modal-home { display: block; margin-top: 10px; font-size: 11px; color: var(--text-dim); text-decoration: none; cursor: pointer; }
+    .modal-home:active { color: var(--text-mid); }
+    .nav-back { font-size: 11px; color: var(--text-dim); text-decoration: none; display: inline-flex; align-items: center; gap: 4px; margin-bottom: 8px; }
+
+    /* ══ ARIA companion ══════════════════════════════════════════ */
+    :root{--aria-color:#00d4d4;--aria-chest:rgba(0,212,212,.18);}
+    .aria-bar{display:flex;align-items:center;gap:10px;background:var(--bg-panel);border:0.5px solid var(--border-dim);border-radius:var(--r12);padding:8px 10px;margin-bottom:8px;}
+    .aria-wrap{width:52px;height:52px;flex-shrink:0;cursor:pointer;animation:aria-bob 2.2s ease-in-out infinite;}
+    @keyframes aria-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+    .aria-wrap.aria-happy{animation:aria-bounce .55s ease;}
+    @keyframes aria-bounce{0%,100%{transform:scale(1) translateY(0)}35%{transform:scale(1.2) translateY(-7px)}65%{transform:scale(.95) translateY(1px)}}
+    .aria-wrap.aria-sad{animation:aria-wag .4s ease;}
+    @keyframes aria-wag{0%,100%{transform:rotate(0)}30%{transform:rotate(-9deg)}70%{transform:rotate(9deg)}}
+    .aria-bubble{flex:1;position:relative;background:rgba(255,255,255,.04);border:0.5px solid rgba(255,255,255,.1);border-radius:var(--r10);padding:7px 10px;min-height:38px;}
+    .aria-bubble::before{content:'';position:absolute;left:-8px;top:50%;transform:translateY(-50%);border:5px solid transparent;border-right-color:rgba(255,255,255,.1);}
+    .aria-name{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--aria-color);display:block;margin-bottom:2px;}
+    .aria-msg{font-size:11.5px;color:var(--text-bright);line-height:1.4;}
+    #cel-canvas{position:fixed;inset:0;pointer-events:none;z-index:199;display:none;}
+    #cel-canvas.active{display:block;}
+    .ov-voss{display:flex;align-items:center;gap:10px;background:var(--bg-panel);border:1px solid rgba(0,212,212,.35);border-radius:var(--r12);padding:10px 13px;max-width:300px;width:90%;animation:ov-voss-in .45s ease;margin-top:8px;}
+    @keyframes ov-voss-in{from{transform:translateY(18px);opacity:0}to{transform:none;opacity:1}}
+    .ov-voss-face{width:44px;height:44px;flex-shrink:0;border-radius:50%;overflow:hidden;border:1.5px solid rgba(0,212,212,.4);}
+    .ov-voss-txt{font-size:11px;color:var(--text-mid);line-height:1.5;font-style:italic;}
+    .ov-voss-txt strong{color:var(--text-bright);font-style:normal;}
+
+  /* ═══════════════════════════════════════════════════
+     2026 VISUAL UPGRADE
+     ═══════════════════════════════════════════════════ */
+
+  @view-transition { navigation: auto; }
+  @keyframes vt-up   { from { opacity:0; transform:translateY(10px); } }
+  @keyframes vt-down { to   { opacity:0; transform:translateY(-8px); } }
+  ::view-transition-old(root) { animation: .22s ease vt-down; }
+  ::view-transition-new(root) { animation: .28s ease vt-up;   }
+
+  /* nebula background */
+  body {
+    background:
+      radial-gradient(ellipse 70% 50% at 10% 70%, rgba(0,180,180,0.055) 0%, transparent 100%),
+      radial-gradient(ellipse 55% 65% at 88% 15%, rgba(120,60,255,0.065) 0%, transparent 100%),
+      #06060f;
+  }
+
+  /* starfield canvas sits behind everything */
+  #bg-stars { position:fixed; inset:0; pointer-events:none; z-index:0; }
+  #app       { position:relative; z-index:1; }
+
+  /* glassmorphism panels */
+  .hud, .ratio-panel, .ticker, .aria-bar {
+    background: rgba(6,6,22,0.52) !important;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-color: rgba(0,212,212,0.12) !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.035);
+  }
+
+  /* cylinder glow */
+  .cyl-outer.n2  { box-shadow: 0 0 14px rgba(68,136,255,0.2), inset 0 0 8px rgba(0,0,0,0.4); }
+  .cyl-outer.o2  { box-shadow: 0 0 14px rgba(0,212,212,0.2),  inset 0 0 8px rgba(0,0,0,0.4); }
+  .cyl-outer.mix { box-shadow: 0 0 18px rgba(159,96,255,0.2), inset 0 0 8px rgba(0,0,0,0.4); }
+
+  /* gradient cylinder fills */
+  .n2  .cyl-fill { background: linear-gradient(to top, rgba(68,136,255,0.9),  rgba(68,136,255,0.22)) !important; }
+  .o2  .cyl-fill { background: linear-gradient(to top, rgba(0,212,212,0.9),   rgba(0,212,212,0.2))   !important; }
+  .mix .cyl-fill { background: linear-gradient(to top, rgba(159,96,255,0.75), rgba(159,96,255,0.15)) !important; transition: height .07s, background .35s; }
+  .mix .cyl-fill.good { background: linear-gradient(to top, rgba(68,221,136,0.85), rgba(68,221,136,0.18)) !important; }
+
+  /* slider tracks — color-matched */
+  input[type=range].hslider.n2-slider::-webkit-slider-runnable-track {
+    background: linear-gradient(90deg, rgba(68,136,255,0.32) 0%, rgba(68,136,255,0.05) 100%);
+    border-color: rgba(68,136,255,0.28);
+  }
+  input[type=range].hslider.o2-slider::-webkit-slider-runnable-track {
+    background: linear-gradient(90deg, rgba(0,212,212,0.32) 0%, rgba(0,212,212,0.05) 100%);
+    border-color: rgba(0,212,212,0.28);
+  }
+  input[type=range].hslider.n2-slider::-webkit-slider-thumb { box-shadow: 0 0 14px rgba(68,136,255,0.9); }
+  input[type=range].hslider.o2-slider::-webkit-slider-thumb { box-shadow: 0 0 14px rgba(0,212,212,0.9); }
+
+  /* power bar glow */
+  .power-fill { box-shadow: 0 0 10px rgba(68,221,136,0.45); }
+  .power-track { border-color: rgba(68,221,136,0.1) !important; }
+
+  /* level name — gradient text */
+  #lv-name {
+    background: linear-gradient(90deg, var(--cyan) 0%, #aaf4ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 600;
+    letter-spacing: .1em;
+  }
+
+  /* Orbitron for labels and number readouts */
+  .tank-lbl, .badge { font-family: 'Orbitron', 'SF Mono', monospace; letter-spacing: .05em; }
+  #tgt-display {
+    font-family: 'Orbitron', 'SF Mono', monospace !important;
+    background: linear-gradient(135deg, #ffffff 30%, var(--cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* target line — stronger glow */
+  .tgt-line.glow { box-shadow: 0 0 16px 6px rgba(68,221,136,0.55), 0 0 32px rgba(68,221,136,0.22) !important; }
+
+  /* nav buttons */
+  .nav-btn { transition: border-color .18s, box-shadow .18s; }
+  .nav-btn:active {
+    background: rgba(0,212,212,0.08);
+    border-color: rgba(0,212,212,0.4);
+    box-shadow: 0 0 10px rgba(0,212,212,0.28);
+  }
+  .nav-back { transition: color .18s; }
+  .nav-back:hover, .nav-back:focus { color: var(--cyan); }
+
+  /* level dots */
+  .dot.active { box-shadow: 0 0 7px rgba(159,96,255,0.7); }
+  .dot.solved { box-shadow: 0 0 7px rgba(68,221,136,0.6); }
+
+  /* vent buttons */
+  .vent-inline:active, .vent-all-btn:active {
+    background: rgba(0,212,212,0.08) !important;
+    border-color: rgba(0,212,212,0.3) !important;
+    box-shadow: 0 0 8px rgba(0,212,212,0.22);
+  }
+
+  /* hint box glass */
+  .hint-box.show {
+    background: rgba(6,6,22,0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-color: rgba(0,212,212,0.14) !important;
+  }
+
+  /* ARIA bubble — cyan tint */
+  .aria-bubble {
+    background: rgba(0,212,212,0.04) !important;
+    border-color: rgba(0,212,212,0.12) !important;
+  }
+  .aria-bubble::before { border-right-color: rgba(0,212,212,0.12) !important; }
+
+  /* modal — deeper glass + stronger glow */
+  .modal-card {
+    background: rgba(6,6,22,0.88) !important;
+    backdrop-filter: blur(24px) !important;
+    -webkit-backdrop-filter: blur(24px) !important;
+    border-width: 1px !important;
+    box-shadow: 0 0 50px rgba(68,221,136,0.18), 0 0 100px rgba(68,221,136,0.07), 0 24px 60px rgba(0,0,0,0.7) !important;
+  }
+
+  /* ── Countdown timer ── */
+  .timer-wrap{margin-bottom:8px;}
+  .timer-meta{display:flex;justify-content:space-between;font-size:9px;color:var(--text-dim);letter-spacing:.07em;text-transform:uppercase;margin-bottom:3px;}
+  .timer-track{height:6px;background:var(--bg-inset);border:0.5px solid rgba(0,212,212,0.1);border-radius:3px;overflow:hidden;}
+  .timer-fill{height:100%;width:100%;border-radius:3px;background:var(--cyan);transition:width .2s linear,background .4s;}
+  .timer-fill.warn{background:var(--amber);}
+  .timer-fill.crit{background:var(--red);animation:tcrit .5s ease-in-out infinite;}
+  @keyframes tcrit{0%,100%{opacity:1}50%{opacity:.55}}
+  @keyframes tflash{0%,100%{filter:none}30%{filter:brightness(2) saturate(0.15)}55%{filter:brightness(1.4) hue-rotate(200deg)}}
+  .t-expired{animation:tflash .55s ease-out forwards!important;}
+
+  /* ── Mix tank split fills (O₂ cyan at bottom, N₂ blue on top) ── */
+  .cyl-fill-o2{position:absolute;bottom:0;left:0;right:0;z-index:1;transition:height .07s;background:linear-gradient(to top,rgba(0,212,212,0.9),rgba(0,212,212,0.35));}
+  .cyl-fill-n2{position:absolute;left:0;right:0;z-index:2;transition:height .07s,bottom .07s;background:linear-gradient(to top,rgba(68,136,255,0.75),rgba(68,136,255,0.25));}
+  .cyl-fill-o2.good{background:linear-gradient(to top,rgba(68,221,136,0.9),rgba(68,221,136,0.3))!important;}
+  .cyl-fill-n2.good{background:linear-gradient(to top,rgba(68,221,136,0.7),rgba(68,221,136,0.2))!important;}
+
+  /* ── Dashed ghost line showing target O₂/N₂ split ── */
+  .tgt-split-ghost{position:absolute;left:0;right:0;height:0;border-top:1.5px dashed rgba(0,212,212,0.45);pointer-events:none;z-index:5;transition:bottom .3s ease;}
+
+  /* ── Ratio panel — simple text ── */
+  .mix-need{font-size:11.5px;color:var(--text-mid);}
+  .mix-need strong{font-weight:600;}
+
+  /* ── Tutorial guide ── */
+  .guide-tip{display:none;background:rgba(0,212,212,0.08);border:1px solid rgba(0,212,212,0.32);border-radius:var(--r10);padding:9px 13px;margin-bottom:8px;align-items:center;gap:10px;animation:gin .3s ease;}
+  @keyframes gin{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
+  .guide-arrow{font-size:20px;color:var(--cyan);animation:gbnc .7s ease-in-out infinite;flex-shrink:0;}
+  @keyframes gbnc{0%,100%{transform:translateX(0)}50%{transform:translateX(6px)}}
+  .guide-text{font-size:12px;color:var(--text-bright);line-height:1.45;}
+  .guide-text strong{color:var(--cyan);}
+  .guide-highlight{outline:2px solid rgba(0,212,212,0.5);outline-offset:3px;border-radius:var(--r8);box-shadow:0 0 14px rgba(0,212,212,0.28)!important;}
+  </style>
+</head>
+<body>
+<canvas id="bg-stars"></canvas>
+<canvas id="cel-canvas"></canvas>
+<div id="app">
+  <a class="nav-back" href="mission_select.html">← Fleet Commander</a>
+  <!-- ARIA companion -->
+  <div class="aria-bar">
+    <div class="aria-wrap" id="aria-wrap" onclick="ariaTap()">
+      <svg viewBox="-2 0 60 70" xmlns="http://www.w3.org/2000/svg">
+        <rect x="-2" y="32" width="12" height="8" rx="4" fill="#1e1e42"/>
+        <rect x="46" y="32" width="12" height="8" rx="4" fill="#1e1e42"/>
+        <rect x="8" y="28" width="40" height="30" rx="10" fill="#1e1e42"/>
+        <ellipse cx="28" cy="18" rx="16" ry="15" fill="#242454"/>
+        <rect x="12" y="10" width="32" height="14" rx="6" fill="rgba(0,8,28,.5)"/>
+        <circle cx="20" cy="17" r="4.5" fill="white"/><circle cx="21" cy="18" r="2.8" fill="#111"/><circle cx="20.3" cy="15.8" r=".9" fill="white"/>
+        <circle cx="36" cy="17" r="4.5" fill="white"/><circle cx="37" cy="18" r="2.8" fill="#111"/><circle cx="36.3" cy="15.8" r=".9" fill="white"/>
+        <path d="M22,25 Q28,29 34,25" stroke="var(--aria-color)" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <rect x="26" y="2" width="4" height="8" rx="2" fill="#242454"/>
+        <circle cx="28" cy="2" r="3.2" fill="var(--aria-color)"/>
+        <rect x="13" y="35" width="30" height="17" rx="5" fill="var(--aria-chest)"/>
+        <circle cx="21" cy="42" r="2.3" fill="var(--aria-color)" opacity=".9"/>
+        <circle cx="28" cy="42" r="2.3" fill="rgba(255,255,255,.35)"/>
+        <circle cx="35" cy="42" r="2.3" fill="var(--aria-color)" opacity=".9"/>
+        <rect x="16" y="48" width="24" height="2.5" rx="1.25" fill="var(--aria-color)" opacity=".4"/>
+        <rect x="13" y="56" width="12" height="12" rx="5" fill="#1e1e42"/>
+        <rect x="31" y="56" width="12" height="12" rx="5" fill="#1e1e42"/>
+      </svg>
+    </div>
+    <div class="aria-bubble">
+      <span class="aria-name">ARIA</span>
+      <span class="aria-msg" id="aria-msg">Balance O₂ and N₂ — the crew needs air!</span>
+    </div>
+  </div>
+
+  <!-- Tutorial guide (Level 1 only) -->
+  <div class="guide-tip" id="guide-tip">
+    <div class="guide-arrow">→</div>
+    <div class="guide-text" id="guide-text">Slide <strong>O₂</strong> up to <strong>5</strong></div>
+  </div>
+
+  <div class="hud">
+    <div class="hud-section">
+      <div class="hud-lbl" id="lv-name">Level 1 — Training Wheels</div>
+      <div class="hud-text" id="lv-mission">Fill to 10 units · Ratio 1:1</div>
+      <div class="hud-flavor" id="lv-flavor">The cabin is stuffy. Mix equal parts Oxygen and Nitrogen.</div>
+      <div class="hint-row">
+        <button class="hint-btn" id="hint-btn">Show hint</button>
+        <div class="hint-box" id="hint-box"></div>
+      </div>
+    </div>
+    <div>
+      <div class="hud-lbl">Target</div>
+      <div style="font-size:22px;font-weight:500;color:var(--text-bright);font-family:'SF Mono','Fira Code',monospace;" id="tgt-display">10</div>
+      <div style="font-size:11px;color:var(--text-dim);">units total</div>
+    </div>
+  </div>
+  <!-- Countdown timer (hidden on Level 1 tutorial) -->
+  <div class="timer-wrap" id="timer-wrap" style="display:none">
+    <div class="timer-meta"><span>⏱ O₂ reserves depleting</span><span id="timer-val">1:30</span></div>
+    <div class="timer-track"><div class="timer-fill" id="timer-fill"></div></div>
+  </div>
+
+  <div class="power-wrap">
+    <div class="power-meta"><span>Ship power grid</span><span id="power-pct">0%</span></div>
+    <div class="power-track"><div class="power-fill" id="power-fill"></div></div>
+  </div>
+
+  <div class="tanks-row">
+    <div class="tank-wrap">
+      <div class="tank-lbl" style="color:var(--blue);">NITROGEN</div>
+      <div class="cyl-outer n2" id="cyl-n2"><div class="cyl-inner"><div class="cyl-fill" id="fill-n2" style="height:0%"></div></div></div>
+      <div class="badge" id="badge-n2">0</div>
+      <div id="ctrl-n2" class="slider-zone">
+        <span style="font-size:10px;color:var(--text-dim);">N2 Valve</span>
+        <div class="slider-row">
+          <input type="range" class="hslider n2-slider" id="valve-n2" min="0" max="14" step="1" value="0">
+          <button class="vent-inline" id="vent-n2">↓</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tank-wrap">
+      <div class="tank-lbl" style="color:var(--cyan);">OXYGEN</div>
+      <div class="cyl-outer o2" id="cyl-o2"><div class="cyl-inner"><div class="cyl-fill" id="fill-o2" style="height:0%"></div></div></div>
+      <div class="badge" id="badge-o2">0</div>
+      <div id="ctrl-o2" class="slider-zone">
+        <span style="font-size:10px;color:var(--text-dim);">O2 Valve</span>
+        <div class="slider-row">
+          <input type="range" class="hslider o2-slider" id="valve-o2" min="0" max="14" step="1" value="0">
+          <button class="vent-inline" id="vent-o2">↓</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tank-wrap mix-wrap">
+      <div class="tank-lbl" style="color:var(--purple);">MIX TANK</div>
+      <div class="cyl-outer mix" id="cyl-mix" style="position:relative;">
+        <div class="cyl-inner">
+          <div class="cyl-fill-o2" id="fill-mix-o2" style="height:0%"></div>
+          <div class="cyl-fill-n2" id="fill-mix-n2" style="height:0%;bottom:0%"></div>
+          <div class="tgt-split-ghost" id="tgt-split" style="bottom:50%"></div>
+          <div class="pulse-overlay" id="pulse"></div>
+        </div>
+        <div class="energy-beam" id="beam"></div>
+        <div class="tgt-line" id="tgt-line"><span class="tgt-tick" id="tgt-tick">10 units</span></div>
+        <div class="chime-ring" id="chime-ring"></div>
+      </div>
+      <div class="badge" id="badge-mix">0 / <span id="tgt-num">10</span></div>
+      <div id="ctrl-vent"><button class="vent-all-btn" id="vent-all">Vent All ↓</button></div>
+    </div>
+  </div>
+
+  <div class="ratio-panel">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <span class="mix-need">Need: <strong id="need-o2" style="color:var(--cyan)">5 O₂</strong> + <strong id="need-n2" style="color:var(--blue)">5 N₂</strong></span>
+      <span class="rmatch no" id="rmatch-badge">—</span>
+    </div>
+  </div>
+
+  <div class="ticker" id="ticker">
+    <div class="tk-icon" id="tk-icon" style="background:var(--bg-secondary);color:var(--text-secondary);">—</div>
+    <div class="tk-text" id="tk-text">Drag the valves to begin pressurization.</div>
+  </div>
+
+  <div class="level-nav">
+    <button class="nav-btn" id="btn-prev">← Prev</button>
+    <div class="dots" id="dots"></div>
+    <button class="nav-btn" id="btn-next">Next →</button>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal">
+  <div class="modal-card">
+    <div class="modal-title" id="mc-title">Level Clear</div>
+    <div class="modal-body" id="mc-body"></div>
+    <button class="modal-next" id="mc-next">Next mission →</button>
+    <a href="mission_select.html" class="modal-home">← Fleet Commander</a>
+    <div class="ov-voss" id="ov-voss">
+      <div class="ov-voss-face">
+        <svg viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="22" cy="22" r="22" fill="#12103a"/>
+          <path d="M6,44 Q8,30 22,28 Q36,30 38,44 Z" fill="#102030"/>
+          <path d="M15,31 L22,28 L29,31 L22,35 Z" fill="#00d4d4" opacity=".65"/>
+          <ellipse cx="22" cy="17" rx="11" ry="12" fill="#d4a870"/>
+          <path d="M11,13 Q12,4 22,4 Q32,4 33,13 Q28,7 22,7 Q16,7 11,13 Z" fill="#2a2a2a"/>
+          <ellipse cx="18" cy="17" rx="2" ry="2.2" fill="#2244cc"/>
+          <ellipse cx="26" cy="17" rx="2" ry="2.2" fill="#2244cc"/>
+          <path d="M18,25 Q22,28 26,25" stroke="#c4906a" stroke-width="1.2" fill="none"/>
+          <rect x="14" y="32" width="16" height="2.5" rx="1.25" fill="#00d4d4" opacity=".7"/>
+          <circle cx="18" cy="33.25" r=".9" fill="#e8c840"/>
+          <circle cx="22" cy="33.25" r=".9" fill="#e8c840"/>
+          <circle cx="26" cy="33.25" r=".9" fill="#e8c840"/>
+        </svg>
+      </div>
+      <div class="ov-voss-txt" id="ov-voss-txt">"Atmosphere stabilized!"</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const LEVELS=[
+  {id:1,level_name:"Training Wheels",ratio:[1,1],target_volume:10,time:999,hint:"Equal parts! Half and half.",flavor_text:"The cabin is stuffy. Mix equal parts Oxygen and Nitrogen."},
+  {id:2,level_name:"The Golden Ratio",ratio:[1,2],target_volume:12,time:90,hint:"For every 1 drop of O2, you need 2 drops of N2.",flavor_text:"Entering low-orbit. We need a bit more Nitrogen to stabilize."},
+  {id:3,level_name:"Deep Breath",ratio:[1,4],target_volume:10,time:80,hint:"Oxygen is powerful! You only need 1 part for every 4 parts Nitrogen.",flavor_text:"The crew is hyperventilating. Thin out the mix."},
+  {id:4,level_name:"Double Trouble",ratio:[2,3],target_volume:15,time:80,hint:"2+3 = 5 parts total. Scale it up to reach 15!",flavor_text:"The regulator is leaking. You need a thicker 2-to-3 blend."},
+  {id:5,level_name:"The Martian Standard",ratio:[1,9],target_volume:20,time:75,hint:"1/10th of the total should be Oxygen.",flavor_text:"Simulating Mars atmosphere. Very little Oxygen needed here."},
+  {id:6,level_name:"Emergency Flush",ratio:[3,1],target_volume:8,time:60,hint:"Mostly Oxygen now! 3 parts Red for every 1 part Blue.",flavor_text:"Smoke in the cockpit! Flush the system with high Oxygen."},
+  {id:7,level_name:"The Prime Mix",ratio:[2,5],target_volume:14,time:75,hint:"Think in sets of 7. How many sets fit in 14?",flavor_text:"The science lab needs a precise 2:5 ratio for the space-plants."},
+  {id:8,level_name:"The Void Specialist",ratio:[3,7],target_volume:20,time:90,hint:"3 parts O2, 7 parts N2. Repeat until full!",flavor_text:"Space walk prep! Suit tanks require a 3-to-7 pressure balance."},
+  {id:9,level_name:"Tricky Totals",ratio:[5,3],target_volume:24,time:90,hint:"5+3 = 8. How many times does 8 go into 24?",flavor_text:"The engines are overheating! We need a 5:3 coolant-oxygen mix."},
+  {id:10,level_name:"Commander's Final",ratio:[7,13],target_volume:40,time:120,hint:"This is the big one. 7 parts O2 for every 13 parts N2.",flavor_text:"The whole ship's life support depends on this final calibration!"}
+];
+
+const TOL=0.5, STABLE_NEEDED=3;
+let cur=0, solved=new Set(), hintOn=false;
+let debounceT=null, ventTs=[], rewardLocked=false, slidersLocked=false;
+let audioCtx=null, stabilityCounter=0, lastInWinZone=false;
+let lastCurBlockKey='', lastState=null, powerLevel=0;
+let timerRemaining=0, timerMax=0, timerInterval=null, tutStep=-1;
+
+const $=id=>document.getElementById(id);
+const vN2=$('valve-n2'), vO2=$('valve-o2');
+const ctrlN2=$('ctrl-n2'), ctrlO2=$('ctrl-o2'), ctrlVent=$('ctrl-vent');
+
+/* ── Audio ── */
+/* ── Ambient audio engine ── */
+let ambientStarted=false, humOsc=null, humGain=null, rumbleOsc=null, rumbleGain=null, ambiCtx=null;
+
+function startAmbience(){
+  if(ambientStarted)return;
+  try{
+    ambiCtx=new(window.AudioContext||window.webkitAudioContext)();
+    // Low space-station hum
+    humOsc=ambiCtx.createOscillator();
+    humGain=ambiCtx.createGain();
+    humOsc.type='sine';
+    humOsc.frequency.value=60;
+    humGain.gain.value=0.0;
+    humOsc.connect(humGain);humGain.connect(ambiCtx.destination);
+    humOsc.start();
+    // Higher rumble layer
+    rumbleOsc=ambiCtx.createOscillator();
+    rumbleGain=ambiCtx.createGain();
+    rumbleOsc.type='sawtooth';
+    rumbleOsc.frequency.value=180;
+    rumbleGain.gain.value=0.0;
+    const filter=ambiCtx.createBiquadFilter();
+    filter.type='lowpass';filter.frequency.value=300;
+    rumbleOsc.connect(filter);filter.connect(rumbleGain);rumbleGain.connect(ambiCtx.destination);
+    rumbleOsc.start();
+    ambientStarted=true;
+  }catch(e){}
+}
+
+function setAmbienceLevel(fillFraction){
+  if(!ambientStarted||!ambiCtx)return;
+  try{
+    const t=ambiCtx.currentTime;
+    const hum=Math.min(fillFraction*0.12, 0.12);
+    const rumble=Math.min(fillFraction*0.06, 0.06);
+    humGain.gain.setTargetAtTime(hum,t,0.3);
+    rumbleGain.gain.setTargetAtTime(rumble,t,0.3);
+    // Pitch rises slightly as pressure builds
+    humOsc.frequency.setTargetAtTime(60+fillFraction*20,t,0.5);
+  }catch(e){}
+}
+
+function playHiss(){
+  try{
+    if(!ambiCtx)return;
+    if(ambiCtx.state==='suspended')ambiCtx.resume();
+    const c=ambiCtx,t=c.currentTime;
+    const bufLen=Math.floor(c.sampleRate*0.55);
+    const buf=c.createBuffer(1,bufLen,c.sampleRate);
+    const data=buf.getChannelData(0);
+    for(let i=0;i<bufLen;i++)data[i]=Math.random()*2-1;
+    const src=c.createBufferSource();src.buffer=buf;
+    const bpf=c.createBiquadFilter();bpf.type='bandpass';
+    bpf.frequency.setValueAtTime(600,t);
+    bpf.frequency.exponentialRampToValueAtTime(5000,t+0.35);
+    bpf.Q.value=0.7;
+    const lpf=c.createBiquadFilter();lpf.type='lowpass';lpf.frequency.value=7000;
+    const g=c.createGain();
+    g.gain.setValueAtTime(0,t);
+    g.gain.linearRampToValueAtTime(0.32,t+0.04);
+    g.gain.exponentialRampToValueAtTime(0.001,t+0.55);
+    src.connect(bpf);bpf.connect(lpf);lpf.connect(g);g.connect(c.destination);
+    src.start(t);src.stop(t+0.57);
+  }catch(e){}
+}
+function playChunk(){
+  try{
+    if(!ambiCtx)return;
+    if(ambiCtx.state==='suspended')ambiCtx.resume();
+    const c=ambiCtx,t=c.currentTime;
+    // Sub thump — pitch drops fast
+    const o1=c.createOscillator(),g1=c.createGain();
+    o1.type='sine';
+    o1.frequency.setValueAtTime(130,t);
+    o1.frequency.exponentialRampToValueAtTime(38,t+0.14);
+    g1.gain.setValueAtTime(0,t);g1.gain.linearRampToValueAtTime(0.55,t+0.01);
+    g1.gain.exponentialRampToValueAtTime(0.001,t+0.17);
+    o1.connect(g1);g1.connect(c.destination);o1.start(t);o1.stop(t+0.18);
+    // Mid click transient
+    const o2=c.createOscillator(),g2=c.createGain();
+    o2.type='square';o2.frequency.value=380;
+    g2.gain.setValueAtTime(0,t);g2.gain.linearRampToValueAtTime(0.07,t+0.004);
+    g2.gain.exponentialRampToValueAtTime(0.001,t+0.06);
+    o2.connect(g2);g2.connect(c.destination);o2.start(t);o2.stop(t+0.06);
+  }catch(e){}
+}
+function playChime(){
+  try{
+    if(!ambiCtx)return;
+    if(ambiCtx.state==='suspended')ambiCtx.resume();
+    const c=ambiCtx;
+    [523,784,1046].forEach((f,i)=>{
+      const o=c.createOscillator(),g=c.createGain();
+      o.type='sine';o.frequency.value=f;
+      const t=c.currentTime+i*0.1;
+      g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(0.15,t+0.03);g.gain.exponentialRampToValueAtTime(0.001,t+0.4);
+      o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+0.42);
+    });
+  }catch(e){}
+}
+
+/* ── CSS lock — vibrant, not disabled ── */
+function lockSliders(){slidersLocked=true;[ctrlN2,ctrlO2,ctrlVent].forEach(el=>el.classList.add('controls-locked'));}
+function unlockSliders(){slidersLocked=false;[ctrlN2,ctrlO2,ctrlVent].forEach(el=>el.classList.remove('controls-locked'));}
+
+/* ── Player override: grabbing a slider cancels any running vent ── */
+function cancelVent(){ventTs.forEach(clearInterval);ventTs=[];}
+
+/* ── Timer ── */
+function startTimer(seconds){
+  clearInterval(timerInterval);
+  timerMax=timerRemaining=seconds;
+  _timerUI();
+  timerInterval=setInterval(()=>{
+    if(rewardLocked)return;
+    timerRemaining=Math.max(0,timerRemaining-0.1);
+    _timerUI();
+    if(timerRemaining<=0){
+      $('app').classList.add('t-expired');
+      setTimeout(()=>$('app').classList.remove('t-expired'),560);
+      if(navigator.vibrate)navigator.vibrate([80,40,80]);
+      ariaReact('wrong');
+      timerRemaining=timerMax; // reset — no punish, just urgency
+    }
+  },100);
+}
+function stopTimer(){clearInterval(timerInterval);timerInterval=null;}
+function _timerUI(){
+  const pct=timerRemaining/timerMax;
+  const m=Math.floor(timerRemaining/60), s=Math.floor(timerRemaining%60);
+  const tf=$('timer-fill');
+  if(!tf)return;
+  tf.style.width=(pct*100)+'%';
+  $('timer-val').textContent=m+':'+String(s).padStart(2,'0');
+  tf.classList.toggle('warn',pct<0.5&&pct>=0.25);
+  tf.classList.toggle('crit',pct<0.25);
+}
+
+/* ── Tutorial (Level 1 only) ── */
+function initTutorial(){
+  tutStep=-1;
+  hideGuide();
+  if(cur!==0)return;
+  tutStep=0;
+  const lv=LEVELS[0];
+  const tO2=Math.round(lv.target_volume*lv.ratio[0]/(lv.ratio[0]+lv.ratio[1]));
+  showGuide('o2',`Slide <strong>O₂</strong> up to <strong>${tO2}</strong>`);
+}
+function showGuide(target,msg){
+  const el=$('guide-tip');if(!el)return;
+  $('guide-text').innerHTML=msg;
+  el.style.display='flex';
+  [$('ctrl-o2'),$('ctrl-n2')].forEach(e=>e&&e.classList.remove('guide-highlight'));
+  const hl=target==='o2'?$('ctrl-o2'):$('ctrl-n2');
+  if(hl)hl.classList.add('guide-highlight');
+}
+function hideGuide(){
+  const el=$('guide-tip');if(el)el.style.display='none';
+  [$('ctrl-o2'),$('ctrl-n2')].forEach(e=>e&&e.classList.remove('guide-highlight'));
+}
+
+/* ── Dots ── */
+function buildDots(){
+  const c=$('dots');c.innerHTML='';
+  LEVELS.forEach((l,i)=>{
+    const d=document.createElement('div');
+    d.className='dot'+(i===cur?' active':'')+(solved.has(i)?' solved':'');
+    d.title=l.level_name;d.onclick=()=>{cur=i;loadLevel();};
+    c.appendChild(d);
+  });
+}
+
+/* ── Load level ── */
+function loadLevel(){
+  const lv=LEVELS[cur];
+  rewardLocked=false;lastState=null;stabilityCounter=0;lastInWinZone=false;lastCurBlockKey='';
+  unlockSliders();cancelVent();stopTimer();
+  vN2.value=0;vO2.value=0;
+  vN2.max=lv.target_volume+4;vO2.max=lv.target_volume+4;
+  hintOn=false;$('hint-box').classList.remove('show');$('hint-btn').textContent='Show hint';
+  $('hint-box').textContent=lv.hint;
+  $('lv-name').textContent=`Level ${lv.id} — ${lv.level_name}`;
+  $('lv-mission').textContent=`Fill to ${lv.target_volume} units · Ratio ${lv.ratio[0]}:${lv.ratio[1]}`;
+  $('lv-flavor').textContent=lv.flavor_text;
+  $('tgt-display').textContent=lv.target_volume;
+  $('tgt-num').textContent=lv.target_volume;
+  $('tgt-tick').textContent=`${lv.target_volume} units`;
+  $('cyl-n2').classList.remove('shake');$('cyl-o2').classList.remove('shake');
+  $('app').classList.remove('flicker');
+  [$('fill-mix-o2'),$('fill-mix-n2')].forEach(e=>e&&e.classList.remove('good'));
+  $('tgt-line').classList.remove('glow');
+  $('power-fill').classList.remove('charging');
+  // Update "Need" display
+  const tO2=Math.round(lv.target_volume*lv.ratio[0]/(lv.ratio[0]+lv.ratio[1]));
+  const tN2=lv.target_volume-tO2;
+  if($('need-o2'))$('need-o2').textContent=tO2+' O₂';
+  if($('need-n2'))$('need-n2').textContent=tN2+' N₂';
+  // Position dashed target-split ghost
+  const splitPct=lv.ratio[0]/(lv.ratio[0]+lv.ratio[1])*100;
+  if($('tgt-split'))$('tgt-split').style.bottom=splitPct+'%';
+  buildDots();
+  setAmbienceLevel(0);
+  // Timer (hidden on Level 1 tutorial)
+  const tw=$('timer-wrap');
+  if(lv.time>=999){if(tw)tw.style.display='none';}
+  else{if(tw)tw.style.display='';startTimer(lv.time);}
+  // Tutorial
+  initTutorial();
+  requestAnimationFrame(()=>_update(true));
+}
+
+/* ── Target row: 14px blocks + gap divider ── */
+function buildRatioTarget(ratio){
+  const el=$('rblocks-tgt');el.innerHTML='';
+  const sum=ratio[0]+ratio[1],sc=Math.min(1,18/sum);
+  const o=Math.max(1,Math.round(ratio[0]*sc)),n=Math.max(1,Math.round(ratio[1]*sc));
+  for(let i=0;i<o;i++){const b=document.createElement('div');b.className='rb tgt o2 hi';el.appendChild(b);}
+  const gap=document.createElement('div');gap.className='rb gap';el.appendChild(gap);
+  for(let i=0;i<n;i++){const b=document.createElement('div');b.className='rb tgt n2 hi';el.appendChild(b);}
+}
+
+/* ── Current row: hysteresis key prevents jitter ── */
+function buildRatioCurrent(o2v,n2v){
+  const total=o2v+n2v;
+  if(total===0){
+    if(lastCurBlockKey==='empty')return;lastCurBlockKey='empty';
+    const el=$('rblocks-cur');el.innerHTML='';
+    const b=document.createElement('div');b.className='rb cur empty';el.appendChild(b);return;
+  }
+  const sc=Math.min(1,18/total);
+  const o=Math.max(o2v>0?1:0,Math.round(o2v*sc));
+  const n=Math.max(n2v>0?1:0,Math.round(n2v*sc));
+  const key=`o${o}n${n}`;
+  if(key===lastCurBlockKey)return;lastCurBlockKey=key;
+  const el=$('rblocks-cur');el.innerHTML='';
+  for(let i=0;i<o;i++){const b=document.createElement('div');b.className='rb cur o2';el.appendChild(b);}
+  for(let i=0;i<n;i++){const b=document.createElement('div');b.className='rb cur n2';el.appendChild(b);}
+}
+
+function ratioOk(o2v,n2v,ratio){
+  const t=o2v+n2v;if(t===0)return false;
+  const s=ratio[0]+ratio[1];
+  return Math.abs(o2v-t*ratio[0]/s)<=TOL && Math.abs(n2v-t*ratio[1]/s)<=TOL;
+}
+
+/* ── Ticker ── */
+function setTicker(icon,ibg,iclr,border,html){
+  $('tk-icon').textContent=icon;$('tk-icon').style.background=ibg;$('tk-icon').style.color=iclr;
+  $('ticker').style.borderColor=border;$('tk-text').innerHTML=html;
+}
+
+/* ── Power bar ── */
+function animPower(from,to,dur,maxed){
+  const start=Date.now(),pf=$('power-fill');
+  pf.classList.remove('maxed');pf.classList.add('charging');
+  const tick=()=>{
+    const t=Math.min(1,(Date.now()-start)/dur),v=from+(to-from)*t;
+    pf.style.width=Math.round(v*100)+'%';
+    $('power-pct').textContent=Math.round(v*100)+'%';
+    if(t<1){requestAnimationFrame(tick);}
+    else{pf.classList.remove('charging');if(maxed)pf.classList.add('maxed');}
+  };
+  requestAnimationFrame(tick);
+}
+
+/* ── Reward ── */
+function triggerReward(){
+  if(rewardLocked)return;
+  rewardLocked=true;lockSliders();stopTimer();
+  playHiss();
+  setTimeout(()=>{ if(navigator.vibrate) navigator.vibrate(50); },540);
+  setTimeout(playChunk,540);
+  setTimeout(playChime,650);
+  const pulse=$('pulse'),beam=$('beam'),ring=$('chime-ring');
+  pulse.classList.remove('fire');void pulse.offsetWidth;pulse.classList.add('fire');
+  beam.classList.remove('fire');void beam.offsetWidth;beam.classList.add('fire');
+  ring.style.display='block';ring.style.animation='none';void ring.offsetWidth;
+  ring.style.animation='ring-out 1s ease-out forwards';
+  setTimeout(()=>ring.style.display='none',1100);
+  const prev=powerLevel;
+  powerLevel=Math.min(1,powerLevel+1/LEVELS.length);
+  const isMaxed=Math.round(powerLevel*100)===100;
+  animPower(prev,powerLevel,900,isMaxed);
+  solved.add(cur);buildDots();
+  try{const p=JSON.parse(localStorage.getItem('spacecrew_progress_v1')||'{}');p.o2=Math.max(p.o2||0,solved.size);localStorage.setItem('spacecrew_progress_v1',JSON.stringify(p));}catch(e){}
+  const isLast=cur===LEVELS.length-1;const lv=LEVELS[cur];
+  $('mc-title').textContent=isLast?'Atmosphere Stabilized':`Level ${lv.id} Clear`;
+  $('mc-body').innerHTML=isLast
+    ?'Commander, the crew can breathe again.<br>Deep space transit engaged.<br><br><em>All 10 sectors complete. Mission accomplished.</em>'
+    :`<em>${lv.level_name}</em> — sector pressurized.<br>Crew status nominal. Advancing to next sector.`;
+  const btn=$('mc-next');
+  if(isLast){
+    btn.textContent='Replay from start';
+    btn.onclick=()=>{
+      $('modal').classList.remove('show');cur=0;solved=new Set();powerLevel=0;
+      const pf=$('power-fill');pf.style.width='0%';pf.classList.remove('maxed','charging');
+      $('power-pct').textContent='0%';loadLevel();
+    };
+  } else {
+    btn.textContent='Next Level →';
+    btn.onclick=()=>{$('modal').classList.remove('show');cur++;loadLevel();};
+  }
+  ariaReact('correct');
+  launchCelebration();
+  if(document.getElementById('ov-voss-txt')) document.getElementById('ov-voss-txt').textContent = VOSS_QUIPS_O2[Math.floor(Math.random()*VOSS_QUIPS_O2.length)];
+  setTimeout(()=>$('modal').classList.add('show'),1500);
+}
+
+/* ── Core update ── */
+function update(){clearTimeout(debounceT);debounceT=setTimeout(()=>_update(false),40);}
+
+function _update(force){
+  if(slidersLocked&&!force)return;
+  const lv=LEVELS[cur];
+  const n2v=parseInt(vN2.value),o2v=parseInt(vO2.value),total=n2v+o2v,target=lv.target_volume;
+  // Side cylinders
+  $('fill-n2').style.height=Math.min(n2v/target,1)*100+'%';
+  $('fill-o2').style.height=Math.min(o2v/target,1)*100+'%';
+  // Mix tank: O₂ (cyan) stacks from bottom, N₂ (blue) sits on top
+  const o2Pct=Math.min(o2v/target,1)*100, n2Pct=Math.min(n2v/target,1)*100;
+  const fmo2=$('fill-mix-o2'), fmn2=$('fill-mix-n2');
+  if(fmo2)fmo2.style.height=o2Pct+'%';
+  if(fmn2){fmn2.style.height=n2Pct+'%';fmn2.style.bottom=o2Pct+'%';}
+  setAmbienceLevel(Math.min(total/target,1));
+  $('badge-n2').textContent=n2v;
+  $('badge-o2').textContent=o2v;
+  $('badge-mix').innerHTML=`${total} / <span id="tgt-num">${target}</span>`;
+  const rOk=ratioOk(o2v,n2v,lv.ratio),vOk=Math.abs(total-target)<=TOL,over=total>target+TOL,under=total>0&&total<target*.25;
+  const inWinZone=rOk&&vOk&&!over;
+  if(rOk&&!over)$('tgt-line').classList.add('glow');else $('tgt-line').classList.remove('glow');
+  if(inWinZone){stabilityCounter++;}else{stabilityCounter=0;}
+  lastInWinZone=inWinZone;
+  const newState=over?'over':inWinZone?'win':rOk?'ratio-ok':(!rOk&&vOk)?'vol-ok':under?'under':total===0?'empty':'off';
+  const changed=newState!==lastState;lastState=newState;
+  if(newState==='win'&&stabilityCounter>=STABLE_NEEDED&&!solved.has(cur))triggerReward();
+  if(!changed&&!force&&newState!=='win')return;
+  const badge=$('rmatch-badge');
+  const clrGood=()=>{[fmo2,fmn2].forEach(e=>e&&e.classList.remove('good'));};
+  $('cyl-n2').classList.remove('shake');$('cyl-o2').classList.remove('shake');$('app').classList.remove('flicker');
+  if(newState==='empty'){badge.textContent='—';badge.className='rmatch no';clrGood();setTicker('—','var(--bg-raised)','var(--text-dim)','var(--border-dim)','Drag the valves to begin pressurization.');}
+  else if(newState==='over'){badge.textContent='over!';badge.className='rmatch no';$('cyl-n2').classList.add('shake');$('cyl-o2').classList.add('shake');clrGood();setTicker('!','rgba(255,68,85,0.12)','var(--red)','var(--red)','<strong>Over-pressure!</strong> Cylinders vibrating — Vent to release gas.');}
+  else if(newState==='win'){badge.textContent='match';badge.className='rmatch yes';[fmo2,fmn2].forEach(e=>e&&e.classList.add('good'));setTicker('✓','rgba(68,221,136,0.12)','var(--green)','var(--green)','<strong>Cabin pressurized.</strong> Crew breathing easy!');}
+  else if(newState==='ratio-ok'){badge.textContent='ratio ✓';badge.className='rmatch yes';clrGood();setTicker('→','rgba(68,221,136,0.12)','var(--green)','var(--green)','<strong>Ratio locked!</strong> Now keep adding gas until the mix tank is full.');}
+  else if(newState==='vol-ok'){badge.textContent='off';badge.className='rmatch no';clrGood();const expO2=Math.round(target*lv.ratio[0]/(lv.ratio[0]+lv.ratio[1]));setTicker('?','rgba(240,176,64,0.12)','var(--amber)','var(--amber)',`<strong>Volume OK but ratio wrong.</strong> Try O₂ = ${expO2}, N₂ = ${target-expO2}. Vent and re-mix!`);}
+  else if(newState==='under'){badge.textContent='low';badge.className='rmatch no';clrGood();$('app').classList.add('flicker');setTicker('~','rgba(68,136,255,0.12)','var(--blue)','var(--blue)','<strong>Under-pressured.</strong> Sensors flickering — open both valves more.');}
+  else{badge.textContent='off';badge.className='rmatch no';clrGood();const s=lv.ratio[0]+lv.ratio[1],expO2=Math.round(total*lv.ratio[0]/s);setTicker('⚠','rgba(240,176,64,0.12)','var(--amber)','var(--amber)',`<strong>Mix imbalance</strong> — at ${total} units: O₂ = ${expO2}, N₂ = ${total-expO2}.`);}
+  // Tutorial step advancement (Level 1 only)
+  if(cur===0&&tutStep>=0&&tutStep<2){
+    const tO2=Math.round(target*lv.ratio[0]/(lv.ratio[0]+lv.ratio[1]));
+    const tN2=target-tO2;
+    if(tutStep===0&&o2v>=tO2){
+      tutStep=1;
+      showGuide('n2',`Good! Now slide <strong>N₂</strong> up to <strong>${tN2}</strong>`);
+    }
+    if(tutStep===1&&n2v>=tN2){tutStep=2;hideGuide();}
+  }
+}
+
+/* ── Vent (with player override on slider input) ── */
+function ventOne(s){if(slidersLocked)return;s.value=Math.max(0,parseInt(s.value)-1);update();}
+function ventAll(){
+  if(slidersLocked)return;cancelVent();
+  const tick=()=>{
+    const a=parseInt(vN2.value),b=parseInt(vO2.value);
+    if(a===0&&b===0){cancelVent();return;}
+    if(a>0)vN2.value=a-1;if(b>0)vO2.value=b-1;update();
+  };
+  ventTs.push(setInterval(tick,60));
+}
+
+/* Player override: slider grab cancels vent immediately + starts ambience */
+vN2.addEventListener('input',()=>{startAmbience();cancelVent();update();});
+vO2.addEventListener('input',()=>{startAmbience();cancelVent();update();});
+$('vent-n2').onclick=()=>ventOne(vN2);
+$('vent-o2').onclick=()=>ventOne(vO2);
+$('vent-all').onclick=ventAll;
+$('btn-prev').onclick=()=>{if(cur>0){cur--;loadLevel();}};
+$('btn-next').onclick=()=>{if(cur<LEVELS.length-1){cur++;loadLevel();}};
+$('hint-btn').onclick=()=>{hintOn=!hintOn;$('hint-box').classList.toggle('show',hintOn);$('hint-btn').textContent=hintOn?'Hide hint':'Show hint';};
+
+/* ── Cylinder touch-drag (drag up = add gas, down = vent) ── */
+(function(){
+  function makeDraggable(cyl,sl){
+    let sy=0,sv=0;
+    cyl.addEventListener('touchstart',e=>{
+      if(slidersLocked)return;
+      startAmbience();
+      sy=e.touches[0].clientY;
+      sv=parseInt(sl.value);
+      e.preventDefault();
+    },{passive:false});
+    cyl.addEventListener('touchmove',e=>{
+      if(slidersLocked)return;
+      e.preventDefault();
+      const dy=sy-e.touches[0].clientY;
+      const h=cyl.getBoundingClientRect().height;
+      const mx=parseInt(sl.max);
+      const nv=Math.max(0,Math.min(mx,sv+Math.round(dy/h*mx)));
+      if(nv!==parseInt(sl.value)){sl.value=nv;cancelVent();update();}
+    },{passive:false});
+  }
+  makeDraggable($('cyl-n2'),vN2);
+  makeDraggable($('cyl-o2'),vO2);
+})();
+
+/* ── Restore progress from previous session ── */
+try{
+  const _sv=JSON.parse(localStorage.getItem('spacecrew_progress_v1')||'{}');
+  const _n=_sv.o2||0;
+  for(let i=0;i<_n&&i<LEVELS.length;i++)solved.add(i);
+  powerLevel=solved.size/LEVELS.length;
+  const pf=$('power-fill');
+  pf.style.width=Math.round(powerLevel*100)+'%';
+  $('power-pct').textContent=Math.round(powerLevel*100)+'%';
+  if(Math.round(powerLevel*100)===100)pf.classList.add('maxed');
+}catch(e){}
+loadLevel();
+
+
+/* ── PWA service worker registration ── */
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});
+}
+
+// ══ ARIA companion ════════════════════════════════════════════════
+const ARIA_MSGS_O2={idle:["Balance O₂ and N₂ ratios!","The crew needs the right mix to breathe!","Look at the ratio — it's a clue!","You're doing great, Commander!"],correct:["⭐ Atmosphere balanced!","Crew breathing easy — brilliant!","Ratio mastered!","O₂ Regulator back online!"],wrong:["Check the ratio again!","Too much of one gas!","Think: how many parts total?","You'll get it — keep trying!"]};
+let _ariaTimerO=null;
+function ariaSetMsg(msg){const el=document.getElementById('aria-msg');if(!el)return;clearTimeout(_ariaTimerO);el.textContent='';let i=0;(function t(){if(i<msg.length){el.textContent+=msg[i++];_ariaTimerO=setTimeout(t,20);}})();}
+function ariaReact(type){const w=document.getElementById('aria-wrap');if(!w)return;const pool=ARIA_MSGS_O2[type]||ARIA_MSGS_O2.idle;ariaSetMsg(pool[Math.floor(Math.random()*pool.length)]);w.className='aria-wrap';void w.offsetWidth;if(type==='correct'){w.className='aria-wrap aria-happy';setTimeout(()=>{w.className='aria-wrap';},700);}else if(type==='wrong'){w.className='aria-wrap aria-sad';setTimeout(()=>{w.className='aria-wrap';},500);}}
+function ariaTap(){const w=document.getElementById('aria-wrap');if(!w)return;w.className='aria-wrap';void w.offsetWidth;const msgs=["I'm ARIA — your AI navigator!","Ratios tell us 'how much of each'!","Simplify: 2:4 is the same as 1:2!","Math keeps the air clean!"];ariaSetMsg(msgs[Math.floor(Math.random()*msgs.length)]);w.style.transform='rotateY(360deg)';setTimeout(()=>{w.style.transform='';},500);}
+(function ariaIdle(){setTimeout(()=>{if(!$('modal').classList.contains('show'))ariaSetMsg(ARIA_MSGS_O2.idle[Math.floor(Math.random()*ARIA_MSGS_O2.idle.length)]);ariaIdle();},10000);})();
+
+// ══ Cyan bubble celebration ═══════════════════════════════════════
+const VOSS_QUIPS_O2=['"Atmosphere stabilized — the crew can breathe!"','"Ratio precision, Commander. Outstanding!"','"O₂ Regulator back online. Well done!"','"The mix is perfect. Air quality: optimal!"','"That\'s the math that keeps us alive!"'];
+function launchCelebration(){
+  const canvas=document.getElementById('cel-canvas');if(!canvas)return;
+  canvas.width=window.innerWidth;canvas.height=window.innerHeight;canvas.classList.add('active');
+  const ctx=canvas.getContext('2d');
+  const cols=['#00d4d4','#44dd88','#00c8a8','#aaffee','#44ffcc'];
+  const bubbles=[];
+  for(let i=0;i<60;i++){bubbles.push({x:Math.random()*canvas.width,y:canvas.height+20+Math.random()*100,vy:-(1+Math.random()*3.5),vx:(Math.random()-.5)*1.5,r:5+Math.random()*18,c:cols[i%cols.length],life:1,d:.006+Math.random()*.008,wobble:Math.random()*Math.PI*2,ws:.04+Math.random()*.06});}
+  (function frame(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);let alive=false;
+    bubbles.forEach(p=>{if(p.life<=0)return;alive=true;p.x+=p.vx+Math.sin(p.wobble)*0.8;p.y+=p.vy;p.wobble+=p.ws;p.life-=p.d;
+      ctx.save();ctx.globalAlpha=Math.max(0,p.life*.7);ctx.strokeStyle=p.c;ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.stroke();
+      ctx.globalAlpha=Math.max(0,p.life*.2);ctx.fillStyle=p.c;ctx.fill();
+      ctx.globalAlpha=Math.max(0,p.life*.5);ctx.fillStyle='rgba(255,255,255,.6)';ctx.beginPath();ctx.arc(p.x-p.r*.3,p.y-p.r*.35,p.r*.25,0,Math.PI*2);ctx.fill();
+      ctx.restore();});
+    if(alive)requestAnimationFrame(frame);else{canvas.classList.remove('active');ctx.clearRect(0,0,canvas.width,canvas.height);}
+  })();
+}
+</script>
+<script src="./audio.js"></script>
+<script>
+/* lightweight background starfield */
+(function(){
+  const c=document.getElementById('bg-stars');
+  if(!c)return;
+  const ctx=c.getContext('2d');
+  let W,H,stars,paused=false;
+  function init(){
+    W=c.width=window.innerWidth;
+    H=c.height=window.innerHeight;
+    stars=Array.from({length:55},()=>({
+      x:Math.random()*W, y:Math.random()*H,
+      r:Math.random()*1.1+0.2,
+      vy:0.04+Math.random()*0.1,
+      o:0.15+Math.random()*0.45
+    }));
+  }
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    if(!paused){
+      stars.forEach(s=>{
+        ctx.globalAlpha=s.o;
+        ctx.fillStyle='#fff';
+        ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();
+        s.y+=s.vy;
+        if(s.y>H+2){s.y=-2;s.x=Math.random()*W;}
+      });
+      ctx.globalAlpha=1;
+    }
+    requestAnimationFrame(draw);
+  }
+  document.addEventListener('visibilitychange',()=>{paused=document.hidden;});
+  window.addEventListener('resize',init);
+  init();draw();
+})();
+</script>
+</body>
+</html>

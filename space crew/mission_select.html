@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Space Crew">
+<link rel="manifest" href="./manifest.json">
+<title>Space Crew — Fleet Commander</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg-deep:#06060f;--bg-panel:#0d0d1e;--bg-inset:#111122;--bg-raised:#161630;
+  --border-dim:rgba(80,80,160,0.18);--border-glow:rgba(100,100,220,0.4);
+  --text-bright:#eeeef8;--text-mid:#8888aa;--text-dim:#44445a;
+  --cyan:#00d4d4;--blue:#4488ff;--purple:#9f60ff;--magenta:#cc44ff;
+  --amber:#f0b040;--green:#44dd88;--red:#ff4455;--silver:#999aaa;
+  --r8:8px;--r10:10px;--r12:12px;
+}
+html{
+  min-height:100%;overflow-y:scroll;
+}
+body{
+  min-height:100%;width:100%;overflow-x:hidden;overflow-y:auto;
+  background:var(--bg-deep);color:var(--text-bright);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  -webkit-tap-highlight-color:transparent;
+  overscroll-behavior-x:none;
+}
+
+#app{
+  padding:12px;max-width:600px;margin:0 auto;
+  padding-bottom:env(safe-area-inset-bottom,20px);
+  display:flex;flex-direction:column;gap:10px;
+  min-height:100vh;
+}
+
+/* ── Header ── */
+.header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 0 4px;
+}
+.header-title{
+  display:flex;flex-direction:column;
+}
+.header-sup{font-size:9px;color:var(--text-dim);letter-spacing:.1em;text-transform:uppercase;}
+.header-name{font-size:20px;font-weight:500;color:var(--text-bright);line-height:1.1;}
+.header-sub{font-size:11px;color:var(--text-mid);margin-top:1px;}
+
+/* ship status badge */
+.ship-badge{
+  display:flex;flex-direction:column;align-items:flex-end;gap:3px;
+}
+.readiness-pill{
+  font-size:10px;font-weight:500;padding:3px 10px;
+  border-radius:20px;border:0.5px solid;letter-spacing:.05em;
+}
+.readiness-pill.not-ready{border-color:var(--text-dim);color:var(--text-dim);}
+.readiness-pill.partial{border-color:var(--amber);color:var(--amber);}
+.readiness-pill.ready{border-color:var(--green);color:var(--green);}
+.readiness-pill.complete{border-color:var(--purple);color:var(--purple);}
+
+/* ── Ship readiness overview ── */
+.overview{
+  background:var(--bg-panel);border:0.5px solid var(--border-dim);
+  border-radius:var(--r12);padding:12px 14px;
+}
+.overview-label{font-size:9px;color:var(--text-dim);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;}
+.readiness-bars{display:flex;flex-direction:column;gap:5px;}
+.rbar-row{display:flex;align-items:center;gap:8px;}
+.rbar-name{font-size:10px;color:var(--text-mid);width:70px;flex-shrink:0;}
+.rbar-track{flex:1;height:5px;background:var(--bg-inset);border-radius:3px;overflow:hidden;}
+.rbar-fill{height:100%;border-radius:3px;transition:width .6s ease;}
+.rbar-count{font-size:10px;color:var(--text-dim);width:32px;text-align:right;flex-shrink:0;font-variant-numeric:tabular-nums;}
+
+/* total power bar */
+.power-section{margin-top:10px;padding-top:10px;border-top:0.5px solid var(--border-dim);}
+.power-label{display:flex;justify-content:space-between;font-size:9px;color:var(--text-dim);
+  letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;}
+.power-track{height:8px;background:var(--bg-inset);border-radius:4px;overflow:hidden;}
+.power-fill{height:100%;border-radius:4px;background:var(--purple);transition:width .8s ease;}
+.power-fill.full{
+  background:linear-gradient(90deg,#6a40cc,var(--purple),#c8a8ff,var(--purple),#6a40cc);
+  background-size:300%;animation:sweep 2s linear infinite;
+}
+@keyframes sweep{0%{background-position:300%}100%{background-position:0%}}
+
+/* ── Mission cards ── */
+.missions-label{font-size:9px;color:var(--text-dim);letter-spacing:.08em;text-transform:uppercase;}
+.mission-card{
+  background:var(--bg-panel);border:0.5px solid var(--border-dim);
+  border-radius:var(--r12);padding:0;overflow:hidden;
+  transition:border-color .2s;cursor:pointer;
+  text-decoration:none;display:block;
+}
+.mission-card:active{border-color:var(--border-glow);opacity:0.9;}
+.mission-card.complete{border-color:rgba(68,221,136,0.35);}
+.mission-card.locked{opacity:0.4;cursor:not-allowed;}
+
+.card-header{
+  display:flex;align-items:stretch;gap:0;
+}
+.card-accent{
+  width:4px;flex-shrink:0;
+  border-radius:var(--r12) 0 0 0;
+}
+.card-body{flex:1;padding:12px 13px 12px 11px;}
+.card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+.card-mission-num{font-size:9px;color:var(--text-dim);letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px;}
+.card-title{font-size:14px;font-weight:500;color:var(--text-bright);line-height:1.2;}
+.card-desc{font-size:11px;color:var(--text-mid);margin-top:3px;line-height:1.4;}
+.card-badge{
+  flex-shrink:0;font-size:9px;font-weight:500;
+  padding:3px 8px;border-radius:20px;border:0.5px solid;
+  white-space:nowrap;align-self:flex-start;
+}
+.card-badge.done{border-color:var(--green);color:var(--green);background:rgba(68,221,136,0.08);}
+.card-badge.partial{border-color:var(--amber);color:var(--amber);background:rgba(240,176,64,0.08);}
+.card-badge.new{border-color:var(--blue);color:var(--blue);background:rgba(68,136,255,0.08);}
+.card-badge.locked-badge{border-color:var(--text-dim);color:var(--text-dim);}
+
+.card-footer{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-top:8px;padding-top:8px;border-top:0.5px solid var(--border-dim);
+}
+.card-dots{display:flex;gap:4px;}
+.cdot{width:8px;height:8px;border-radius:50%;border:1px solid;transition:background .3s;}
+.cdot.done{background:var(--green);border-color:var(--green);}
+.cdot.active{background:var(--amber);border-color:var(--amber);}
+.cdot.empty{background:transparent;border-color:var(--border-glow);}
+.card-math{font-size:10px;color:var(--text-dim);font-style:italic;}
+
+/* ── Final cinematic ── */
+.cinematic{
+  display:none;position:fixed;inset:0;
+  background:#000;z-index:200;
+  flex-direction:column;align-items:center;justify-content:center;
+  gap:16px;
+}
+.cinematic.show{display:flex;}
+.star-field{
+  position:absolute;inset:0;overflow:hidden;
+}
+.star{position:absolute;background:white;border-radius:50%;}
+@keyframes warp{
+  0%{transform:translateX(0) scaleX(1);opacity:1;}
+  100%{transform:translateX(calc(var(--dir)*120vw)) scaleX(12);opacity:0;}
+}
+.cin-ship{
+  width:60px;height:60px;position:relative;z-index:2;
+}
+.cin-ship svg{width:100%;height:100%;}
+.cin-text{
+  font-size:14px;color:rgba(200,200,255,0.7);
+  letter-spacing:.12em;text-transform:uppercase;
+  position:relative;z-index:2;text-align:center;
+  line-height:1.8;
+}
+.cin-text .big{font-size:22px;color:#e8e8f0;font-weight:500;display:block;margin-bottom:4px;}
+@keyframes fade-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.cin-text{animation:fade-in .8s ease forwards;}
+.cin-close{
+  font-size:12px;color:var(--t3);padding:8px 20px;
+  border:0.5px solid var(--t3);border-radius:var(--r8);
+  background:transparent;cursor:pointer;
+  position:relative;z-index:2;margin-top:8px;
+  letter-spacing:.06em;
+}
+
+/* ── Reset button ── */
+.reset-row{display:flex;justify-content:center;padding-top:4px;}
+.reset-btn{
+  font-size:10px;color:var(--text-dim);cursor:pointer;
+  text-decoration:underline;border:none;background:none;
+  letter-spacing:.04em;
+}
+
+/* ══ Hub starfield canvas ══════════════════════════════════════ */
+#hub-stars{position:fixed;inset:0;pointer-events:none;z-index:0;}
+#app{position:relative;z-index:1;}
+
+/* ══ Ship hero ═════════════════════════════════════════════════ */
+.ship-hero{
+  display:flex;align-items:center;gap:12px;
+  background:var(--bg-panel);border:0.5px solid var(--border-dim);
+  border-radius:var(--r12);padding:12px 14px;
+  transition:border-color .5s;
+}
+.ship-hero.online{border-color:rgba(159,96,255,.5);}
+.ship-hero.flight-ready{border-color:rgba(68,221,136,.5);}
+.ship-svg{width:56px;height:56px;flex-shrink:0;filter:brightness(.5);transition:filter 1s ease;}
+.ship-svg.powered{filter:brightness(1) drop-shadow(0 0 8px rgba(159,96,255,.7));}
+.ship-info{flex:1;min-width:0;}
+.ship-name{font-size:14px;font-weight:600;color:var(--text-bright);letter-spacing:.04em;}
+.ship-status{font-size:11px;color:var(--text-mid);margin-top:2px;}
+.ship-status span{color:var(--purple);}
+
+/* ══ ARIA on hub ════════════════════════════════════════════════ */
+.hub-aria{
+  display:flex;align-items:center;gap:10px;
+  background:var(--bg-panel);border:0.5px solid var(--border-dim);
+  border-radius:var(--r12);padding:8px 10px;
+}
+.hub-aria-wrap{width:48px;height:48px;flex-shrink:0;cursor:pointer;animation:aria-bob 2.4s ease-in-out infinite;}
+@keyframes aria-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.hub-aria-wrap.aria-happy{animation:aria-bounce-hub .5s ease;}
+@keyframes aria-bounce-hub{0%,100%{transform:scale(1)}40%{transform:scale(1.18) translateY(-5px)}70%{transform:scale(.95)}}
+.hub-aria-bubble{flex:1;position:relative;background:rgba(255,255,255,.04);border:0.5px solid rgba(255,255,255,.1);border-radius:var(--r10);padding:6px 10px;}
+.hub-aria-bubble::before{content:'';position:absolute;left:-7px;top:50%;transform:translateY(-50%);border:4px solid transparent;border-right-color:rgba(255,255,255,.1);}
+.hub-aria-name{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#9f60ff;display:block;margin-bottom:2px;}
+.hub-aria-msg{font-size:11.5px;color:var(--text-bright);line-height:1.4;}
+
+/* ══ Card icon animations ═══════════════════════════════════════ */
+.card-icon{font-size:22px;line-height:1;flex-shrink:0;width:32px;text-align:center;}
+.mission-card:active .card-icon{transform:scale(1.2);transition:transform .1s;}
+.mission-card.complete .card-icon{animation:icon-pulse 2s ease-in-out infinite;}
+@keyframes icon-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+</style>
+</head>
+<body>
+<canvas id="hub-stars"></canvas>
+<div id="app">
+
+  <!-- ARIA greeting -->
+  <div class="hub-aria">
+    <div class="hub-aria-wrap" id="hub-aria-wrap" onclick="hubAriaTap()">
+      <svg viewBox="-2 0 60 70" xmlns="http://www.w3.org/2000/svg">
+        <rect x="-2" y="32" width="12" height="8" rx="4" fill="#1e1e42"/>
+        <rect x="46" y="32" width="12" height="8" rx="4" fill="#1e1e42"/>
+        <rect x="8" y="28" width="40" height="30" rx="10" fill="#1e1e42"/>
+        <ellipse cx="28" cy="18" rx="16" ry="15" fill="#242454"/>
+        <rect x="12" y="10" width="32" height="14" rx="6" fill="rgba(0,8,28,.5)"/>
+        <circle cx="20" cy="17" r="4.5" fill="white"/><circle cx="21" cy="18" r="2.8" fill="#111"/><circle cx="20.3" cy="15.8" r=".9" fill="white"/>
+        <circle cx="36" cy="17" r="4.5" fill="white"/><circle cx="37" cy="18" r="2.8" fill="#111"/><circle cx="36.3" cy="15.8" r=".9" fill="white"/>
+        <path d="M22,25 Q28,29 34,25" stroke="#9f60ff" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <rect x="26" y="2" width="4" height="8" rx="2" fill="#242454"/>
+        <circle cx="28" cy="2" r="3.2" fill="#9f60ff"/>
+        <rect x="13" y="35" width="30" height="17" rx="5" fill="rgba(159,96,255,.22)"/>
+        <circle cx="21" cy="42" r="2.3" fill="#9f60ff" opacity=".9"/>
+        <circle cx="28" cy="42" r="2.3" fill="rgba(255,255,255,.35)"/>
+        <circle cx="35" cy="42" r="2.3" fill="#9f60ff" opacity=".9"/>
+        <rect x="16" y="48" width="24" height="2.5" rx="1.25" fill="#9f60ff" opacity=".4"/>
+        <rect x="13" y="56" width="12" height="12" rx="5" fill="#1e1e42"/>
+        <rect x="31" y="56" width="12" height="12" rx="5" fill="#1e1e42"/>
+      </svg>
+    </div>
+    <div class="hub-aria-bubble">
+      <span class="hub-aria-name">ARIA</span>
+      <span class="hub-aria-msg" id="hub-aria-msg">Welcome back, Commander! Select a mission.</span>
+    </div>
+  </div>
+
+  <!-- Ship hero -->
+  <div class="ship-hero" id="ship-hero">
+    <div class="ship-svg" id="ship-svg">
+      <svg viewBox="0 0 56 56" xmlns="http://www.w3.org/2000/svg">
+        <!-- engine glow -->
+        <ellipse cx="28" cy="50" rx="10" ry="4" fill="#9f60ff" opacity=".5" id="ship-glow"/>
+        <!-- main hull -->
+        <polygon points="28,4 46,50 28,42 10,50" fill="#c8c8e8"/>
+        <!-- inner hull -->
+        <polygon points="28,16 38,46 28,40 18,46" fill="#9090cc"/>
+        <!-- cockpit -->
+        <ellipse cx="28" cy="22" rx="6" ry="5" fill="#4488ff" opacity=".8"/>
+        <ellipse cx="28" cy="21" rx="3" ry="2.5" fill="#aaddff" opacity=".6"/>
+        <!-- wing detail -->
+        <line x1="28" y1="32" x2="42" y2="48" stroke="#7070aa" stroke-width="1"/>
+        <line x1="28" y1="32" x2="14" y2="48" stroke="#7070aa" stroke-width="1"/>
+        <!-- engine thrust -->
+        <ellipse cx="28" cy="44" rx="7" ry="3" fill="#9f60ff" opacity=".6" id="ship-thrust"/>
+      </svg>
+    </div>
+    <div class="ship-info">
+      <div class="ship-name">SCVII Horizon</div>
+      <div class="ship-status" id="ship-status">Systems offline — <span>0% power</span></div>
+    </div>
+    <div class="ship-badge">
+      <div class="readiness-pill not-ready" id="readiness-pill">Systems offline</div>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-title">
+      <span class="header-sup">Project</span>
+      <span class="header-name">Space Crew</span>
+      <span class="header-sub">Fleet Commander</span>
+    </div>
+  </div>
+
+  <!-- Ship Readiness Overview -->
+  <div class="overview">
+    <div class="overview-label">Ship readiness</div>
+    <div class="readiness-bars">
+      <div class="rbar-row">
+        <div class="rbar-name" style="color:#00d4d4;">O2 Regulator</div>
+        <div class="rbar-track"><div class="rbar-fill" id="bar-o2" style="background:#00d4d4;width:0%;"></div></div>
+        <div class="rbar-count" id="count-o2">0/10</div>
+      </div>
+      <div class="rbar-row">
+        <div class="rbar-name" style="color:#cc44ff;">Fuel Reactor</div>
+        <div class="rbar-track"><div class="rbar-fill" id="bar-fuel" style="background:#cc44ff;width:0%;"></div></div>
+        <div class="rbar-count" id="count-fuel">0/5</div>
+      </div>
+      <div class="rbar-row">
+        <div class="rbar-name" style="color:#f0b040;">Nav Computer</div>
+        <div class="rbar-track"><div class="rbar-fill" id="bar-nav" style="background:#f0b040;width:0%;"></div></div>
+        <div class="rbar-count" id="count-nav">0/5</div>
+      </div>
+      <div class="rbar-row">
+        <div class="rbar-name" style="color:#ff7040;">Power Grid</div>
+        <div class="rbar-track"><div class="rbar-fill" id="bar-power" style="background:#ff7040;width:0%;"></div></div>
+        <div class="rbar-count" id="count-power">0/5</div>
+      </div>
+      <div class="rbar-row">
+        <div class="rbar-name" style="color:#00c8a8;">Med Bay</div>
+        <div class="rbar-track"><div class="rbar-fill" id="bar-med" style="background:#00c8a8;width:0%;"></div></div>
+        <div class="rbar-count" id="count-med">0/5</div>
+      </div>
+      <div class="rbar-row">
+        <div class="rbar-name" style="color:#e8c840;">Docking Ring</div>
+        <div class="rbar-track"><div class="rbar-fill" id="bar-docking" style="background:#e8c840;width:0%;"></div></div>
+        <div class="rbar-count" id="count-docking">0/5</div>
+      </div>
+      <div class="rbar-row">
+        <div class="rbar-name" style="color:#ff7040;">Blast Shield</div>
+        <div class="rbar-track"><div class="rbar-fill" id="bar-blast" style="background:#ff7040;width:0%;"></div></div>
+        <div class="rbar-count" id="count-blast">0/5</div>
+      </div>
+      <div class="rbar-row">
+        <div class="rbar-name" style="color:#9f60ff;">Engine Core</div>
+        <div class="rbar-track"><div class="rbar-fill" id="bar-engine" style="background:#9f60ff;width:0%;"></div></div>
+        <div class="rbar-count" id="count-engine">0/5</div>
+      </div>
+      <div class="rbar-row">
+        <div class="rbar-name" style="color:#00d4d4;">Warp Drive</div>
+        <div class="rbar-track"><div class="rbar-fill" id="bar-warp" style="background:#00d4d4;width:0%;"></div></div>
+        <div class="rbar-count" id="count-warp">0/5</div>
+      </div>
+    </div>
+    <div class="power-section">
+      <div class="power-label">
+        <span>Deep space power</span>
+        <span id="power-pct">0%</span>
+      </div>
+      <div class="power-track"><div class="power-fill" id="power-fill" style="width:0%;"></div></div>
+    </div>
+  </div>
+
+  <!-- Mission cards -->
+  <div class="missions-label">Mission log</div>
+
+  <!-- O2 Regulator card -->
+  <a class="mission-card" id="card-o2" href="o2_regulator.html">
+    <div class="card-header">
+      <div class="card-accent" style="background:#00d4d4;"></div>
+      <div class="card-body">
+        <div class="card-top">
+          <div style="display:flex;align-items:flex-start;gap:8px;">
+            <div class="card-icon">🌬️</div>
+            <div>
+              <div class="card-mission-num">Mission 01 · Atmosphere</div>
+              <div class="card-title">O2 Regulator</div>
+              <div class="card-desc">Balance Oxygen and Nitrogen ratios to keep the crew breathing. Levels 1–10.</div>
+            </div>
+          </div>
+          <div class="card-badge new" id="badge-o2">Start</div>
+        </div>
+        <div class="card-footer">
+          <div class="card-dots" id="dots-o2"></div>
+          <div class="card-math">A : B ratios · fractions · scaling</div>
+        </div>
+      </div>
+    </div>
+  </a>
+
+  <!-- Fuel Reactor card -->
+  <a class="mission-card" id="card-fuel" href="fuel_reactor.html">
+    <div class="card-header">
+      <div class="card-accent" style="background:#cc44ff;"></div>
+      <div class="card-body">
+        <div class="card-top">
+          <div style="display:flex;align-items:flex-start;gap:8px;">
+            <div class="card-icon">⚛️</div>
+            <div>
+              <div class="card-mission-num">Mission 02 · Power</div>
+              <div class="card-title">Fuel Reactor</div>
+              <div class="card-desc">Balance Hydrogen, Plasma, and Coolant to initiate lightspeed. Levels 11–15.</div>
+            </div>
+          </div>
+          <div class="card-badge new" id="badge-fuel">Start</div>
+        </div>
+        <div class="card-footer">
+          <div class="card-dots" id="dots-fuel"></div>
+          <div class="card-math">A : B : C ratios · equilibrium · scaling</div>
+        </div>
+      </div>
+    </div>
+  </a>
+
+  <!-- Nav Computer card -->
+  <a class="mission-card" id="card-nav" href="nav_computer.html">
+    <div class="card-header">
+      <div class="card-accent" style="background:#f0b040;"></div>
+      <div class="card-body">
+        <div class="card-top">
+          <div style="display:flex;align-items:flex-start;gap:8px;">
+            <div class="card-icon">🗺️</div>
+            <div>
+              <div class="card-mission-num">Mission 03 · Navigation</div>
+              <div class="card-title">Nav Computer</div>
+              <div class="card-desc">Plot jump coordinates on a radar grid. Avoid solar flares. Levels 16–20.</div>
+            </div>
+          </div>
+          <div class="card-badge new" id="badge-nav">Start</div>
+        </div>
+        <div class="card-footer">
+          <div class="card-dots" id="dots-nav"></div>
+          <div class="card-math">coordinates · negative numbers · Pythagoras</div>
+        </div>
+      </div>
+    </div>
+  </a>
+
+  <!-- Power Grid card -->
+  <a class="mission-card" id="card-power" href="power_grid.html">
+    <div class="card-header">
+      <div class="card-accent" style="background:#ff7040;"></div>
+      <div class="card-body">
+        <div class="card-top">
+          <div style="display:flex;align-items:flex-start;gap:8px;">
+            <div class="card-icon">⚡</div>
+            <div>
+              <div class="card-mission-num">Mission 04 · Power Grid</div>
+              <div class="card-title">Power Grid</div>
+              <div class="card-desc">Restore circuit breakers by finding missing loads. Levels 21–25.</div>
+            </div>
+          </div>
+          <div class="card-badge new" id="badge-power">Start</div>
+        </div>
+        <div class="card-footer">
+          <div class="card-dots" id="dots-power"></div>
+          <div class="card-math">multiplication · division · factor pairs</div>
+        </div>
+      </div>
+    </div>
+  </a>
+
+  <!-- Med Bay card -->
+  <a class="mission-card" id="card-med" href="med_bay.html">
+    <div class="card-header">
+      <div class="card-accent" style="background:#00c8a8;"></div>
+      <div class="card-body">
+        <div class="card-top">
+          <div style="display:flex;align-items:flex-start;gap:8px;">
+            <div class="card-icon">💉</div>
+            <div>
+              <div class="card-mission-num">Mission 05 · Med Bay</div>
+              <div class="card-title">Med Bay</div>
+              <div class="card-desc">Synthesise crew treatments with precise fraction doses. Levels 26–30.</div>
+            </div>
+          </div>
+          <div class="card-badge new" id="badge-med">Start</div>
+        </div>
+        <div class="card-footer">
+          <div class="card-dots" id="dots-med"></div>
+          <div class="card-math">fractions · equivalent fractions · mixed numbers</div>
+        </div>
+      </div>
+    </div>
+  </a>
+
+  <!-- Docking Ring card -->
+  <a class="mission-card" id="card-docking" href="docking_ring.html">
+    <div class="card-header">
+      <div class="card-accent" style="background:#e8c840;"></div>
+      <div class="card-body">
+        <div class="card-top">
+          <div style="display:flex;align-items:flex-start;gap:8px;">
+            <div class="card-icon">🔗</div>
+            <div>
+              <div class="card-mission-num">Mission 06 · Docking Ring</div>
+              <div class="card-title">Docking Ring</div>
+              <div class="card-desc">Align the docking ring to precise angles to mate with the rescue shuttle. Levels 31–35.</div>
+            </div>
+          </div>
+          <div class="card-badge new" id="badge-docking">Start</div>
+        </div>
+        <div class="card-footer">
+          <div class="card-dots" id="dots-docking"></div>
+          <div class="card-math">angles · complementary · supplementary</div>
+        </div>
+      </div>
+    </div>
+  </a>
+
+  <!-- Blast Shield card -->
+  <a class="mission-card" id="card-blast" href="blast_shield.html">
+    <div class="card-header">
+      <div class="card-accent" style="background:#ff7040;"></div>
+      <div class="card-body">
+        <div class="card-top">
+          <div style="display:flex;align-items:flex-start;gap:8px;">
+            <div class="card-icon">🛡️</div>
+            <div>
+              <div class="card-mission-num">Mission 07 · Blast Shield</div>
+              <div class="card-title">Blast Shield</div>
+              <div class="card-desc">Cut replacement panels to exact area and perimeter specs. Levels 36–40.</div>
+            </div>
+          </div>
+          <div class="card-badge new" id="badge-blast">Start</div>
+        </div>
+        <div class="card-footer">
+          <div class="card-dots" id="dots-blast"></div>
+          <div class="card-math">area · perimeter · optimisation</div>
+        </div>
+      </div>
+    </div>
+  </a>
+
+  <!-- Engine Core card -->
+  <a class="mission-card" id="card-engine" href="engine_core.html">
+    <div class="card-header">
+      <div class="card-accent" style="background:#9f60ff;"></div>
+      <div class="card-body">
+        <div class="card-top">
+          <div style="display:flex;align-items:flex-start;gap:8px;">
+            <div class="card-icon">⚙️</div>
+            <div>
+              <div class="card-mission-num">Mission 08 · Engine Core</div>
+              <div class="card-title">Engine Core</div>
+              <div class="card-desc">Solve corrupted equations to restore engine thrust. Levels 41–45.</div>
+            </div>
+          </div>
+          <div class="card-badge new" id="badge-engine">Start</div>
+        </div>
+        <div class="card-footer">
+          <div class="card-dots" id="dots-engine"></div>
+          <div class="card-math">algebra · solve for x · balance</div>
+        </div>
+      </div>
+    </div>
+  </a>
+
+  <!-- Warp Drive card -->
+  <a class="mission-card" id="card-warp" href="warp_drive.html">
+    <div class="card-header">
+      <div class="card-accent" style="background:#00d4d4;"></div>
+      <div class="card-body">
+        <div class="card-top">
+          <div style="display:flex;align-items:flex-start;gap:8px;">
+            <div class="card-icon">🚀</div>
+            <div>
+              <div class="card-mission-num">Mission 09 · Warp Drive</div>
+              <div class="card-title">Warp Drive</div>
+              <div class="card-desc">Load the ignition sequence by completing arithmetic and geometric patterns. Levels 46–50.</div>
+            </div>
+          </div>
+          <div class="card-badge new" id="badge-warp">Start</div>
+        </div>
+        <div class="card-footer">
+          <div class="card-dots" id="dots-warp"></div>
+          <div class="card-math">sequences · arithmetic · geometric</div>
+        </div>
+      </div>
+    </div>
+  </a>
+
+  <!-- Final mission — locked until all complete -->
+  <div class="mission-card locked" id="card-final" style="pointer-events:none;">
+    <div class="card-header">
+      <div class="card-accent" style="background:var(--purple);"></div>
+      <div class="card-body">
+        <div class="card-top">
+          <div>
+            <div class="card-mission-num">Final Mission · Deep Space Transit</div>
+            <div class="card-title">Engage the Drive</div>
+            <div class="card-desc">All systems nominal. SCVII Horizon ready for warp. Complete all 50 levels to unlock.</div>
+          </div>
+          <div class="card-badge locked-badge" id="badge-final">Locked</div>
+        </div>
+        <div class="card-footer">
+          <div style="font-size:10px;color:var(--text-dim);" id="final-progress">0 / 20 levels complete</div>
+          <div class="card-math">all systems · cinematic</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="reset-row">
+    <button class="reset-btn" id="reset-btn">Reset all progress</button>
+  </div>
+
+</div>
+
+<!-- Cinematic overlay -->
+<div class="cinematic" id="cinematic">
+  <div class="star-field" id="star-field"></div>
+  <div class="cin-ship">
+    <svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="30,4 48,52 30,42 12,52" fill="#c8c8e8"/>
+      <polygon points="30,20 40,46 30,40 20,46" fill="#7f77dd"/>
+      <ellipse cx="30" cy="44" rx="10" ry="4" fill="#9f60ff" opacity="0.8"/>
+    </svg>
+  </div>
+  <div class="cin-text">
+    <span class="big">Deep Space Transit Engaged</span>
+    All 50 levels complete.<br>
+    The crew is safe. SCVII Horizon warps into the unknown.<br>
+    <em style="color:var(--purple);font-size:12px;">Commander, you did it.</em>
+  </div>
+  <button class="cin-close" id="cin-close">Return to fleet</button>
+</div>
+
+<script>
+/* ── Persistent progress via localStorage ── */
+const SAVE_KEY = 'spacecrew_progress_v1';
+
+const MISSIONS = {
+  o2:    { total: 10, color: '#00d4d4', label: 'O2 Regulator' },
+  fuel:  { total: 5,  color: '#cc44ff', label: 'Fuel Reactor' },
+  nav:   { total: 5,  color: '#f0b040', label: 'Nav Computer' },
+  power: { total: 5,  color: '#ff7040', label: 'Power Grid'   },
+  med:     { total: 5,  color: '#00c8a8', label: 'Med Bay'      },
+  docking: { total: 5,  color: '#e8c840', label: 'Docking Ring' },
+  blast:   { total: 5,  color: '#ff7040', label: 'Blast Shield' },
+  engine:  { total: 5,  color: '#9f60ff', label: 'Engine Core'  },
+  warp:    { total: 5,  color: '#00d4d4', label: 'Warp Drive'   }
+};
+
+function loadProgress() {
+  const defaults = { o2: 0, fuel: 0, nav: 0, power: 0, med: 0, docking: 0, blast: 0, engine: 0, warp: 0 };
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (raw) return Object.assign(defaults, JSON.parse(raw));
+  } catch(e) {}
+  return defaults;
+}
+
+function saveProgress(p) {
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(p)); } catch(e) {}
+}
+
+function totalLevels() {
+  return Object.values(MISSIONS).reduce((s, m) => s + m.total, 0);
+}
+
+/* ── Build level dots for a card ── */
+function buildDots(containerId, solved, total, color) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  for (let i = 0; i < total; i++) {
+    const d = document.createElement('div');
+    d.className = 'cdot ' + (i < solved ? 'done' : i === solved ? 'active' : 'empty');
+    d.style.borderColor = i < solved ? color : 'rgba(80,80,160,0.35)';
+    el.appendChild(d);
+  }
+}
+
+/* ── Badge text ── */
+function badgeState(solved, total) {
+  if (solved === 0) return { text: 'Start', cls: 'new' };
+  if (solved === total) return { text: 'Complete', cls: 'done' };
+  return { text: `${solved}/${total}`, cls: 'partial' };
+}
+
+/* ── Ship readiness pill ── */
+function readinessPill(pct) {
+  if (pct === 0)   return { text: 'Systems offline', cls: 'not-ready' };
+  if (pct < 0.5)   return { text: 'Partial power', cls: 'partial' };
+  if (pct < 1.0)   return { text: 'Almost ready', cls: 'partial' };
+  return { text: 'Flight ready', cls: 'complete' };
+}
+
+/* ── Render ── */
+function render() {
+  const p = loadProgress();
+  const tot = totalLevels();
+  const totalSolved = p.o2 + p.fuel + p.nav + p.power + p.med + p.docking + p.blast + p.engine + p.warp;
+  const pct = totalSolved / tot;
+
+  /* readiness bars */
+  document.getElementById('bar-o2').style.width    = (p.o2    / MISSIONS.o2.total    * 100) + '%';
+  document.getElementById('bar-fuel').style.width  = (p.fuel  / MISSIONS.fuel.total  * 100) + '%';
+  document.getElementById('bar-nav').style.width   = (p.nav   / MISSIONS.nav.total   * 100) + '%';
+  document.getElementById('bar-power').style.width = (p.power / MISSIONS.power.total * 100) + '%';
+  document.getElementById('bar-med').style.width     = (p.med     / MISSIONS.med.total     * 100) + '%';
+  document.getElementById('bar-docking').style.width = (p.docking / MISSIONS.docking.total * 100) + '%';
+  document.getElementById('bar-blast').style.width   = (p.blast   / MISSIONS.blast.total   * 100) + '%';
+  document.getElementById('bar-engine').style.width  = (p.engine  / MISSIONS.engine.total  * 100) + '%';
+  document.getElementById('bar-warp').style.width    = (p.warp    / MISSIONS.warp.total    * 100) + '%';
+  document.getElementById('count-o2').textContent    = `${p.o2}/${MISSIONS.o2.total}`;
+  document.getElementById('count-fuel').textContent  = `${p.fuel}/${MISSIONS.fuel.total}`;
+  document.getElementById('count-nav').textContent   = `${p.nav}/${MISSIONS.nav.total}`;
+  document.getElementById('count-power').textContent = `${p.power}/${MISSIONS.power.total}`;
+  document.getElementById('count-med').textContent     = `${p.med}/${MISSIONS.med.total}`;
+  document.getElementById('count-docking').textContent = `${p.docking}/${MISSIONS.docking.total}`;
+  document.getElementById('count-blast').textContent   = `${p.blast}/${MISSIONS.blast.total}`;
+  document.getElementById('count-engine').textContent  = `${p.engine}/${MISSIONS.engine.total}`;
+  document.getElementById('count-warp').textContent    = `${p.warp}/${MISSIONS.warp.total}`;
+
+  /* power bar */
+  const pf = document.getElementById('power-fill');
+  pf.style.width = Math.round(pct * 100) + '%';
+  pf.className = 'power-fill' + (pct >= 1 ? ' full' : '');
+  document.getElementById('power-pct').textContent = Math.round(pct * 100) + '%';
+
+  /* readiness pill */
+  const pill = readinessPill(pct);
+  const pillEl = document.getElementById('readiness-pill');
+  pillEl.textContent = pill.text;
+  pillEl.className = 'readiness-pill ' + pill.cls;
+
+  /* mission card dots + badges */
+  buildDots('dots-o2',    p.o2,    MISSIONS.o2.total,    MISSIONS.o2.color);
+  buildDots('dots-fuel',  p.fuel,  MISSIONS.fuel.total,  MISSIONS.fuel.color);
+  buildDots('dots-nav',   p.nav,   MISSIONS.nav.total,   MISSIONS.nav.color);
+  buildDots('dots-power', p.power, MISSIONS.power.total, MISSIONS.power.color);
+  buildDots('dots-med',     p.med,     MISSIONS.med.total,     MISSIONS.med.color);
+  buildDots('dots-docking', p.docking, MISSIONS.docking.total, MISSIONS.docking.color);
+  buildDots('dots-blast',   p.blast,   MISSIONS.blast.total,   MISSIONS.blast.color);
+  buildDots('dots-engine',  p.engine,  MISSIONS.engine.total,  MISSIONS.engine.color);
+  buildDots('dots-warp',    p.warp,    MISSIONS.warp.total,    MISSIONS.warp.color);
+
+  function applyBadge(id, state) {
+    const el = document.getElementById(id);
+    el.textContent = state.text;
+    el.className = 'card-badge ' + state.cls;
+  }
+  applyBadge('badge-o2',    badgeState(p.o2,    MISSIONS.o2.total));
+  applyBadge('badge-fuel',  badgeState(p.fuel,  MISSIONS.fuel.total));
+  applyBadge('badge-nav',   badgeState(p.nav,   MISSIONS.nav.total));
+  applyBadge('badge-power', badgeState(p.power, MISSIONS.power.total));
+  applyBadge('badge-med',     badgeState(p.med,     MISSIONS.med.total));
+  applyBadge('badge-docking', badgeState(p.docking, MISSIONS.docking.total));
+  applyBadge('badge-blast',   badgeState(p.blast,   MISSIONS.blast.total));
+  applyBadge('badge-engine',  badgeState(p.engine,  MISSIONS.engine.total));
+  applyBadge('badge-warp',    badgeState(p.warp,    MISSIONS.warp.total));
+
+  /* card complete styling */
+  if (p.o2    === MISSIONS.o2.total)    document.getElementById('card-o2').classList.add('complete');
+  if (p.fuel  === MISSIONS.fuel.total)  document.getElementById('card-fuel').classList.add('complete');
+  if (p.nav   === MISSIONS.nav.total)   document.getElementById('card-nav').classList.add('complete');
+  if (p.power === MISSIONS.power.total) document.getElementById('card-power').classList.add('complete');
+  if (p.med     === MISSIONS.med.total)     document.getElementById('card-med').classList.add('complete');
+  if (p.docking === MISSIONS.docking.total) document.getElementById('card-docking').classList.add('complete');
+  if (p.blast   === MISSIONS.blast.total)   document.getElementById('card-blast').classList.add('complete');
+  if (p.engine  === MISSIONS.engine.total)  document.getElementById('card-engine').classList.add('complete');
+  if (p.warp    === MISSIONS.warp.total)    document.getElementById('card-warp').classList.add('complete');
+
+  /* final mission unlock */
+  const finalCard = document.getElementById('card-final');
+  document.getElementById('final-progress').textContent = `${totalSolved} / ${tot} levels complete`;
+  if (totalSolved >= tot) {
+    finalCard.classList.remove('locked');
+    finalCard.style.pointerEvents = '';
+    finalCard.style.cursor = 'pointer';
+    finalCard.onclick = () => showCinematic();
+    const fb = document.getElementById('badge-final');
+    fb.textContent = 'Engage';
+    fb.className = 'card-badge done';
+    finalCard.style.borderColor = 'rgba(159,96,255,0.5)';
+  }
+}
+
+/* ── Star field for cinematic ── */
+function buildStars() {
+  const sf = document.getElementById('star-field');
+  sf.innerHTML = '';
+  for (let i = 0; i < 120; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const size = Math.random() < 0.2 ? 2 : 1;
+    s.style.cssText = `
+      width:${size}px;height:${size}px;
+      left:${Math.random()*100}%;top:${Math.random()*100}%;
+      opacity:${0.2 + Math.random()*0.7};
+      --dir:${Math.random()>0.5?1:-1};
+      animation:warp ${0.5 + Math.random()*1}s ${Math.random()*0.4}s ease-in forwards;
+    `;
+    sf.appendChild(s);
+  }
+}
+
+function showCinematic() {
+  buildStars();
+  document.getElementById('cinematic').classList.add('show');
+}
+
+document.getElementById('cin-close').onclick = () => {
+  document.getElementById('cinematic').classList.remove('show');
+};
+
+/* ── Reset ── */
+document.getElementById('reset-btn').onclick = () => {
+  if (confirm('Reset all progress? This cannot be undone.')) {
+    saveProgress({ o2: 0, fuel: 0, nav: 0, power: 0, med: 0, docking: 0, blast: 0, engine: 0, warp: 0 });
+    render();
+  }
+};
+
+/* ── Cross-game progress injection ── 
+   Each game writes its solved count back here on level complete.
+   The hub reads on load. Games can call window.updateFleetProgress(mission, count).
+   This also works when returning via the Back button since localStorage persists. ── */
+window.updateFleetProgress = function(mission, count) {
+  const p = loadProgress();
+  if (mission in p) {
+    p[mission] = Math.max(p[mission], count);
+    saveProgress(p);
+  }
+};
+
+/* ── Check for progress updates passed via URL hash ── 
+   e.g. mission_select.html#o2=7 lets a game report back on return ── */
+function checkHashProgress() {
+  const hash = window.location.hash.slice(1);
+  if (!hash) return;
+  hash.split('&').forEach(pair => {
+    const [key, val] = pair.split('=');
+    const n = parseInt(val);
+    if (!isNaN(n)) window.updateFleetProgress(key, n);
+  });
+  history.replaceState(null, '', window.location.pathname);
+}
+
+/* ══ Hub starfield ═════════════════════════════════════════════ */
+(function startHubStarfield(){
+  const canvas = document.getElementById('hub-stars');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const STAR_COUNT = 160;
+  let stars = [];
+  function resize(){
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+    stars = [];
+    for (let i = 0; i < STAR_COUNT; i++) {
+      stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() < 0.15 ? 1.5 : 0.8,
+        base: 0.15 + Math.random() * 0.55,   // base opacity
+        phase: Math.random() * Math.PI * 2,
+        speed: 0.4 + Math.random() * 0.8     // twinkle speed rad/s
+      });
+    }
+  }
+  resize();
+  window.addEventListener('resize', resize);
+  let last = 0;
+  function frame(ts){
+    const dt = Math.min((ts - last) / 1000, 0.05);
+    last = ts;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (const s of stars) {
+      s.phase += s.speed * dt;
+      const a = s.base + Math.sin(s.phase) * s.base * 0.6;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(200,210,255,${Math.max(0, Math.min(1, a))})`;
+      ctx.fill();
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+
+/* ══ Ship brightness / hero update ════════════════════════════ */
+function updateShipBrightness(pct) {
+  const svg    = document.getElementById('ship-svg');
+  const hero   = document.getElementById('ship-hero');
+  const status = document.getElementById('ship-status');
+  const pctTxt = Math.round(pct * 100);
+
+  if (pct <= 0) {
+    svg.classList.remove('powered');
+    hero.classList.remove('online','flight-ready');
+    status.innerHTML = `Systems offline — <span>0% power</span>`;
+  } else if (pct < 1) {
+    svg.classList.add('powered');
+    hero.classList.add('online');
+    hero.classList.remove('flight-ready');
+    status.innerHTML = `Charging systems — <span>${pctTxt}% power</span>`;
+  } else {
+    svg.classList.add('powered');
+    hero.classList.remove('online');
+    hero.classList.add('flight-ready');
+    status.innerHTML = `All systems nominal — <span>100% power</span>`;
+  }
+}
+
+/* ══ Hub ARIA ══════════════════════════════════════════════════ */
+const HUB_ARIA_MSGS = [
+  "Welcome back, Commander! Select a mission.",
+  "All systems monitoring. Ready when you are.",
+  "Long-range sensors nominal. Which system needs attention?",
+  "I've been running diagnostics while you were away.",
+  "The crew is counting on us, Commander.",
+  "Every mission brings the Horizon closer to launch.",
+  "I've charted the fastest route to each station.",
+  "Ship's power cells will be full once all missions are complete!",
+  "Remember: a calm commander is an effective commander.",
+  "Data logs updated. All mission stats are recorded.",
+];
+
+function hubAriaTap() {
+  const wrap = document.getElementById('hub-aria-wrap');
+  wrap.className = 'hub-aria-wrap';
+  void wrap.offsetWidth;
+  wrap.className = 'hub-aria-wrap aria-happy';
+  setTimeout(() => { wrap.className = 'hub-aria-wrap'; }, 600);
+
+  const msgEl = document.getElementById('hub-aria-msg');
+  const msg = HUB_ARIA_MSGS[Math.floor(Math.random() * HUB_ARIA_MSGS.length)];
+  // typewriter
+  msgEl.textContent = '';
+  let i = 0;
+  function type() {
+    if (i < msg.length) { msgEl.textContent += msg[i++]; setTimeout(type, 22); }
+  }
+  type();
+}
+
+/* Hub ARIA idle rotation — change message every ~12s when page is in view */
+let _hubIdleTimer = null;
+function scheduleHubIdle() {
+  clearTimeout(_hubIdleTimer);
+  _hubIdleTimer = setTimeout(function tick() {
+    const msgEl = document.getElementById('hub-aria-msg');
+    if (!msgEl) return;
+    const msg = HUB_ARIA_MSGS[Math.floor(Math.random() * HUB_ARIA_MSGS.length)];
+    msgEl.textContent = '';
+    let i = 0;
+    function type() {
+      if (i < msg.length) { msgEl.textContent += msg[i++]; setTimeout(type, 20); }
+    }
+    type();
+    _hubIdleTimer = setTimeout(tick, 12000);
+  }, 12000);
+}
+scheduleHubIdle();
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') scheduleHubIdle();
+  else clearTimeout(_hubIdleTimer);
+});
+
+/* ── Patch render() to also update ship hero ── */
+const _origRender = render;
+render = function() {
+  _origRender();
+  const p    = loadProgress();
+  const tot  = totalLevels();
+  const done = Object.values(p).reduce((s, v) => s + v, 0);
+  updateShipBrightness(done / tot);
+};
+
+checkHashProgress();
+render();
+
+/* ── Engine hum — low square wave, starts on first interaction ── */
+let humCtx=null,humStarted=false;
+function startHum(){
+  if(humStarted)return;humStarted=true;
+  try{
+    humCtx=new(window.AudioContext||window.webkitAudioContext)();
+    const o1=humCtx.createOscillator(),o2=humCtx.createOscillator();
+    const g=humCtx.createGain(),f=humCtx.createBiquadFilter();
+    o1.type='square';o1.frequency.value=55;
+    o2.type='sine';o2.frequency.value=110;
+    f.type='lowpass';f.frequency.value=200;f.Q.value=0.8;
+    g.gain.setValueAtTime(0,humCtx.currentTime);
+    g.gain.linearRampToValueAtTime(0.04,humCtx.currentTime+2);
+    o1.connect(f);o2.connect(f);f.connect(g);g.connect(humCtx.destination);
+    o1.start();o2.start();
+  }catch(e){}
+}
+['touchstart','click'].forEach(evt=>window.addEventListener(evt,startHum,{once:true}));
+
+/* Re-render when returning to this tab (e.g. back from a game) */
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') render();
+});
+window.addEventListener('focus', render);
+window.addEventListener('pageshow', () => { checkHashProgress(); render(); });
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+</script>
+<script src="./audio.js"></script>
+</body>
+</html>

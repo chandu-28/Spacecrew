@@ -1,0 +1,17 @@
+{
+  "short_name": "Space Crew",
+  "name": "Project Space Crew — Fleet Commander",
+  "description": "Three math missions disguised as a space sim. Ratios, equilibrium, and coordinate geometry.",
+  "icons": [
+    { "src": "icon-192.png", "type": "image/png", "sizes": "192x192", "purpose": "any maskable" },
+    { "src": "icon-512.png", "type": "image/png", "sizes": "512x512", "purpose": "any maskable" }
+  ],
+  "start_url": "./mission_select.html",
+  "scope": "./",
+  "background_color": "#0a0a14",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#9f60ff",
+  "categories": ["education", "games"],
+  "lang": "en"
+}

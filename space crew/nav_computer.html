@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Nav Computer">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<title>Nav Computer — Space Crew Mission 3</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg1:#0d0d1a;--bg2:#141428;--bg3:#0a0a14;
+  --t1:#e8e8f0;--t2:#9090a8;--t3:#505068;
+  --bd1:rgba(100,100,160,0.3);--bd2:rgba(100,100,160,0.15);
+  --cyan:#00d4d4;--magenta:#cc44ff;--amber:#f0b040;--purple:#9f60ff;--red:#ff4040;
+  --green:#44dd88;
+  --r8:8px;--r12:12px;
+}
+html{min-height:100%;width:100%;overflow-y:scroll;}
+body{
+  min-height:100%;width:100%;overflow-x:hidden;overflow-y:auto;
+  background:var(--bg3);color:var(--t1);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  -webkit-tap-highlight-color:transparent;
+  overscroll-behavior-x:none;
+}
+#app{
+  padding:10px;max-width:600px;margin:0 auto;
+  padding-bottom:env(safe-area-inset-bottom,20px);
+  display:flex;flex-direction:column;gap:8px;
+}
+
+/* HUD */
+.hud{background:var(--bg2);border:0.5px solid var(--bd1);border-radius:var(--r12);padding:10px 12px;display:flex;flex-direction:column;gap:5px;}
+.hud-top{display:flex;gap:8px;align-items:flex-start;}
+.hud-main{flex:1;min-width:0;}
+.hud-lbl{font-size:9px;color:var(--t3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px;}
+.hud-name{font-size:12px;font-weight:500;color:var(--t1);line-height:1.2;}
+.hud-flavor{font-size:10px;color:var(--t2);font-style:italic;margin-top:2px;line-height:1.3;}
+.hud-coords{display:flex;gap:6px;align-items:stretch;flex-shrink:0;}
+.coord-box{background:var(--bg3);border:0.5px solid var(--bd1);border-radius:var(--r8);padding:5px 8px;text-align:center;min-width:72px;}
+.coord-lbl{font-size:8px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;}
+.coord-val{font-size:13px;font-weight:500;font-variant-numeric:tabular-nums;}
+.coord-val.amber{color:var(--amber);}
+.coord-val.cyan{color:var(--cyan);}
+.coord-val.dist{color:var(--green);font-size:11px;}
+
+/* hint */
+.hint-row{display:flex;align-items:flex-start;gap:8px;}
+.hint-btn{font-size:10px;color:var(--t3);cursor:pointer;text-decoration:underline;border:none;background:none;white-space:nowrap;flex-shrink:0;}
+.hint-box{font-size:10px;color:var(--t2);background:var(--bg3);border:0.5px solid var(--bd1);border-radius:var(--r8);padding:4px 8px;display:none;}
+.hint-box.show{display:block;}
+
+/* radar grid — read-only map */
+.radar-wrap{background:var(--bg2);border:0.5px solid var(--bd1);border-radius:var(--r12);padding:8px;display:flex;align-items:center;justify-content:center;}
+#radar-canvas{display:block;touch-action:auto;cursor:default;border-radius:4px;}
+
+/* axis sliders */
+.axis-ctrl{background:var(--bg2);border:0.5px solid var(--bd1);border-radius:var(--r12);padding:9px 12px;}
+.axis-hdr{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.axis-name{font-size:15px;font-weight:700;font-family:monospace;min-width:16px;}
+.axis-desc{font-size:10px;color:var(--t3);flex:1;}
+.axis-val{font-size:22px;font-weight:500;font-family:monospace;min-width:44px;text-align:right;transition:color .15s;}
+.axis-val.pos{color:var(--cyan);}
+.axis-val.neg{color:var(--red);}
+.axis-val.zero{color:var(--t3);}
+.axis-track{display:flex;align-items:center;gap:6px;}
+.axis-end{font-size:9px;color:var(--t3);font-family:monospace;min-width:26px;text-align:center;flex-shrink:0;}
+input[type=range].ax-sl{
+  flex:1;height:38px;cursor:pointer;touch-action:manipulation;
+  -webkit-appearance:none;appearance:none;background:transparent;
+}
+input[type=range].ax-sl::-webkit-slider-runnable-track{
+  height:4px;border-radius:2px;background:var(--bg3);border:0.5px solid var(--bd1);
+}
+input[type=range].ax-sl.x-sl::-webkit-slider-thumb{
+  -webkit-appearance:none;width:22px;height:22px;border-radius:50%;
+  background:var(--cyan);border:2px solid var(--bg1);margin-top:-9px;
+  box-shadow:0 0 10px rgba(0,212,212,0.4);
+}
+input[type=range].ax-sl.y-sl::-webkit-slider-thumb{
+  -webkit-appearance:none;width:22px;height:22px;border-radius:50%;
+  background:var(--amber);border:2px solid var(--bg1);margin-top:-9px;
+  box-shadow:0 0 10px rgba(240,176,64,0.4);
+}
+.ax-lock{pointer-events:none;opacity:.6;}
+
+/* jump button */
+.jump-wrap{display:flex;justify-content:center;}
+.jump-btn{font-size:13px;font-weight:500;letter-spacing:.06em;padding:10px 32px;border-radius:var(--r8);border:1.5px solid var(--t3);background:transparent;color:var(--t3);cursor:not-allowed;transition:all .2s;text-transform:uppercase;}
+.jump-btn.active{border-color:var(--purple);color:var(--purple);cursor:pointer;box-shadow:0 0 12px rgba(159,96,255,0.35);}
+.jump-btn.active:active{transform:scale(0.97);}
+
+/* ticker */
+.ticker{border:0.5px solid var(--bd1);border-radius:var(--r12);padding:9px 12px;min-height:42px;display:flex;align-items:center;gap:8px;transition:border-color .3s;}
+.tki{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;}
+.tkt{font-size:11px;line-height:1.4;color:var(--t2);flex:1;}
+.tkt strong{color:var(--t1);}
+
+/* level nav */
+.lnav{display:flex;gap:6px;align-items:center;justify-content:space-between;}
+.nb{font-size:12px;padding:5px 12px;border:0.5px solid var(--bd1);border-radius:var(--r8);background:transparent;color:var(--t1);cursor:pointer;}
+.nb:active{background:var(--bg2);}
+.dots{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;flex:1;}
+.dot{width:10px;height:10px;border-radius:50%;border:1px solid var(--bd1);background:transparent;cursor:pointer;}
+.dot.active{background:var(--purple);border-color:var(--purple);}
+.dot.solved{background:var(--green);border-color:var(--green);}
+
+/* modal */
+.moverlay{position:fixed;inset:0;background:rgba(0,0,0,0);pointer-events:none;z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;transition:background .3s;}
+.moverlay.show{background:rgba(0,0,0,.6);pointer-events:all;}
+.mcard{background:var(--bg2);border:2px solid var(--purple);border-radius:var(--r12);padding:22px 26px;text-align:center;max-width:300px;width:100%;opacity:0;transform:scale(.85);transition:opacity .3s,transform .3s;pointer-events:none;}
+.moverlay.show .mcard{opacity:1;transform:scale(1);pointer-events:all;}
+.mttl{font-size:16px;font-weight:500;color:var(--purple);margin-bottom:6px;}
+.mbdy{font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:14px;}
+.mbtn{font-size:13px;padding:7px 18px;border:0.5px solid var(--purple);border-radius:var(--r8);background:rgba(159,96,255,0.15);color:var(--purple);cursor:pointer;font-weight:500;}
+.mbtn:active{background:rgba(159,96,255,0.3);}
+.mbtn.sec{background:transparent;border-color:var(--bd1);color:var(--t3);margin-top:6px;display:block;text-decoration:none;}
+.mbtn.sec:active{color:var(--t2);}
+.nav-back{font-size:11px;color:var(--t3);text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-bottom:8px;}
+
+@keyframes streak{0%{transform:scaleX(1) scaleY(1);opacity:1;}40%{transform:scaleX(8) scaleY(0.15);opacity:0.7;}100%{transform:scaleX(20) scaleY(0);opacity:0;}}
+.streaking{animation:streak .6s ease-in forwards;}
+
+/* ══ ARIA companion ══════════════════════════════════════════ */
+:root{--aria-color:#f0b040;--aria-chest:rgba(240,176,64,.2);}
+.aria-bar{display:flex;align-items:center;gap:10px;background:var(--bg-panel);border:0.5px solid var(--border-dim);border-radius:var(--r12);padding:8px 10px;margin-bottom:8px;}
+.aria-wrap{width:52px;height:52px;flex-shrink:0;cursor:pointer;animation:aria-bob 2.2s ease-in-out infinite;}
+@keyframes aria-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.aria-wrap.aria-happy{animation:aria-bounce .55s ease;}
+@keyframes aria-bounce{0%,100%{transform:scale(1) translateY(0)}35%{transform:scale(1.2) translateY(-7px)}65%{transform:scale(.95) translateY(1px)}}
+.aria-wrap.aria-sad{animation:aria-wag .4s ease;}
+@keyframes aria-wag{0%,100%{transform:rotate(0)}30%{transform:rotate(-9deg)}70%{transform:rotate(9deg)}}
+.aria-bubble{flex:1;position:relative;background:rgba(255,255,255,.04);border:0.5px solid rgba(255,255,255,.1);border-radius:var(--r10);padding:7px 10px;min-height:38px;}
+.aria-bubble::before{content:'';position:absolute;left:-8px;top:50%;transform:translateY(-50%);border:5px solid transparent;border-right-color:rgba(255,255,255,.1);}
+.aria-name{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--aria-color);display:block;margin-bottom:2px;}
+.aria-msg{font-size:11.5px;color:var(--text-bright);line-height:1.4;}
+#cel-canvas{position:fixed;inset:0;pointer-events:none;z-index:99;display:none;}
+#cel-canvas.active{display:block;}
+.ov-voss{display:flex;align-items:center;gap:10px;background:var(--bg-panel);border:1px solid rgba(240,176,64,.35);border-radius:var(--r12);padding:10px 13px;max-width:300px;width:90%;animation:ov-voss-in .45s ease;margin-top:8px;}
+@keyframes ov-voss-in{from{transform:translateY(18px);opacity:0}to{transform:none;opacity:1}}
+.ov-voss-face{width:44px;height:44px;flex-shrink:0;border-radius:50%;overflow:hidden;border:1.5px solid rgba(240,176,64,.4);}
+.ov-voss-txt{font-size:11px;color:var(--text-mid);line-height:1.5;font-style:italic;}
+.ov-voss-txt strong{color:var(--text-bright);font-style:normal;}
+</style>
+</head>
+<body>
+<canvas id="cel-canvas"></canvas>
+<div id="app">
+  <a class="nav-back" href="mission_select.html">← Fleet Commander</a>
+  <!-- ARIA companion -->
+  <div class="aria-bar">
+    <div class="aria-wrap" id="aria-wrap" onclick="ariaTap()">
+      <svg viewBox="-2 0 60 70" xmlns="http://www.w3.org/2000/svg">
+        <rect x="-2" y="32" width="12" height="8" rx="4" fill="#1e1e42"/>
+        <rect x="46" y="32" width="12" height="8" rx="4" fill="#1e1e42"/>
+        <rect x="8" y="28" width="40" height="30" rx="10" fill="#1e1e42"/>
+        <ellipse cx="28" cy="18" rx="16" ry="15" fill="#242454"/>
+        <rect x="12" y="10" width="32" height="14" rx="6" fill="rgba(0,8,28,.5)"/>
+        <circle cx="20" cy="17" r="4.5" fill="white"/><circle cx="21" cy="18" r="2.8" fill="#111"/><circle cx="20.3" cy="15.8" r=".9" fill="white"/>
+        <circle cx="36" cy="17" r="4.5" fill="white"/><circle cx="37" cy="18" r="2.8" fill="#111"/><circle cx="36.3" cy="15.8" r=".9" fill="white"/>
+        <path d="M22,25 Q28,29 34,25" stroke="var(--aria-color)" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <rect x="26" y="2" width="4" height="8" rx="2" fill="#242454"/>
+        <circle cx="28" cy="2" r="3.2" fill="var(--aria-color)"/>
+        <rect x="13" y="35" width="30" height="17" rx="5" fill="var(--aria-chest)"/>
+        <circle cx="21" cy="42" r="2.3" fill="var(--aria-color)" opacity=".9"/>
+        <circle cx="28" cy="42" r="2.3" fill="rgba(255,255,255,.35)"/>
+        <circle cx="35" cy="42" r="2.3" fill="var(--aria-color)" opacity=".9"/>
+        <rect x="16" y="48" width="24" height="2.5" rx="1.25" fill="var(--aria-color)" opacity=".4"/>
+        <rect x="13" y="56" width="12" height="12" rx="5" fill="#1e1e42"/>
+        <rect x="31" y="56" width="12" height="12" rx="5" fill="#1e1e42"/>
+      </svg>
+    </div>
+    <div class="aria-bubble">
+      <span class="aria-name">ARIA</span>
+      <span class="aria-msg" id="aria-msg">Plot the jump coordinates on the grid!</span>
+    </div>
+  </div>
+
+  <!-- HUD -->
+  <div class="hud">
+    <div class="hud-top">
+      <div class="hud-main">
+        <div class="hud-lbl" id="lv-id">Level 16 — Course Correction</div>
+        <div class="hud-name" id="lv-name">Plot a course to the refueling station.</div>
+        <div class="hud-flavor" id="lv-flavor"></div>
+        <div class="hint-row" style="margin-top:4px;">
+          <button class="hint-btn" id="hint-btn">Show hint</button>
+          <div class="hint-box" id="hint-box"></div>
+        </div>
+      </div>
+      <div class="hud-coords">
+        <div class="coord-box">
+          <div class="coord-lbl">Target</div>
+          <div class="coord-val amber" id="tgt-coord">5, 3</div>
+        </div>
+        <div class="coord-box">
+          <div class="coord-lbl">Position</div>
+          <div class="coord-val cyan" id="cur-coord">0, 0</div>
+        </div>
+        <div class="coord-box">
+          <div class="coord-lbl" id="dist-lbl">Distance</div>
+          <div class="coord-val dist" id="dist-val">0.0 LY</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Radar Grid — read-only map -->
+  <div class="radar-wrap">
+    <canvas id="radar-canvas"></canvas>
+  </div>
+
+  <!-- X Axis Slider -->
+  <div class="axis-ctrl" id="x-ctrl">
+    <div class="axis-hdr">
+      <span class="axis-name" style="color:var(--cyan)">X</span>
+      <span class="axis-desc">◀ negative (left) · positive (right) ▶</span>
+      <span class="axis-val zero" id="xv">0</span>
+    </div>
+    <div class="axis-track">
+      <span class="axis-end">−10</span>
+      <input type="range" class="ax-sl x-sl" id="sx" min="-10" max="10" step="1" value="0">
+      <span class="axis-end">+10</span>
+    </div>
+  </div>
+
+  <!-- Y Axis Slider -->
+  <div class="axis-ctrl" id="y-ctrl">
+    <div class="axis-hdr">
+      <span class="axis-name" style="color:var(--amber)">Y</span>
+      <span class="axis-desc">▼ negative (down) · positive (up) ▲</span>
+      <span class="axis-val zero" id="yv">0</span>
+    </div>
+    <div class="axis-track">
+      <span class="axis-end">−10</span>
+      <input type="range" class="ax-sl y-sl" id="sy" min="-10" max="10" step="1" value="0">
+      <span class="axis-end">+10</span>
+    </div>
+  </div>
+
+  <!-- Jump Button -->
+  <div class="jump-wrap">
+    <button class="jump-btn" id="jump-btn">Engage Jump</button>
+  </div>
+
+  <!-- Ticker -->
+  <div class="ticker" id="ticker">
+    <div class="tki" id="tki" style="background:var(--bd2);color:var(--t3);">—</div>
+    <div class="tkt" id="tkt">Set X and Y to reach the target coordinates.</div>
+  </div>
+
+  <!-- Nav -->
+  <div class="lnav">
+    <button class="nb" id="bprev">← Prev</button>
+    <div class="dots" id="dots"></div>
+    <button class="nb" id="bnxt">Next →</button>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="moverlay" id="moverlay">
+  <div class="mcard">
+    <div class="mttl" id="mttl">Jump Engaged</div>
+    <div class="mbdy" id="mbdy"></div>
+    <button class="mbtn" id="mbtn">Next mission →</button>
+    <a href="mission_select.html" class="mbtn sec">← Fleet Commander</a>
+    <div class="ov-voss" id="ov-voss">
+      <div class="ov-voss-face">
+        <svg viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="22" cy="22" r="22" fill="#12103a"/>
+          <path d="M6,44 Q8,30 22,28 Q36,30 38,44 Z" fill="#181408"/>
+          <path d="M15,31 L22,28 L29,31 L22,35 Z" fill="#f0b040" opacity=".65"/>
+          <ellipse cx="22" cy="17" rx="11" ry="12" fill="#d4a870"/>
+          <path d="M11,13 Q12,4 22,4 Q32,4 33,13 Q28,7 22,7 Q16,7 11,13 Z" fill="#2a2a2a"/>
+          <ellipse cx="18" cy="17" rx="2" ry="2.2" fill="#2244cc"/>
+          <ellipse cx="26" cy="17" rx="2" ry="2.2" fill="#2244cc"/>
+          <path d="M18,25 Q22,28 26,25" stroke="#c4906a" stroke-width="1.2" fill="none"/>
+          <rect x="14" y="32" width="16" height="2.5" rx="1.25" fill="#f0b040" opacity=".7"/>
+          <circle cx="18" cy="33.25" r=".9" fill="#e8c840"/>
+          <circle cx="22" cy="33.25" r=".9" fill="#e8c840"/>
+          <circle cx="26" cy="33.25" r=".9" fill="#e8c840"/>
+        </svg>
+      </div>
+      <div class="ov-voss-txt" id="ov-voss-txt">"Jump coordinates locked!"</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const LEVELS = [
+  {id:16, level_name:"Course Correction",
+   target:{x:5,y:3}, obstacles:[],
+   hint:"X controls left/right — positive X goes right. Y controls up/down — positive Y goes up.",
+   flavor:"Refueling station at (5, 3). Set X=5, then Y=3."},
+  {id:17, level_name:"Decoy Field",
+   target:{x:3,y:7}, obstacles:[{x:7,y:3},{x:-3,y:7}],
+   hint:"Watch the decoys: (7,3) swaps X and Y. (−3,7) flips the X sign. Your target is (3,7).",
+   flavor:"Two decoy signals on screen. Only one coordinate is real: (3, 7)."},
+  {id:18, level_name:"The Dark Sector",
+   target:{x:-5,y:4}, obstacles:[{x:5,y:4},{x:-5,y:-4}],
+   hint:"Negative X means LEFT of centre — slide X past zero. (5,4) is the mirror on the wrong side.",
+   flavor:"Jump gate is behind us. Negative X quadrant at (−5, 4)."},
+  {id:19, level_name:"Gravity Well",
+   target:{x:-4,y:-6}, obstacles:[{x:-4,y:6},{x:4,y:-6},{x:4,y:6}],
+   hint:"Both X and Y are negative — slide both sliders left of centre. Every obstacle has at least one wrong sign.",
+   flavor:"Sling-shotting around a black hole. Deep south-west at (−4, −6)."},
+  {id:20, level_name:"The Final Jump",
+   target:{x:8,y:-7}, obstacles:[{x:8,y:7},{x:-8,y:-7},{x:-8,y:7}],
+   hint:"X is positive (right), Y is negative (down). Every trap has a wrong sign somewhere.",
+   flavor:"Final destination. Long-range lock required at (8, −7)."}
+];
+
+const $ = id => document.getElementById(id);
+let cur = 0, solved = new Set(), hintOn = false;
+let markerX = 0, markerY = 0;
+let rLock = false;
+let audioCtx = null;
+
+/* ── Audio ── */
+let ambientStarted = false, noiseGain = null;
+function startAmbient() {
+  if (ambientStarted) return; ambientStarted = true;
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const rate = audioCtx.sampleRate;
+  const buf = audioCtx.createBuffer(1, rate * 3, rate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1);
+  const src = audioCtx.createBufferSource();
+  src.buffer = buf; src.loop = true;
+  const bp = audioCtx.createBiquadFilter();
+  bp.type = 'bandpass'; bp.frequency.value = 90; bp.Q.value = 0.4;
+  noiseGain = audioCtx.createGain(); noiseGain.gain.value = 0;
+  src.connect(bp); bp.connect(noiseGain); noiseGain.connect(audioCtx.destination);
+  src.start();
+  noiseGain.gain.setValueAtTime(0, audioCtx.currentTime);
+  noiseGain.gain.linearRampToValueAtTime(0.04, audioCtx.currentTime + 4);
+}
+function getAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+function playBuzz() {
+  try {
+    const c = getAudio();
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = 'sawtooth'; o.frequency.value = 80;
+    g.gain.setValueAtTime(0.3, c.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.18);
+    o.connect(g); g.connect(c.destination);
+    o.start(); o.stop(c.currentTime + 0.2);
+    if (navigator.vibrate) navigator.vibrate(30);
+  } catch(e) {}
+}
+function playChime() {
+  try {
+    const c = getAudio();
+    [523, 784, 1046].forEach((f, i) => {
+      const o = c.createOscillator(), g = c.createGain();
+      o.type = 'sine'; o.frequency.value = f;
+      const t = c.currentTime + i * 0.1;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.2, t + 0.03);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+      o.connect(g); g.connect(c.destination);
+      o.start(t); o.stop(t + 0.42);
+    });
+  } catch(e) {}
+}
+
+/* ── Canvas ── */
+const canvas = $('radar-canvas');
+const ctx = canvas.getContext('2d');
+const GRID = 10;
+let cellSize, originX, originY, canvasSize;
+
+function setupCanvas() {
+  const wrap = canvas.parentElement;
+  const maxW = Math.min(wrap.clientWidth - 16, 400);
+  canvasSize = maxW;
+  canvas.width = canvasSize;
+  canvas.height = canvasSize;
+  cellSize = canvasSize / (GRID * 2 + 2);
+  originX = canvasSize / 2;
+  originY = canvasSize / 2;
+}
+function toPixel(gx, gy) {
+  return { px: originX + gx * cellSize, py: originY - gy * cellSize };
+}
+function clamp(v, mn, mx) { return Math.max(mn, Math.min(mx, v)); }
+
+/* ── Obstacle check ── */
+function isOnObstacle(gx, gy) {
+  return LEVELS[cur].obstacles.some(o => o.x === gx && o.y === gy);
+}
+
+/* ── Draw ── */
+function draw() {
+  const lv = LEVELS[cur];
+  ctx.clearRect(0, 0, canvasSize, canvasSize);
+
+  /* background */
+  ctx.fillStyle = '#08081a';
+  ctx.fillRect(0, 0, canvasSize, canvasSize);
+
+  /* star field */
+  const seed = cur * 137;
+  for (let i = 0; i < 60; i++) {
+    const sx = ((seed * (i+1) * 2654435761) % canvasSize + canvasSize) % canvasSize;
+    const sy = ((seed * (i+1) * 1013904223) % canvasSize + canvasSize) % canvasSize;
+    ctx.fillStyle = `rgba(200,200,255,${i%3===0?0.6:0.25})`;
+    ctx.fillRect(sx, sy, 1, 1);
+  }
+
+  /* grid lines */
+  for (let g = -GRID; g <= GRID; g++) {
+    const { px } = toPixel(g, 0);
+    const { py } = toPixel(0, g);
+    const isAxis = g === 0;
+    ctx.strokeStyle = isAxis ? 'rgba(120,120,200,0.7)' : 'rgba(60,60,120,0.35)';
+    ctx.lineWidth = isAxis ? 1.5 : 0.5;
+    ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, canvasSize); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, py); ctx.lineTo(canvasSize, py); ctx.stroke();
+  }
+
+  /* axis labels — always shown, negative in red */
+  ctx.font = `${Math.max(8, cellSize * 0.52)}px monospace`;
+  for (let g = -GRID; g <= GRID; g++) {
+    if (g === 0 || Math.abs(g) > 9) continue;
+    ctx.fillStyle = g < 0 ? 'rgba(200,100,100,0.6)' : 'rgba(120,120,200,0.6)';
+    const { px } = toPixel(g, 0);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText(g, px, originY + 3);
+    const { py } = toPixel(0, g);
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    ctx.fillText(g, originX - 3, py);
+  }
+
+  /* obstacles — full grid cell with ✕ and coordinate label */
+  const pulse = 0.55 + 0.25 * Math.sin(Date.now() / 400);
+  const half = cellSize / 2;
+  lv.obstacles.forEach(ob => {
+    const { px, py } = toPixel(ob.x, ob.y);
+    ctx.fillStyle = `rgba(255,40,40,${pulse * 0.32})`;
+    ctx.fillRect(px - half, py - half, cellSize, cellSize);
+    ctx.strokeStyle = `rgba(255,80,80,${pulse * 0.9})`;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(px - half + 0.5, py - half + 0.5, cellSize - 1, cellSize - 1);
+    const cx = half * 0.5;
+    ctx.strokeStyle = `rgba(255,120,120,${pulse})`;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(px-cx,py-cx); ctx.lineTo(px+cx,py+cx); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(px+cx,py-cx); ctx.lineTo(px-cx,py+cx); ctx.stroke();
+    ctx.fillStyle = `rgba(255,140,140,${pulse * 0.85})`;
+    ctx.font = `bold ${Math.max(7, cellSize * 0.4)}px monospace`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(`${ob.x},${ob.y}`, px, py);
+  });
+
+  /* target marker — amber */
+  const tgt = toPixel(lv.target.x, lv.target.y);
+  const arm = cellSize * 0.5;
+  ctx.strokeStyle = '#f0b040'; ctx.lineWidth = 1.5;
+  ctx.setLineDash([3, 2]);
+  ctx.beginPath(); ctx.arc(tgt.px, tgt.py, cellSize * 0.45, 0, Math.PI * 2); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(tgt.px-arm, tgt.py); ctx.lineTo(tgt.px+arm, tgt.py); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(tgt.px, tgt.py-arm); ctx.lineTo(tgt.px, tgt.py+arm); ctx.stroke();
+
+  /* coordinate triangle — X leg (cyan), Y leg (amber), hypotenuse */
+  const { px: mx, py: my } = toPixel(markerX, markerY);
+  if (markerX !== 0 || markerY !== 0) {
+    const foot = toPixel(markerX, 0);
+    const onTarget = markerX === lv.target.x && markerY === lv.target.y;
+
+    /* X leg — cyan */
+    ctx.strokeStyle = 'rgba(0,212,212,0.6)';
+    ctx.lineWidth = 2; ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.moveTo(originX, originY); ctx.lineTo(foot.px, foot.py); ctx.stroke();
+
+    /* Y leg — amber */
+    ctx.strokeStyle = 'rgba(240,176,64,0.6)';
+    ctx.beginPath(); ctx.moveTo(foot.px, foot.py); ctx.lineTo(mx, my); ctx.stroke();
+    ctx.setLineDash([]);
+
+    /* right-angle mark */
+    const sq = cellSize * 0.12;
+    const sdx = markerX >= 0 ? -sq : sq;
+    const sdy = markerY >= 0 ? sq : -sq;
+    ctx.strokeStyle = 'rgba(180,180,180,0.35)'; ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.moveTo(foot.px + sdx, foot.py);
+    ctx.lineTo(foot.px + sdx, foot.py + sdy);
+    ctx.lineTo(foot.px, foot.py + sdy);
+    ctx.stroke();
+
+    /* hypotenuse */
+    ctx.strokeStyle = onTarget ? 'rgba(159,96,255,0.9)' : 'rgba(0,212,212,0.3)';
+    ctx.lineWidth = 1.5; ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.moveTo(originX, originY); ctx.lineTo(mx, my); ctx.stroke();
+    ctx.setLineDash([]);
+
+    /* X label at midpoint of X leg */
+    ctx.font = `bold ${Math.max(8, cellSize * 0.46)}px monospace`;
+    ctx.fillStyle = 'rgba(0,212,212,0.8)';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = markerY >= 0 ? 'top' : 'bottom';
+    ctx.fillText(`x=${markerX}`, (originX + foot.px) / 2, originY + (markerY >= 0 ? 3 : -3));
+
+    /* Y label at midpoint of Y leg */
+    ctx.fillStyle = 'rgba(240,176,64,0.8)';
+    ctx.textAlign = markerX >= 0 ? 'left' : 'right';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`y=${markerY}`, foot.px + (markerX >= 0 ? 4 : -4), (foot.py + my) / 2);
+  }
+
+  /* ship at origin */
+  const shipR = cellSize * 0.38;
+  ctx.fillStyle = '#c8c8e8';
+  ctx.beginPath();
+  ctx.moveTo(originX, originY - shipR);
+  ctx.lineTo(originX + shipR*0.6, originY + shipR*0.7);
+  ctx.lineTo(originX - shipR*0.6, originY + shipR*0.7);
+  ctx.closePath(); ctx.fill();
+
+  /* nav marker */
+  const onTarget = markerX === lv.target.x && markerY === lv.target.y;
+  ctx.strokeStyle = onTarget ? '#9f60ff' : '#00d4d4';
+  ctx.lineWidth = 2;
+  const marm = cellSize * 0.5;
+  ctx.beginPath(); ctx.moveTo(mx-marm,my); ctx.lineTo(mx+marm,my); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(mx,my-marm); ctx.lineTo(mx,my+marm); ctx.stroke();
+  ctx.beginPath(); ctx.arc(mx, my, cellSize*0.28, 0, Math.PI*2); ctx.stroke();
+
+  /* origin label */
+  ctx.fillStyle = 'rgba(120,120,200,0.5)';
+  ctx.font = `${Math.max(8, cellSize*0.5)}px monospace`;
+  ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+  ctx.fillText('0,0', originX+3, originY-3);
+}
+
+/* ── Slider controls ── */
+const sxEl = $('sx'), syEl = $('sy');
+
+function updateSliderUI() {
+  const xv = $('xv'), yv = $('yv');
+  xv.textContent = markerX;
+  xv.className = 'axis-val ' + (markerX > 0 ? 'pos' : markerX < 0 ? 'neg' : 'zero');
+  yv.textContent = markerY;
+  yv.className = 'axis-val ' + (markerY > 0 ? 'pos' : markerY < 0 ? 'neg' : 'zero');
+}
+
+function lockSliders() {
+  [$('x-ctrl'), $('y-ctrl')].forEach(el => el.classList.add('ax-lock'));
+}
+function unlockSliders() {
+  [$('x-ctrl'), $('y-ctrl')].forEach(el => el.classList.remove('ax-lock'));
+}
+
+function onSliderChange() {
+  if (rLock) return;
+  startAmbient();
+  markerX = parseInt(sxEl.value);
+  markerY = parseInt(syEl.value);
+  updateSliderUI();
+  updateState();
+}
+
+sxEl.addEventListener('input', onSliderChange);
+syEl.addEventListener('input', onSliderChange);
+
+/* ── Update HUD & state ── */
+function updateState() {
+  const lv = LEVELS[cur];
+  const ax = Math.abs(markerX), ay = Math.abs(markerY);
+  const distToOrigin = Math.sqrt(markerX*markerX + markerY*markerY);
+
+  $('cur-coord').textContent = `${markerX}, ${markerY}`;
+
+  /* Pythagorean formula — the key teaching moment */
+  if (ax > 0 || ay > 0) {
+    $('dist-lbl').textContent = `√(${ax}²+${ay}²)`;
+    $('dist-val').textContent = distToOrigin.toFixed(1) + ' LY';
+  } else {
+    $('dist-lbl').textContent = 'Distance';
+    $('dist-val').textContent = '0.0 LY';
+  }
+
+  const onObs = isOnObstacle(markerX, markerY);
+  const onTarget = markerX === lv.target.x && markerY === lv.target.y;
+  const xMatch = markerX === lv.target.x;
+  const yMatch = markerY === lv.target.y;
+  const atOrigin = markerX === 0 && markerY === 0;
+  const jumpBtn = $('jump-btn');
+  const tdx = lv.target.x - markerX, tdy = lv.target.y - markerY;
+
+  if (onObs) {
+    jumpBtn.className = 'jump-btn';
+    playBuzz();
+    ariaReact('wrong');
+    $('ticker').style.borderColor = 'var(--red)';
+    $('tki').style.background = 'rgba(255,64,64,0.2)'; $('tki').style.color = 'var(--red)';
+    $('tki').textContent = '!';
+    $('tkt').innerHTML = `<strong>Danger zone (${markerX},${markerY})!</strong> This coordinate is a decoy trap — adjust course.`;
+  } else if (onTarget) {
+    jumpBtn.className = 'jump-btn active';
+    $('ticker').style.borderColor = 'var(--purple)';
+    $('tki').style.background = 'rgba(159,96,255,0.2)'; $('tki').style.color = 'var(--purple)';
+    $('tki').textContent = '✓';
+    const tx = lv.target.x, ty = lv.target.y;
+    const d = Math.sqrt(tx*tx + ty*ty);
+    $('tkt').innerHTML = `Coordinates (${tx}, ${ty}) locked. Distance = √(${Math.abs(tx)}²+${Math.abs(ty)}²) = <strong>${d.toFixed(1)} LY</strong>. Engage Jump!`;
+  } else if (atOrigin) {
+    jumpBtn.className = 'jump-btn';
+    $('ticker').style.borderColor = 'var(--bd1)';
+    $('tki').style.background = 'var(--bd2)'; $('tki').style.color = 'var(--t3)';
+    $('tki').textContent = '—';
+    $('tkt').innerHTML = `Use the <strong style="color:var(--cyan)">X slider</strong> for left/right and the <strong style="color:var(--amber)">Y slider</strong> for up/down. Target: (${lv.target.x}, ${lv.target.y}).`;
+  } else if (xMatch) {
+    jumpBtn.className = 'jump-btn';
+    $('ticker').style.borderColor = 'var(--cyan)';
+    $('tki').style.background = 'rgba(0,212,212,0.15)'; $('tki').style.color = 'var(--cyan)';
+    $('tki').textContent = '→';
+    $('tkt').innerHTML = `X=${markerX} <strong>✓</strong> — now adjust <strong style="color:var(--amber)">Y slider</strong> ${tdy>0?'up':'down'} to Y=${lv.target.y}.`;
+  } else if (yMatch) {
+    jumpBtn.className = 'jump-btn';
+    $('ticker').style.borderColor = 'var(--amber)';
+    $('tki').style.background = 'rgba(240,176,64,0.15)'; $('tki').style.color = 'var(--amber)';
+    $('tki').textContent = '↑';
+    $('tkt').innerHTML = `Y=${markerY} <strong>✓</strong> — now adjust <strong style="color:var(--cyan)">X slider</strong> ${tdx>0?'right':'left'} to X=${lv.target.x}.`;
+  } else {
+    jumpBtn.className = 'jump-btn';
+    $('ticker').style.borderColor = 'var(--bd1)';
+    $('tki').style.background = 'var(--bd2)'; $('tki').style.color = 'var(--t2)';
+    $('tki').textContent = '→';
+    const xDir = tdx > 0 ? `${tdx} right` : `${Math.abs(tdx)} left`;
+    const yDir = tdy > 0 ? `${tdy} up` : `${Math.abs(tdy)} down`;
+    $('tkt').innerHTML = `X needs <strong>${xDir}</strong>, Y needs <strong>${yDir}</strong> to reach (${lv.target.x}, ${lv.target.y}).`;
+  }
+}
+
+/* ── Jump button ── */
+$('jump-btn').onclick = () => {
+  if (rLock) return;
+  const lv = LEVELS[cur];
+  if (markerX !== lv.target.x || markerY !== lv.target.y) return;
+  if (isOnObstacle(markerX, markerY)) return;
+  triggerWin();
+};
+
+/* ── Win ── */
+function triggerWin() {
+  if (rLock) return;
+  rLock = true; lockSliders();
+  playChime();
+  if (navigator.vibrate) navigator.vibrate([40, 30, 80]);
+  canvas.classList.add('streaking');
+  setTimeout(() => canvas.classList.remove('streaking'), 700);
+  const lv = LEVELS[cur];
+  const isLast = cur === LEVELS.length - 1;
+  $('mttl').textContent = isLast ? 'Destination reached!' : `Level ${lv.id} clear`;
+  const dist = Math.sqrt(lv.target.x**2 + lv.target.y**2).toFixed(1);
+  $('mbdy').innerHTML = isLast
+    ? `Jump complete. Total distance: <strong>${dist} LY</strong>. The crew made it home.`
+    : `<em>${lv.level_name}</em> — locked at (${lv.target.x}, ${lv.target.y}), distance ${dist} LY.`;
+  const btn = $('mbtn');
+  if (isLast) {
+    btn.textContent = 'Replay mission';
+    btn.onclick = () => { $('moverlay').classList.remove('show'); cur = 0; solved = new Set(); load(); };
+  } else {
+    btn.textContent = 'Next Level →';
+    btn.onclick = () => { $('moverlay').classList.remove('show'); cur++; load(); };
+  }
+  solved.add(cur); buildDots();
+  try {
+    const p = JSON.parse(localStorage.getItem('spacecrew_progress_v1')||'{}');
+    p.nav = Math.max(p.nav||0, solved.size);
+    localStorage.setItem('spacecrew_progress_v1', JSON.stringify(p));
+  } catch(e) {}
+  ariaReact('correct');
+  launchCelebration();
+  if(document.getElementById('ov-voss-txt')) document.getElementById('ov-voss-txt').textContent = VOSS_QUIPS_NAV[Math.floor(Math.random()*VOSS_QUIPS_NAV.length)];
+  setTimeout(() => $('moverlay').classList.add('show'), 700);
+}
+
+/* ── Dots ── */
+function buildDots() {
+  const c = $('dots'); c.innerHTML = '';
+  LEVELS.forEach((l, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i===cur?' active':'') + (solved.has(i)?' solved':'');
+    d.title = l.level_name; d.onclick = () => { cur = i; load(); };
+    c.appendChild(d);
+  });
+}
+
+/* ── Load ── */
+function load() {
+  const lv = LEVELS[cur];
+  rLock = false; markerX = 0; markerY = 0; hintOn = false;
+  unlockSliders();
+  sxEl.value = 0; syEl.value = 0;
+  updateSliderUI();
+  $('lv-id').textContent = `Level ${lv.id} — ${lv.level_name}`;
+  $('lv-name').textContent = lv.flavor;
+  $('tgt-coord').textContent = `${lv.target.x}, ${lv.target.y}`;
+  $('cur-coord').textContent = '0, 0';
+  $('dist-lbl').textContent = 'Distance';
+  $('dist-val').textContent = '0.0 LY';
+  $('hint-box').textContent = lv.hint;
+  $('hint-box').classList.remove('show');
+  $('hint-btn').textContent = 'Show hint';
+  $('jump-btn').className = 'jump-btn';
+  $('moverlay').classList.remove('show');
+  setupCanvas();
+  buildDots();
+  updateState();
+}
+
+/* ── Hint ── */
+$('hint-btn').onclick = () => {
+  hintOn = !hintOn;
+  $('hint-box').classList.toggle('show', hintOn);
+  $('hint-btn').textContent = hintOn ? 'Hide hint' : 'Show hint';
+};
+
+/* ── Nav ── */
+$('bprev').onclick = () => { if (cur > 0) { cur--; load(); } };
+$('bnxt').onclick = () => { if (cur < LEVELS.length-1) { cur++; load(); } };
+
+/* ── Animation loop ── */
+function animate() { draw(); requestAnimationFrame(animate); }
+
+/* ── Init ── */
+window.addEventListener('resize', () => { setupCanvas(); });
+/* ── Restore progress from previous session ── */
+try{
+  const _sv=JSON.parse(localStorage.getItem('spacecrew_progress_v1')||'{}');
+  const _n=_sv.nav||0;
+  for(let i=0;i<_n&&i<LEVELS.length;i++)solved.add(i);
+}catch(e){}
+load();
+animate();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+
+// ══ ARIA companion ════════════════════════════════════════════════
+const ARIA_MSGS_NAV={idle:["Plot your coordinates on the grid!","(X, Y) — across first, then up!","Watch for obstacles — avoid the red zones!","Navigation saves the crew!"],correct:["⭐ Jump coordinates locked!","Destination reached — excellent!","Coordinate navigation mastered!","We're going to make it!"],wrong:["Wrong coordinates — check X and Y!","Negative numbers go left/down!","Try again — you can do this!","Check the hint — it will help!"]};
+let _ariaTimerN=null;
+function ariaSetMsg(msg){const el=document.getElementById('aria-msg');if(!el)return;clearTimeout(_ariaTimerN);el.textContent='';let i=0;(function t(){if(i<msg.length){el.textContent+=msg[i++];_ariaTimerN=setTimeout(t,20);}})();}
+function ariaReact(type){const w=document.getElementById('aria-wrap');if(!w)return;const pool=ARIA_MSGS_NAV[type]||ARIA_MSGS_NAV.idle;ariaSetMsg(pool[Math.floor(Math.random()*pool.length)]);w.className='aria-wrap';void w.offsetWidth;if(type==='correct'){w.className='aria-wrap aria-happy';setTimeout(()=>{w.className='aria-wrap';},700);}else if(type==='wrong'){w.className='aria-wrap aria-sad';setTimeout(()=>{w.className='aria-wrap';},500);}}
+function ariaTap(){const w=document.getElementById('aria-wrap');if(!w)return;w.className='aria-wrap';void w.offsetWidth;const msgs=["I'm ARIA — your AI navigator!","X = left/right, Y = up/down!","Negative X goes left, negative Y goes down!","Stars await your coordinates!"];ariaSetMsg(msgs[Math.floor(Math.random()*msgs.length)]);w.style.transform='rotateY(360deg)';setTimeout(()=>{w.style.transform='';},500);}
+(function ariaIdle(){setTimeout(()=>{if(!$('moverlay').classList.contains('show'))ariaSetMsg(ARIA_MSGS_NAV.idle[Math.floor(Math.random()*ARIA_MSGS_NAV.idle.length)]);ariaIdle();},10000);})();
+
+// ══ Star-streak celebration ═══════════════════════════════════════
+const VOSS_QUIPS_NAV=['"Jump coordinates confirmed! Warping now!"','"Navigation mastered, Commander!"','"The stars align — destination reached!"','"Negative coordinates and all — textbook nav!"','"Pythagoras would be proud of that jump!"'];
+function launchCelebration(){
+  const cv=document.getElementById('cel-canvas');if(!cv)return;
+  cv.width=window.innerWidth;cv.height=window.innerHeight;cv.classList.add('active');
+  const ctx=cv.getContext('2d');
+  const stars=[];
+  for(let i=0;i<120;i++){const a=Math.random()*Math.PI*2,sp=3+Math.random()*8;stars.push({x:cv.width/2,y:cv.height/2,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:1,d:.014+Math.random()*.01,c:Math.random()>.5?'#f0b040':'#ffffff'});}
+  (function frame(){
+    ctx.clearRect(0,0,cv.width,cv.height);let alive=false;
+    stars.forEach(p=>{if(p.life<=0)return;alive=true;const ox=p.x,oy=p.y;p.x+=p.vx;p.y+=p.vy;p.life-=p.d;
+      ctx.save();ctx.globalAlpha=Math.max(0,p.life);ctx.strokeStyle=p.c;ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(p.x,p.y);ctx.stroke();ctx.restore();});
+    if(alive)requestAnimationFrame(frame);else{cv.classList.remove('active');ctx.clearRect(0,0,cv.width,cv.height);}
+  })();
+}
+</script>
+<script src="./audio.js"></script>
+</body>
+</html>

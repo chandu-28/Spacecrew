@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#06060f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Med Bay">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  <title>Med Bay — Space Crew</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg-deep:#06060f; --bg-panel:#0d0d1e; --bg-inset:#111122; --bg-raised:#161630;
+      --border-dim:rgba(80,80,160,0.18); --border-glow:rgba(100,100,220,0.4);
+      --text-bright:#eeeef8; --text-mid:#8888aa; --text-dim:#44445a;
+      --cyan:#00d4d4; --blue:#4488ff; --purple:#9f60ff; --magenta:#cc44ff;
+      --amber:#f0b040; --green:#44dd88; --red:#ff4455; --teal:#00c8a8;
+      --r8:8px; --r10:10px; --r12:12px;
+    }
+    html { min-height:100%; width:100%; overflow-y:scroll; }
+    body {
+      min-height:100%; width:100%; overflow-x:hidden; overflow-y:auto;
+      background:var(--bg-deep); color:var(--text-bright);
+      font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-tap-highlight-color:transparent;
+      overscroll-behavior-x:none;
+    }
+    #app {
+      padding:10px; width:100%; max-width:600px; margin:0 auto;
+      padding-bottom:env(safe-area-inset-bottom, 24px);
+    }
+
+    .nav-back {
+      font-size:11px; color:var(--text-dim); text-decoration:none;
+      display:inline-flex; align-items:center; gap:4px; margin-bottom:8px;
+    }
+
+    /* ── HUD ── */
+    .hud {
+      background:var(--bg-panel); border:0.5px solid var(--border-dim);
+      border-radius:var(--r12); padding:10px 12px; margin-bottom:8px;
+      display:flex; gap:10px; align-items:flex-start;
+    }
+    .hud-main { flex:1; min-width:0; }
+    .hud-lbl  { font-size:9px; color:var(--text-dim); letter-spacing:.08em; text-transform:uppercase; margin-bottom:2px; }
+    .hud-text { font-size:12px; color:var(--text-bright); font-weight:500; line-height:1.3; }
+    .hud-flavor { font-size:11px; color:var(--text-mid); font-style:italic; margin-top:2px; line-height:1.3; }
+    .hud-lvl .hud-num { font-size:22px; font-weight:500; color:var(--teal); line-height:1; }
+
+    /* ── Power bar ── */
+    .power-wrap { margin-bottom:10px; }
+    .power-meta { display:flex; justify-content:space-between; font-size:9px; color:var(--text-dim); letter-spacing:.07em; text-transform:uppercase; margin-bottom:3px; }
+    .power-track { height:8px; background:var(--bg-inset); border:0.5px solid var(--border-dim); border-radius:4px; overflow:hidden; }
+    .power-fill { height:100%; width:0%; border-radius:4px; background:var(--teal); transition:width .6s ease; }
+    .power-fill.maxed {
+      background:linear-gradient(90deg,#009878,var(--teal),#80ffe8,var(--teal),#009878);
+      background-size:300%; animation:shimmer 1.2s linear infinite;
+    }
+    @keyframes shimmer { 0%{background-position:300%} 100%{background-position:0%} }
+
+    /* ══ ARIA companion ══════════════════════════════════════════ */
+    :root{--aria-color:#00c8a8;--aria-chest:rgba(0,200,168,.2);}
+    .aria-bar{display:flex;align-items:center;gap:10px;background:var(--bg-panel);border:0.5px solid var(--border-dim);border-radius:var(--r12);padding:8px 10px;margin-bottom:8px;}
+    .aria-wrap{width:52px;height:52px;flex-shrink:0;cursor:pointer;animation:aria-bob 2.2s ease-in-out infinite;}
+    @keyframes aria-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+    .aria-wrap.aria-happy{animation:aria-bounce .55s ease;}
+    @keyframes aria-bounce{0%,100%{transform:scale(1) translateY(0)}35%{transform:scale(1.2) translateY(-7px)}65%{transform:scale(.95) translateY(1px)}}
+    .aria-wrap.aria-sad{animation:aria-wag .4s ease;}
+    @keyframes aria-wag{0%,100%{transform:rotate(0)}30%{transform:rotate(-9deg)}70%{transform:rotate(9deg)}}
+    .aria-bubble{flex:1;position:relative;background:rgba(255,255,255,.04);border:0.5px solid rgba(255,255,255,.1);border-radius:var(--r10);padding:7px 10px;min-height:38px;}
+    .aria-bubble::before{content:'';position:absolute;left:-8px;top:50%;transform:translateY(-50%);border:5px solid transparent;border-right-color:rgba(255,255,255,.1);}
+    .aria-name{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--aria-color);display:block;margin-bottom:2px;}
+    .aria-msg{font-size:11.5px;color:var(--text-bright);line-height:1.4;}
+    #cel-canvas{position:fixed;inset:0;pointer-events:none;z-index:99;display:none;}
+    #cel-canvas.active{display:block;}
+    .ov-voss{display:flex;align-items:center;gap:10px;background:var(--bg-panel);border:1px solid rgba(0,200,168,.35);border-radius:var(--r12);padding:10px 13px;max-width:320px;width:90%;animation:ov-voss-in .45s ease;}
+    @keyframes ov-voss-in{from{transform:translateY(18px);opacity:0}to{transform:none;opacity:1}}
+    .ov-voss-face{width:44px;height:44px;flex-shrink:0;border-radius:50%;overflow:hidden;border:1.5px solid rgba(0,200,168,.4);}
+    .ov-voss-txt{font-size:11px;color:var(--text-mid);line-height:1.5;font-style:italic;}
+    .ov-voss-txt strong{color:var(--text-bright);font-style:normal;}
+
+    /* ── Game area ── */
+    .game-area {
+      display:flex; gap:10px; align-items:flex-start; margin-bottom:10px;
+    }
+
+    /* ── Syringe ── */
+    .syringe-wrap {
+      display:flex; flex-direction:column; align-items:center; gap:6px; flex-shrink:0;
+    }
+    .syringe-lbl { font-size:9px; color:var(--text-dim); letter-spacing:.08em; text-transform:uppercase; }
+
+    .syringe-outer {
+      width:clamp(52px,15vw,72px);
+      height:clamp(180px,50vw,280px);
+      background:var(--bg-inset);
+      border:2px solid var(--teal);
+      border-radius:6px 6px 3px 3px;
+      position:relative; overflow:hidden;
+    }
+    /* graduation marks */
+    .syringe-outer::before {
+      content:'';
+      position:absolute; top:0; right:0; bottom:0;
+      width:12px;
+      background:repeating-linear-gradient(
+        to bottom,
+        transparent,
+        transparent calc(10% - 1px),
+        rgba(0,200,168,0.18) calc(10% - 1px),
+        rgba(0,200,168,0.18) 10%
+      );
+    }
+    .syringe-fill {
+      position:absolute; bottom:0; left:0; right:0;
+      background:rgba(0,200,168,0.45);
+      transition:height .12s ease;
+      border-radius:0 0 2px 2px;
+    }
+    .syringe-fill.good { background:rgba(68,221,136,0.55); }
+    .syringe-fill.over { background:rgba(255,68,85,0.45); }
+    /* target line */
+    .syringe-target {
+      position:absolute; left:0; right:0; height:2px;
+      background:var(--teal); opacity:0.8; transition:bottom .3s;
+    }
+    .syringe-target::after {
+      content: attr(data-label);
+      position:absolute; left:calc(100% + 4px); top:-8px;
+      font-size:9px; color:var(--teal); white-space:nowrap;
+    }
+    /* value label inside syringe */
+    .syringe-val {
+      position:absolute; bottom:6px; left:0; right:0;
+      text-align:center; font-size:12px; font-weight:600;
+      color:var(--text-bright); pointer-events:none;
+    }
+    /* drag handle at top of fill */
+    .syringe-handle {
+      position:absolute; left:0; right:0; height:16px;
+      cursor:row-resize; touch-action:none;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .syringe-handle::after {
+      content:'';
+      display:block; width:60%; height:3px;
+      background:var(--teal); border-radius:2px; opacity:0.7;
+    }
+
+    /* ── Fraction display panel ── */
+    .frac-panel {
+      flex:1; background:var(--bg-panel); border:0.5px solid var(--border-dim);
+      border-radius:var(--r12); padding:12px; display:flex; flex-direction:column; gap:10px;
+    }
+    .frac-panel-lbl { font-size:9px; color:var(--text-dim); letter-spacing:.08em; text-transform:uppercase; margin-bottom:2px; }
+
+    /* target fraction display */
+    .target-frac {
+      display:flex; flex-direction:column; align-items:center;
+      background:var(--bg-inset); border-radius:var(--r8); padding:10px;
+    }
+    .frac-row { display:flex; align-items:center; gap:8px; }
+    .frac-glyph {
+      display:inline-flex; flex-direction:column; align-items:center;
+      font-size:clamp(18px,6vw,26px); font-weight:600; color:var(--teal); line-height:1;
+    }
+    .frac-line { width:100%; height:2px; background:var(--teal); margin:2px 0; border-radius:1px; }
+    .frac-of { font-size:13px; color:var(--text-mid); }
+    .frac-total { font-size:clamp(18px,6vw,26px); font-weight:600; color:var(--text-bright); }
+    .frac-equals { font-size:13px; color:var(--text-mid); }
+    .frac-result { font-size:clamp(18px,6vw,26px); font-weight:600; color:var(--teal); }
+    .target-sub { font-size:10px; color:var(--text-dim); margin-top:4px; text-align:center; }
+
+    /* block visualiser */
+    .block-vis { margin-top:2px; }
+    .block-vis-lbl { font-size:9px; color:var(--text-dim); letter-spacing:.08em; text-transform:uppercase; margin-bottom:4px; }
+    .block-row { display:flex; gap:2px; flex-wrap:wrap; }
+    .block {
+      width:clamp(16px,calc((100% - 20px)/var(--n)),36px);
+      height:18px; border-radius:3px;
+      border:1px solid rgba(0,200,168,0.25);
+      background:transparent;
+      transition:background .2s;
+    }
+    .block.filled { background:rgba(0,200,168,0.45); }
+    .block.filled.good { background:rgba(68,221,136,0.55); }
+
+    /* current readout */
+    .cur-row {
+      display:flex; align-items:center; justify-content:space-between;
+      background:var(--bg-inset); border-radius:var(--r8); padding:8px 10px;
+    }
+    .cur-lbl { font-size:10px; color:var(--text-dim); }
+    .cur-val { font-size:16px; font-weight:600; color:var(--text-bright); font-variant-numeric:tabular-nums; }
+    .cur-match { font-size:11px; font-weight:600; }
+    .cur-match.yes { color:var(--green); }
+    .cur-match.no  { color:var(--text-dim); }
+
+    /* ── Slider ── */
+    .slider-wrap { margin-bottom:10px; }
+    .slider-lbl-row { display:flex; justify-content:space-between; font-size:10px; color:var(--text-dim); margin-bottom:4px; }
+    input[type=range] {
+      -webkit-appearance:none; appearance:none; width:100%; height:36px;
+      background:transparent; border-radius:4px; outline:none;
+      touch-action:manipulation; cursor:pointer;
+    }
+    input[type=range]::-webkit-slider-runnable-track {
+      height:4px; border-radius:2px; background:var(--bg-inset);
+      border:0.5px solid var(--border-dim);
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance:none; width:22px; height:22px;
+      border-radius:50%; background:var(--teal);
+      box-shadow:0 0 6px rgba(0,200,168,0.5); cursor:pointer; margin-top:-9px;
+    }
+    input[type=range].good::-webkit-slider-thumb { background:var(--green); box-shadow:0 0 6px rgba(68,221,136,0.5); }
+
+    /* ── Overlay ── */
+    .overlay {
+      display:none; position:fixed; inset:0;
+      background:rgba(6,6,15,0.88); z-index:100;
+      flex-direction:column; align-items:center; justify-content:center; gap:12px;
+    }
+    .overlay.show { display:flex; }
+    .ov-icon  { font-size:44px; }
+    .ov-title { font-size:20px; font-weight:500; color:var(--text-bright); text-align:center; padding:0 20px; }
+    .ov-sub   { font-size:13px; color:var(--text-mid); text-align:center; padding:0 24px; line-height:1.5; }
+    .ov-btn {
+      padding:12px 32px; background:var(--teal); color:#fff;
+      border:none; border-radius:var(--r10); font-size:14px; font-weight:600;
+      cursor:pointer; letter-spacing:.04em; margin-top:4px;
+    }
+    .ov-btn:active { background:#009878; }
+    .ov-btn.sec {
+      background:transparent; border:0.5px solid var(--border-glow);
+      color:var(--text-mid); margin-top:0;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <a class="nav-back" href="mission_select.html">← Fleet Commander</a>
+
+  <!-- ARIA companion -->
+  <div class="aria-bar">
+    <div class="aria-wrap" id="aria-wrap" onclick="ariaTap()">
+      <svg viewBox="-2 0 60 70" xmlns="http://www.w3.org/2000/svg">
+        <rect x="-2" y="32" width="12" height="8" rx="4" fill="#1e1e42"/>
+        <rect x="46" y="32" width="12" height="8" rx="4" fill="#1e1e42"/>
+        <rect x="8" y="28" width="40" height="30" rx="10" fill="#1e1e42"/>
+        <ellipse cx="28" cy="18" rx="16" ry="15" fill="#242454"/>
+        <rect x="12" y="10" width="32" height="14" rx="6" fill="rgba(0,8,28,.5)"/>
+        <circle cx="20" cy="17" r="4.5" fill="white"/><circle id="aria-el" cx="21" cy="18" r="2.8" fill="#111"/><circle cx="20.3" cy="15.8" r=".9" fill="white"/>
+        <circle cx="36" cy="17" r="4.5" fill="white"/><circle id="aria-er" cx="37" cy="18" r="2.8" fill="#111"/><circle cx="36.3" cy="15.8" r=".9" fill="white"/>
+        <path d="M22,25 Q28,29 34,25" stroke="var(--aria-color)" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <rect x="26" y="2" width="4" height="8" rx="2" fill="#242454"/>
+        <circle cx="28" cy="2" r="3.2" fill="var(--aria-color)"/>
+        <rect x="13" y="35" width="30" height="17" rx="5" fill="var(--aria-chest)"/>
+        <circle cx="21" cy="42" r="2.3" fill="var(--aria-color)" opacity=".9"/>
+        <circle cx="28" cy="42" r="2.3" fill="rgba(255,255,255,.35)"/>
+        <circle cx="35" cy="42" r="2.3" fill="var(--aria-color)" opacity=".9"/>
+        <rect x="16" y="48" width="24" height="2.5" rx="1.25" fill="var(--aria-color)" opacity=".4"/>
+        <rect x="13" y="56" width="12" height="12" rx="5" fill="#1e1e42"/>
+        <rect x="31" y="56" width="12" height="12" rx="5" fill="#1e1e42"/>
+      </svg>
+    </div>
+    <div class="aria-bubble">
+      <span class="aria-name">ARIA</span>
+      <span class="aria-msg" id="aria-msg">Precise fractions heal the crew!</span>
+    </div>
+  </div>
+
+  <div class="hud">
+    <div class="hud-main">
+      <div class="hud-lbl">Mission 05 · Med Bay</div>
+      <div class="hud-text" id="hud-title">Synthesiser Online</div>
+      <div class="hud-flavor" id="hud-flavor">Loading…</div>
+    </div>
+    <div class="hud-lvl" style="text-align:right; flex-shrink:0;">
+      <div class="hud-lbl">Level</div>
+      <div class="hud-num" id="hud-level">26</div>
+    </div>
+  </div>
+
+  <div class="power-wrap">
+    <div class="power-meta">
+      <span>Treatments synthesised</span>
+      <span id="power-pct">0%</span>
+    </div>
+    <div class="power-track">
+      <div class="power-fill" id="power-fill"></div>
+    </div>
+  </div>
+
+  <!-- Main game area -->
+  <div class="game-area" id="game-area">
+
+    <!-- Syringe column -->
+    <div class="syringe-wrap">
+      <div class="syringe-lbl">Dose</div>
+      <div class="syringe-outer" id="syringe">
+        <div class="syringe-fill" id="syr-fill"></div>
+        <div class="syringe-target" id="syr-target"></div>
+        <div class="syringe-val" id="syr-val">0</div>
+        <div class="syringe-handle" id="syr-handle"></div>
+      </div>
+    </div>
+
+    <!-- Fraction info panel -->
+    <div class="frac-panel">
+      <div>
+        <div class="frac-panel-lbl">Target dose</div>
+        <div class="target-frac">
+          <div class="frac-row">
+            <div class="frac-glyph">
+              <span id="frac-num">1</span>
+              <div class="frac-line"></div>
+              <span id="frac-den">2</span>
+            </div>
+            <div class="frac-of">of</div>
+            <div class="frac-total" id="frac-total">80</div>
+            <div class="frac-equals">=</div>
+            <div class="frac-result" id="frac-result">40</div>
+          </div>
+          <div class="target-sub" id="target-sub">Fill the syringe to <strong id="target-ml">40</strong> ml</div>
+        </div>
+      </div>
+
+      <div class="block-vis">
+        <div class="block-vis-lbl">Fraction blocks</div>
+        <div class="block-row" id="block-row"></div>
+      </div>
+
+      <div class="cur-row">
+        <div>
+          <div class="cur-lbl">Current fill</div>
+          <div class="cur-val"><span id="cur-ml">0</span> ml</div>
+        </div>
+        <div class="cur-match no" id="cur-match">off target</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slider -->
+  <div class="slider-wrap">
+    <div class="slider-lbl-row">
+      <span>0 ml</span>
+      <span id="slider-max-lbl">80 ml</span>
+    </div>
+    <input type="range" id="dose-slider" min="0" max="80" value="0" step="1">
+  </div>
+</div>
+
+<canvas id="cel-canvas"></canvas>
+<!-- Level complete overlay -->
+<div class="overlay" id="overlay">
+  <div class="ov-icon">💉</div>
+  <div class="ov-title" id="ov-title">Treatment Synthesised</div>
+  <div class="ov-sub" id="ov-sub"></div>
+  <button class="ov-btn" id="ov-next">Next Level →</button>
+  <button class="ov-btn sec" id="ov-home">← Fleet Commander</button>
+  <div class="ov-voss" id="ov-voss">
+    <div class="ov-voss-face">
+      <svg viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="22" cy="22" r="22" fill="#12103a"/>
+        <path d="M6,44 Q8,30 22,28 Q36,30 38,44 Z" fill="#102020"/>
+        <path d="M15,31 L22,28 L29,31 L22,35 Z" fill="#00c8a8" opacity=".65"/>
+        <ellipse cx="22" cy="17" rx="11" ry="12" fill="#d4a870"/>
+        <path d="M11,13 Q12,4 22,4 Q32,4 33,13 Q28,7 22,7 Q16,7 11,13 Z" fill="#2a2a2a"/>
+        <ellipse cx="18" cy="17" rx="2" ry="2.2" fill="#2244cc"/>
+        <ellipse cx="26" cy="17" rx="2" ry="2.2" fill="#2244cc"/>
+        <path d="M18,25 Q22,28 26,25" stroke="#c4906a" stroke-width="1.2" fill="none"/>
+        <rect x="14" y="32" width="16" height="2.5" rx="1.25" fill="#00c8a8" opacity=".7"/>
+        <circle cx="18" cy="33.25" r=".9" fill="#e8c840"/>
+        <circle cx="22" cy="33.25" r=".9" fill="#e8c840"/>
+        <circle cx="26" cy="33.25" r=".9" fill="#e8c840"/>
+      </svg>
+    </div>
+    <div class="ov-voss-txt" id="ov-voss-txt">"Crew vitals stable!"</div>
+  </div>
+</div>
+
+<script>
+// ── Level data ──
+// Each level: fraction num/den of total ml = target
+// tolerance: ±(total/den * 0.4) ml
+
+const LEVELS = [
+  {
+    id: 26,
+    title: 'Unit Fractions',
+    flavor: 'Simple unit doses. Fill each syringe to the correct fraction of the total.',
+    tasks: [
+      { num:1, den:2, total:80  },  // 1/2 of 80 = 40ml
+      { num:1, den:4, total:80  },  // 1/4 of 80 = 20ml
+      { num:1, den:2, total:60  },  // 1/2 of 60 = 30ml
+    ]
+  },
+  {
+    id: 27,
+    title: 'Non-Unit Fractions',
+    flavor: 'More than one part of the whole. Remember: numerator counts the parts.',
+    tasks: [
+      { num:3, den:4, total:80  },  // 3/4 of 80 = 60ml
+      { num:2, den:5, total:100 },  // 2/5 of 100 = 40ml
+      { num:3, den:5, total:100 },  // 3/5 of 100 = 60ml
+    ]
+  },
+  {
+    id: 28,
+    title: 'Equivalent Doses',
+    flavor: 'Two syringes, same patient — different fractions, same amount. Prove they\'re equal.',
+    tasks: [
+      { num:1, den:2, total:80, hint:'Same as 2/4 of 80' },   // 1/2 = 40ml
+      { num:2, den:4, total:80, hint:'Same as 1/2 of 80' },   // 2/4 = 40ml — same as above
+      { num:2, den:3, total:90, hint:'Same as 4/6 of 90' },   // 2/3 = 60ml
+    ]
+  },
+  {
+    id: 29,
+    title: 'Split Doses',
+    flavor: 'One dose split across two syringes. Fill each so they add up to the full treatment.',
+    tasks: [
+      { num:1, den:3, total:90, hint:'1/3 + 2/3 = 1 full dose (90ml)' },  // 30ml
+      { num:2, den:3, total:90, hint:'The second part of the split dose' }, // 60ml
+      { num:1, den:6, total:120, hint:'1/6 + 5/6 = 1 full dose' },         // 20ml
+    ]
+  },
+  {
+    id: 30,
+    title: 'Mixed Doses',
+    flavor: 'Crew needs more than a full unit. Fill syringes with mixed amounts.',
+    tasks: [
+      { num:3, den:2, total:80, hint:'1 and 1/2 units = 3/2' },  // 120ml — note: total means max syringe
+      { num:5, den:4, total:80, hint:'1 and 1/4 units = 5/4' },  // 100ml
+      { num:7, den:4, total:80, hint:'1 and 3/4 units = 7/4' },  // 140ml
+    ]
+  }
+];
+
+// ── State ──
+const SAVE_KEY   = 'spacecrew_progress_v1';
+const BASE_LEVEL = 26;
+const TOTAL      = LEVELS.length;
+const STABLE_NEEDED = 40;  // frames in tolerance to auto-win
+
+let levelIdx  = 0;
+let taskIdx   = 0;
+let task      = null;
+let targetMl  = 0;
+let maxMl     = 0;
+let tolerance = 0;
+let stableFrames = 0;
+let won = false;
+let dragging = false;
+let dragStartY = 0;
+let dragStartVal = 0;
+
+const slider    = document.getElementById('dose-slider');
+const syrFill   = document.getElementById('syr-fill');
+const syrTarget = document.getElementById('syr-target');
+const syrVal    = document.getElementById('syr-val');
+const syrHandle = document.getElementById('syr-handle');
+const syrOuter  = document.getElementById('syringe');
+
+// ── Persistence ──
+function loadSaved() {
+  try { const r=localStorage.getItem(SAVE_KEY); if(r) return JSON.parse(r).med||0; } catch(e){}
+  return 0;
+}
+function writeSaved(n) {
+  try {
+    const def={o2:0,fuel:0,nav:0,power:0,med:0};
+    const r=localStorage.getItem(SAVE_KEY);
+    const p=r?Object.assign(def,JSON.parse(r)):def;
+    p.med=Math.max(p.med||0,n);
+    localStorage.setItem(SAVE_KEY,JSON.stringify(p));
+  } catch(e){}
+}
+
+// ── Load task ──
+function loadTask() {
+  const lv = LEVELS[levelIdx];
+  task = lv.tasks[taskIdx];
+
+  // For mixed numbers (num > den), treat total as 1 unit = total ml
+  // Max syringe = ceil(num/den) * total
+  const ratio = task.num / task.den;
+  maxMl = Math.ceil(ratio) * task.total;
+  targetMl = Math.round(task.num / task.den * task.total);
+  // tolerance: half a block width
+  tolerance = Math.max(1, Math.round(task.total / task.den * 0.4));
+
+  slider.min = 0;
+  slider.max = maxMl;
+  slider.step = 1;
+  slider.value = 0;
+
+  document.getElementById('slider-max-lbl').textContent = maxMl + ' ml';
+
+  // fraction display
+  document.getElementById('frac-num').textContent    = task.num;
+  document.getElementById('frac-den').textContent    = task.den;
+  document.getElementById('frac-total').textContent  = task.total;
+  document.getElementById('frac-result').textContent = targetMl;
+  document.getElementById('target-ml').textContent   = targetMl;
+  document.getElementById('target-sub').innerHTML =
+    `Fill the syringe to <strong>${targetMl}</strong> ml` +
+    (task.hint ? `<br><em style="color:var(--text-dim)">${task.hint}</em>` : '');
+
+  buildBlocks();
+  updateSyringe(0);
+  stableFrames = 0;
+  won = false;
+}
+
+// ── Block visualiser ──
+function buildBlocks() {
+  const row = document.getElementById('block-row');
+  row.innerHTML = '';
+  row.style.setProperty('--n', task.den);
+  // show den blocks, first num filled
+  for (let i = 0; i < task.den; i++) {
+    const b = document.createElement('div');
+    b.className = 'block' + (i < task.num ? ' filled' : '');
+    row.appendChild(b);
+  }
+}
+
+// ── Update syringe visual ──
+function updateSyringe(ml) {
+  const pct = ml / maxMl * 100;
+  syrFill.style.height = pct + '%';
+  syrHandle.style.bottom = pct + '%';
+  syrVal.textContent = ml;
+
+  const targetPct = targetMl / maxMl * 100;
+  syrTarget.style.bottom = targetPct + '%';
+  syrTarget.setAttribute('data-label', targetMl + ' ml');
+
+  const inTol = Math.abs(ml - targetMl) <= tolerance;
+  syrFill.className = 'syringe-fill' + (inTol ? ' good' : ml > maxMl * 0.98 ? ' over' : '');
+  slider.className  = inTol ? 'good' : '';
+
+  document.getElementById('cur-ml').textContent = ml;
+  const matchEl = document.getElementById('cur-match');
+  matchEl.textContent = inTol ? 'on target ✓' : 'off target';
+  matchEl.className   = 'cur-match ' + (inTol ? 'yes' : 'no');
+
+  // update blocks
+  const filledCount = Math.round(ml / task.total * task.den);
+  const blocks = document.querySelectorAll('#block-row .block');
+  blocks.forEach((b, i) => {
+    const shouldFill = i < Math.min(filledCount, task.den);
+    b.className = 'block' + (shouldFill ? ' filled' + (inTol ? ' good' : '') : '');
+  });
+
+}
+
+// ── Win ──
+function triggerWin() {
+  if (won) return;
+  won = true;
+  playWin();
+
+  taskIdx++;
+  const lv = LEVELS[levelIdx];
+  if (taskIdx < lv.tasks.length) {
+    // more tasks in this level
+    setTimeout(() => loadTask(), 600);
+    return;
+  }
+
+  // level done
+  taskIdx = 0;
+  const solved = levelIdx + 1;
+  writeSaved(solved);
+  updatePowerBar(solved);
+
+  const isLast = levelIdx >= TOTAL - 1;
+  document.getElementById('ov-title').textContent = lv.title + ' — Complete';
+  document.getElementById('ov-sub').textContent = isLast
+    ? 'All treatments synthesised. Med Bay mission complete!'
+    : `Level ${BASE_LEVEL + levelIdx} complete. ${TOTAL - solved} level${TOTAL-solved===1?'':'s'} remain.`;
+
+  const next = document.getElementById('ov-next');
+  if (isLast) {
+    next.textContent = 'Back to Fleet →';
+    next.onclick = () => { window.location.href = 'mission_select.html#med=' + solved; };
+  } else {
+    next.textContent = `Level ${BASE_LEVEL + solved} →`;
+    next.onclick = () => {
+      document.getElementById('overlay').classList.remove('show');
+      levelIdx++;
+      loadLevel();
+    };
+  }
+  ariaReact('correct');
+  launchCelebration();
+  document.getElementById('ov-voss-txt').textContent = VOSS_QUIPS_MED[Math.floor(Math.random()*VOSS_QUIPS_MED.length)];
+  setTimeout(() => document.getElementById('overlay').classList.add('show'), 400);
+}
+
+// ── Load full level ──
+function loadLevel() {
+  const lv = LEVELS[levelIdx];
+  document.getElementById('hud-title').textContent  = lv.title;
+  document.getElementById('hud-flavor').textContent = lv.flavor;
+  document.getElementById('hud-level').textContent  = BASE_LEVEL + levelIdx;
+  taskIdx = 0;
+  loadTask();
+}
+
+// ── Power bar ──
+function updatePowerBar(solved) {
+  const pct  = Math.round(solved / TOTAL * 100);
+  const fill = document.getElementById('power-fill');
+  fill.style.width = pct + '%';
+  fill.className   = 'power-fill' + (pct >= 100 ? ' maxed' : '');
+  document.getElementById('power-pct').textContent = pct + '%';
+}
+
+// ── Slider input ──
+slider.addEventListener('input', () => {
+  startAudio();
+  updateSyringe(parseInt(slider.value));
+});
+
+// ── Syringe drag (touch) ──
+function startAudio() {
+  if (!_ctx) _ctx = new (window.AudioContext||window.webkitAudioContext)();
+  if (_ctx.state === 'suspended') _ctx.resume();
+}
+
+syrOuter.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  startAudio();
+  dragging = true;
+  dragStartY   = e.touches[0].clientY;
+  dragStartVal = parseInt(slider.value);
+}, {passive:false});
+
+document.addEventListener('touchmove', (e) => {
+  if (!dragging) return;
+  e.preventDefault();
+  const dy   = dragStartY - e.touches[0].clientY;
+  const h    = syrOuter.getBoundingClientRect().height;
+  const dVal = Math.round(dy / h * maxMl);
+  const newV = Math.max(0, Math.min(maxMl, dragStartVal + dVal));
+  slider.value = newV;
+  updateSyringe(newV);
+}, {passive:false});
+
+document.addEventListener('touchend', () => { dragging = false; });
+
+// ── Audio ──
+let _ctx = null;
+function playWin() {
+  try {
+    startAudio();
+    const c=_ctx, notes=[523,659,784,1047];
+    notes.forEach((freq,i)=>{
+      const o=c.createOscillator(),g=c.createGain();
+      o.type='sine'; o.frequency.value=freq;
+      const t=c.currentTime+i*0.13;
+      g.gain.setValueAtTime(0,t);
+      g.gain.linearRampToValueAtTime(0.14,t+0.04);
+      g.gain.exponentialRampToValueAtTime(0.001,t+0.28);
+      o.connect(g); g.connect(c.destination);
+      o.start(t); o.stop(t+0.28);
+    });
+  }catch(e){}
+}
+
+// ── rAF loop for stable-hold detection ──
+function loop() {
+  if (!won) {
+    const ml = parseInt(slider.value);
+    const inTol = Math.abs(ml - targetMl) <= tolerance;
+    if (inTol) {
+      stableFrames++;
+      if (stableFrames >= STABLE_NEEDED) triggerWin();
+    } else {
+      stableFrames = 0;
+    }
+  }
+  requestAnimationFrame(loop);
+}
+
+// ══ ARIA companion ════════════════════════════════════════════════
+const ARIA_MSGS_MED={idle:["Drag the syringe to the right level!","Fractions tell you what fraction of the total!","Look at the target fraction — it's a clue!","You're healing the crew, Commander!"],correct:["⭐ Perfect dose!","Fraction nailed — crew recovering!","Medical precision achieved!","The crew will be fine thanks to you!"],wrong:[]};
+let _ariaTimerM=null;
+function ariaSetMsg(msg){const el=document.getElementById('aria-msg');if(!el)return;clearTimeout(_ariaTimerM);el.textContent='';let i=0;(function t(){if(i<msg.length){el.textContent+=msg[i++];_ariaTimerM=setTimeout(t,20);}})();}
+function ariaReact(type){const w=document.getElementById('aria-wrap');if(!w)return;const pool=ARIA_MSGS_MED[type]||ARIA_MSGS_MED.idle;if(!pool.length)return;ariaSetMsg(pool[Math.floor(Math.random()*pool.length)]);w.className='aria-wrap';void w.offsetWidth;if(type==='correct'){w.className='aria-wrap aria-happy';setTimeout(()=>{w.className='aria-wrap';},700);}else if(type==='wrong'){w.className='aria-wrap aria-sad';setTimeout(()=>{w.className='aria-wrap';},500);}}
+function ariaTap(){const w=document.getElementById('aria-wrap');if(!w)return;w.className='aria-wrap';void w.offsetWidth;const msgs=["I'm ARIA — your AI navigator!","½ of 20 = 10. Get the idea?","Numerator ÷ Denominator × Total!","Fractions save lives here!"];ariaSetMsg(msgs[Math.floor(Math.random()*msgs.length)]);w.style.transform='rotateY(360deg)';setTimeout(()=>{w.style.transform='';},500);}
+(function ariaIdle(){setTimeout(()=>{if(!document.getElementById('overlay').classList.contains('show'))ariaSetMsg(ARIA_MSGS_MED.idle[Math.floor(Math.random()*ARIA_MSGS_MED.idle.length)]);ariaIdle();},10000);})();
+
+// ══ Teal droplet celebration ══════════════════════════════════════
+const VOSS_QUIPS_MED=['"Crew vitals stable. Treatment successful!"','"Fraction precision saved the day!"','"Med Bay fully operational. Outstanding!"','"The right dose at the right fraction!"','"Crew is healthy thanks to your math!"'];
+function launchCelebration(){
+  const canvas=document.getElementById('cel-canvas');if(!canvas)return;
+  canvas.width=window.innerWidth;canvas.height=window.innerHeight;canvas.classList.add('active');
+  const ctx=canvas.getContext('2d');
+  const cols=['#00c8a8','#00d4d4','#44dd88','#c8ffee','#44ffcc'];
+  const drops=[];
+  for(let i=0;i<70;i++){const a=Math.random()*Math.PI*2,sp=1.5+Math.random()*4;drops.push({x:canvas.width/2+(Math.random()-.5)*100,y:canvas.height/2+(Math.random()-.5)*60,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1.5,r:3+Math.random()*8,c:cols[i%cols.length],life:1,d:.01+Math.random()*.012});}
+  (function frame(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);let alive=false;
+    drops.forEach(p=>{if(p.life<=0)return;alive=true;p.x+=p.vx;p.y+=p.vy;p.vy+=0.05;p.r*=.997;p.life-=p.d;
+      ctx.save();ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.c;
+      ctx.beginPath();ctx.ellipse(p.x,p.y,p.r,p.r*1.3,Math.atan2(p.vy,p.vx),0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='rgba(255,255,255,.4)';ctx.beginPath();ctx.arc(p.x-p.r*.3,p.y-p.r*.3,p.r*.3,0,Math.PI*2);ctx.fill();
+      ctx.restore();});
+    if(alive)requestAnimationFrame(frame);else{canvas.classList.remove('active');ctx.clearRect(0,0,canvas.width,canvas.height);}
+  })();
+}
+
+// ── Home button ──
+document.getElementById('ov-home').addEventListener('click', () => {
+  window.location.href = 'mission_select.html#med=' + loadSaved();
+});
+
+// ── Init ──
+(function init() {
+  const saved = loadSaved();
+  levelIdx = Math.min(saved, TOTAL - 1);
+  updatePowerBar(saved);
+  loadLevel();
+  requestAnimationFrame(loop);
+})();
+if ('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js').catch(() => {}); }
+</script>
+<script src="./audio.js"></script>
+</body>
+</html>
