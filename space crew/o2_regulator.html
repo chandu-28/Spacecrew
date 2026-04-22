@@ -144,6 +144,10 @@
     .answer-digits.correct { color:var(--green); text-shadow:0 0 12px rgba(68,221,136,0.5); }
     .answer-digits.wrong   { color:var(--red); }
 
+    .feedback-msg { text-align:center; font-size:13px; font-weight:600; min-height:18px; margin-bottom:7px; letter-spacing:.03em; opacity:0; transition:opacity .18s; }
+    .feedback-msg.show { opacity:1; }
+    .feedback-msg.correct { color:var(--green); }
+    .feedback-msg.wrong   { color:var(--red); }
     .hint-row { display:flex; align-items:flex-start; gap:8px; margin-bottom:9px; flex-wrap:wrap; }
     .hint-btn { font-size:10px; color:var(--text-dim); cursor:pointer; text-decoration:underline; border:none; background:none; flex-shrink:0; }
     .hint-box { font-size:11px; color:var(--text-mid); background:rgba(6,6,22,0.6); backdrop-filter:blur(8px); border:0.5px solid rgba(0,212,212,0.14); border-radius:var(--r8); padding:6px 10px; display:none; flex:1; line-height:1.5; }
@@ -280,6 +284,7 @@
       <span class="answer-prompt" id="answer-prompt">Enter N₂ units:</span>
       <span class="answer-digits empty" id="answer-digits">—</span>
     </div>
+    <div class="feedback-msg" id="feedback-msg"></div>
     <div class="hint-row">
       <button class="hint-btn" id="hint-btn" onclick="toggleHint()">Show hint</button>
       <div class="hint-box" id="hint-box"></div>
@@ -506,7 +511,7 @@ function loadLevel(){
   $('hint-box').classList.remove('show');
   $('hint-btn').textContent    = 'Show hint';
 
-  _resetDots(); _renderDigits(); buildDots(); ariaReact('idle');
+  clearFeedback(); _resetDots(); _renderDigits(); buildDots(); ariaReact('idle');
 }
 
 function pct(v){ return Math.min(v/_lvScale,1)*100; }
@@ -539,9 +544,21 @@ function _renderPreview(){
   }
 }
 
+/* ── Feedback ── */
+function showFeedback(msg,type){
+  const el=$('feedback-msg'); if(!el) return;
+  el.textContent=msg; el.className='feedback-msg '+type;
+  void el.offsetWidth; el.classList.add('show');
+}
+function clearFeedback(){
+  const el=$('feedback-msg'); if(!el) return;
+  el.className='feedback-msg'; el.textContent='';
+}
+
 /* ── Numpad ── */
 function numPress(k){
   if(levelDone) return;
+  clearFeedback();
   if(k==='⌫') answerStr=answerStr.slice(0,-1);
   else if(k==='✓'){ submitAnswer(); return; }
   else if(answerStr.length<3) answerStr+=k;
@@ -557,7 +574,6 @@ function handleCorrect(){
   const lv=LEVELS[cur]; levelDone=true;
   const id=_unkId();
 
-  /* Snap cylinder to correct fill + green */
   $('cyl-'+id).className='cyl-body '+id+'-unk correct';
   $('fill-'+id).style.height=Math.min(pct(lv.answer),100)+'%';
   $('val-'+id).textContent=lv.answer;
@@ -565,9 +581,9 @@ function handleCorrect(){
 
   const el=$('answer-digits');
   el.textContent=lv.answer; el.className='answer-digits correct';
-
   for(let i=attempts;i<3;i++){const d=$('att-'+i);if(d)d.classList.add('correct');}
 
+  showFeedback('✓ Correct!','correct');
   playChime();
   if(navigator.vibrate) navigator.vibrate(50);
 
@@ -585,12 +601,11 @@ function handleCorrect(){
   ariaReact('correct'); launchCelebration();
 
   const isLast=cur===LEVELS.length-1;
-  $('mc-title').textContent=isLast?'Atmosphere Stabilized':`Level ${lv.id} Clear`;
-  $('mc-body').innerHTML=isLast
-    ?'Commander, the crew can breathe again.<br><em>All 10 sectors complete. Mission accomplished.</em>'
-    :`<em>${lv.name}</em> — sector pressurized.<br>Crew status nominal.`;
-  const btn=$('mc-next');
   if(isLast){
+    /* Final level — show completion modal */
+    $('mc-title').textContent='Atmosphere Stabilized';
+    $('mc-body').innerHTML='Commander, the crew can breathe again.<br><em>All 10 sectors complete. Mission accomplished.</em>';
+    const btn=$('mc-next');
     btn.textContent='Replay from start';
     btn.onclick=()=>{
       $('modal').classList.remove('show');
@@ -599,12 +614,12 @@ function handleCorrect(){
       pf.classList.remove('maxed','charging');
       $('power-pct').textContent='0%'; loadLevel();
     };
+    if($('ov-voss-txt')) $('ov-voss-txt').textContent=VOSS_QUIPS[Math.floor(Math.random()*VOSS_QUIPS.length)];
+    setTimeout(()=>$('modal').classList.add('show'),1800);
   } else {
-    btn.textContent='Next Level →';
-    btn.onclick=()=>{ $('modal').classList.remove('show'); cur++; loadLevel(); };
+    /* Auto-advance to next level */
+    setTimeout(()=>{ cur++; loadLevel(); },1600);
   }
-  if($('ov-voss-txt')) $('ov-voss-txt').textContent=VOSS_QUIPS[Math.floor(Math.random()*VOSS_QUIPS.length)];
-  setTimeout(()=>$('modal').classList.add('show'),1200);
 }
 
 function handleWrong(){
@@ -619,6 +634,7 @@ function handleWrong(){
   setTimeout(()=>{ $('cyl-'+id).classList.remove('wrong-flash'); },400);
   setTimeout(()=>{ answerStr=''; _renderDigits(); _renderPreview(); },400);
 
+  showFeedback('✗ Wrong — try again!','wrong');
   playError();
   if(navigator.vibrate) navigator.vibrate([60,30,60]);
   ariaReact('wrong');
