@@ -1,176 +1,141 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#1a0a2e">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Fuel Reactor">
-<link rel="manifest" href="./manifest.json">
-<link rel="apple-touch-icon" href="./icon-192.png">
-<title>Fuel Reactor — Space Crew Mission 2</title>
-<style>
-*{box-sizing:border-box;margin:0;padding:0;}
-:root{
-  --bg-deep:#06060f;--bg-panel:#0d0d1e;--bg-inset:#111122;--bg-raised:#161630;
-  --border-dim:rgba(80,80,160,0.18);--border-glow:rgba(100,100,220,0.4);
-  --text-bright:#eeeef8;--text-mid:#8888aa;--text-dim:#44445a;
-  --cyan:#00d4d4;--blue:#4488ff;--purple:#9f60ff;--magenta:#cc44ff;
-  --amber:#f0b040;--green:#44dd88;--red:#ff4455;--silver:#999aaa;
-  --r8:8px;--r10:10px;--r12:12px;
-}
-html{min-height:100%;width:100%;overflow-y:scroll;}
-body{min-height:100%;width:100%;overflow-x:hidden;overflow-y:auto;background:var(--bg-deep);color:var(--text-bright);
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-  -webkit-tap-highlight-color:transparent;overscroll-behavior-x:none;}
-#app{padding:10px;max-width:600px;margin:0 auto;padding-bottom:env(safe-area-inset-bottom,24px);}
-
-.hud{background:var(--bg-panel);border:0.5px solid var(--border-dim);border-radius:var(--r12);
-  padding:10px 12px;margin-bottom:8px;display:flex;gap:10px;align-items:flex-start;}
-.hud-main{flex:1;min-width:0;}
-.lbl{font-size:9px;color:var(--text-dim);letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px;}
-.hud-name{font-size:12px;font-weight:500;color:var(--text-bright);line-height:1.2;}
-.hud-flavor{font-size:11px;color:var(--text-mid);font-style:italic;margin-top:2px;line-height:1.3;}
-.hud-tgt{text-align:right;flex-shrink:0;}
-.hud-num{font-size:22px;font-weight:500;color:var(--text-bright);font-family:"SF Mono","Fira Code",monospace;}
-
-.reactor-wrap{display:flex;gap:8px;align-items:stretch;margin-bottom:8px;}
-.core-col{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:3px;}
-.cd-track{width:120px;height:7px;background:var(--bg-inset);border:0.5px solid var(--border-dim);border-radius:4px;overflow:hidden;}
-.cd-fill{height:100%;width:0%;background:var(--green);border-radius:4px;transition:width .08s linear;}
-.cd-lbl{font-size:9px;color:var(--text-dim);text-align:center;line-height:14px;}
-
-.sliders-col{flex:1;display:flex;flex-direction:column;gap:7px;justify-content:center;}
-.sr{display:flex;align-items:center;gap:5px;}
-.sdot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
-.slbl{font-size:10px;font-weight:500;width:20px;flex-shrink:0;}
-input[type=range].fs{
-  flex:1;min-width:0;height:32px;cursor:pointer;touch-action:manipulation;
-  -webkit-appearance:none;appearance:none;background:transparent;
-}
-input[type=range].fs::-webkit-slider-runnable-track{
-  height:4px;border-radius:2px;background:var(--bg-raised);border:0.5px solid var(--border-glow);
-}
-input[type=range].fs::-webkit-slider-thumb{
-  -webkit-appearance:none;width:18px;height:18px;border-radius:50%;
-  background:var(--text-bright);border:2px solid var(--bg-deep);margin-top:-7px;cursor:pointer;
-}
-input[type=range].fs.h-slider::-webkit-slider-thumb{background:var(--blue);   box-shadow:0 0 8px rgba(68,136,255,0.5);}
-input[type=range].fs.p-slider::-webkit-slider-thumb{background:var(--magenta);box-shadow:0 0 8px rgba(204,68,255,0.5);}
-input[type=range].fs.c-slider::-webkit-slider-thumb{background:var(--silver);  box-shadow:0 0 6px rgba(153,154,170,0.4);}
-.sval{font-size:12px;font-weight:500;color:var(--text-bright);width:18px;text-align:right;flex-shrink:0;font-family:"SF Mono","Fira Code",monospace;}
-.vb{font-size:10px;padding:4px 7px;border:0.5px solid var(--border-glow);border-radius:var(--r8);
-  background:transparent;color:var(--text-mid);cursor:pointer;flex-shrink:0;}
-.vb:active{background:var(--bg-raised);}
-
-.needle-sec{margin-bottom:8px;}
-.needle-meta{display:flex;justify-content:space-between;font-size:9px;color:var(--text-dim);
-  letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px;}
-.needle-track{height:14px;border-radius:7px;background:var(--bg-inset);border:0.5px solid var(--border-dim);
-  position:relative;overflow:hidden;}
-.needle-green{position:absolute;top:0;bottom:0;left:32%;right:32%;
-  background:rgba(68,221,136,0.1);border-left:1.5px solid var(--green);border-right:1.5px solid var(--green);}
-.needle-bar{position:absolute;top:2px;bottom:2px;width:4px;border-radius:2px;
-  background:var(--text-bright);transition:left .08s;}
-.needle-note{font-size:9px;color:var(--text-dim);margin-top:3px;display:flex;justify-content:space-between;}
-
-.rp{background:var(--bg-panel);border:0.5px solid var(--border-dim);border-radius:var(--r8);
-  padding:7px 10px;margin-bottom:8px;}
-.rrow{display:flex;align-items:center;gap:6px;margin-bottom:4px;}
-.rrow:last-child{margin-bottom:0;}
-.rlbl{font-size:9px;width:36px;flex-shrink:0;}
-.rblocks{display:flex;gap:2px;flex-wrap:wrap;flex:1;min-height:11px;align-items:center;}
-.rb{border-radius:2px;flex-shrink:0;width:11px;height:11px;}
-.rb.h {background:rgba(68,136,255,0.4);} .rb.hh{background:var(--blue);}
-.rb.p {background:rgba(204,68,255,0.4);} .rb.ph{background:var(--magenta);}
-.rb.c {background:rgba(153,154,170,0.4);}.rb.ch{background:var(--silver);}
-.rb.e {background:var(--border-dim);}
-.rb.g {width:5px;height:11px;background:transparent;border-left:1.5px solid var(--border-glow);}
-.rm{font-size:9px;padding:2px 6px;border-radius:10px;font-weight:500;margin-left:4px;}
-.rm.yes{background:rgba(68,221,136,0.12);color:var(--green);}
-.rm.no{background:var(--bg-inset);color:var(--text-dim);border:0.5px solid var(--border-dim);}
-
-/* proportion bars */
-.prop-sec{background:var(--bg-panel);border:0.5px solid var(--border-dim);border-radius:var(--r8);padding:7px 10px;margin-bottom:8px;}
-.prop-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;font-size:10px;font-weight:500;}
-.prop-sublbl{font-size:9px;color:var(--text-dim);margin-bottom:3px;}
-.prop-bar{display:flex;height:18px;border-radius:4px;overflow:hidden;border:0.5px solid var(--border-dim);margin-bottom:2px;}
-.pb-h{background:rgba(68,136,255,0.65);display:flex;align-items:center;justify-content:center;min-width:0;overflow:hidden;transition:width .1s;}
-.pb-p{background:rgba(204,68,255,0.65);display:flex;align-items:center;justify-content:center;min-width:0;overflow:hidden;transition:width .1s;}
-.pb-c{background:rgba(153,154,170,0.55);display:flex;align-items:center;justify-content:center;min-width:0;overflow:hidden;transition:width .1s;}
-.pb-empty{background:var(--bg-inset);flex:1;}
-.pb-lbl{font-size:8px;font-weight:700;color:rgba(255,255,255,0.9);white-space:nowrap;}
-.prop-pcts{display:flex;justify-content:space-between;font-size:9px;font-family:monospace;}
-.pp-h{color:#4488ff;} .pp-p{color:#cc44ff;} .pp-c{color:#999aaa;}
-
-.ticker{border:0.5px solid var(--border-dim);border-radius:var(--r12);padding:9px 12px;
-  margin-bottom:8px;min-height:46px;display:flex;align-items:center;gap:8px;transition:border-color .25s;}
-.tki{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;
-  justify-content:center;font-size:12px;flex-shrink:0;}
-.tkt{font-size:12px;line-height:1.4;color:var(--text-mid);flex:1;}
-.tkt strong{color:var(--text-bright);}
-
-.lnav{display:flex;gap:6px;align-items:center;justify-content:space-between;}
-.nb{font-size:12px;padding:5px 12px;border:0.5px solid var(--border-glow);border-radius:var(--r8);
-  background:transparent;color:var(--text-bright);cursor:pointer;}
-.nb:active{background:var(--bg-raised);}
-.dots{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;flex:1;}
-.dot{width:10px;height:10px;border-radius:50%;border:1px solid var(--border-glow);background:transparent;cursor:pointer;}
-.dot.active{background:var(--purple);border-color:var(--purple);}
-.dot.solved{background:var(--green);border-color:var(--green);}
-
-@keyframes flicker{0%,100%{opacity:1}48%{opacity:.82}}
-.tflicker{animation:flicker .45s ease-in-out infinite;}
-@keyframes shake{0%,100%{transform:translateX(0)}30%{transform:translateX(-3px)}70%{transform:translateX(3px)}}
-.doshake{animation:shake .22s;}
-
-.moverlay{position:fixed;inset:0;background:rgba(0,0,0,0);pointer-events:none;
-  z-index:100;display:flex;align-items:center;justify-content:center;
-  padding:20px;transition:background .3s;}
-.moverlay.show{background:rgba(0,0,0,.65);pointer-events:all;}
-.mcard{background:var(--bg-panel);border:1.5px solid var(--green);border-radius:var(--r12);
-  padding:22px 26px;text-align:center;max-width:300px;width:100%;
-  opacity:0;transform:scale(.85);transition:opacity .3s,transform .3s;pointer-events:none;
-  box-shadow:0 0 32px rgba(68,221,136,0.1);}
-.moverlay.show .mcard{opacity:1;transform:scale(1);pointer-events:all;}
-.mttl{font-size:16px;font-weight:500;color:var(--green);margin-bottom:6px;}
-.mbdy{font-size:12px;color:var(--text-mid);line-height:1.6;margin-bottom:14px;}
-.mbtn{font-size:13px;padding:7px 18px;border:0.5px solid var(--green);border-radius:var(--r8);
-  background:rgba(68,221,136,0.08);color:var(--green);cursor:pointer;font-weight:500;}
-.mbtn:active{background:rgba(68,221,136,0.18);}
-.mbtn.sec{background:transparent;border-color:var(--border-dim);color:var(--text-dim);margin-top:6px;display:block;text-decoration:none;}
-.mbtn.sec:active{color:var(--text-mid);}
-.nav-back{font-size:11px;color:var(--text-dim);text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-bottom:8px;}
-
-/* ══ ARIA companion ══════════════════════════════════════════ */
-:root{--aria-color:#cc44ff;--aria-chest:rgba(204,68,255,.2);}
-.aria-bar{display:flex;align-items:center;gap:10px;background:var(--bg-panel);border:0.5px solid var(--border-dim);border-radius:var(--r12);padding:8px 10px;margin-bottom:8px;}
-.aria-wrap{width:52px;height:52px;flex-shrink:0;cursor:pointer;animation:aria-bob 2.2s ease-in-out infinite;}
-@keyframes aria-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
-.aria-wrap.aria-happy{animation:aria-bounce .55s ease;}
-@keyframes aria-bounce{0%,100%{transform:scale(1) translateY(0)}35%{transform:scale(1.2) translateY(-7px)}65%{transform:scale(.95) translateY(1px)}}
-.aria-wrap.aria-sad{animation:aria-wag .4s ease;}
-@keyframes aria-wag{0%,100%{transform:rotate(0)}30%{transform:rotate(-9deg)}70%{transform:rotate(9deg)}}
-.aria-bubble{flex:1;position:relative;background:rgba(255,255,255,.04);border:0.5px solid rgba(255,255,255,.1);border-radius:var(--r10);padding:7px 10px;min-height:38px;}
-.aria-bubble::before{content:'';position:absolute;left:-8px;top:50%;transform:translateY(-50%);border:5px solid transparent;border-right-color:rgba(255,255,255,.1);}
-.aria-name{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--aria-color);display:block;margin-bottom:2px;}
-.aria-msg{font-size:11.5px;color:var(--text-bright);line-height:1.4;}
-#cel-canvas{position:fixed;inset:0;pointer-events:none;z-index:199;display:none;}
-#cel-canvas.active{display:block;}
-.ov-voss{display:flex;align-items:center;gap:10px;background:var(--bg-panel);border:1px solid rgba(204,68,255,.35);border-radius:var(--r12);padding:10px 13px;max-width:300px;width:90%;animation:ov-voss-in .45s ease;margin-top:8px;}
-@keyframes ov-voss-in{from{transform:translateY(18px);opacity:0}to{transform:none;opacity:1}}
-.ov-voss-face{width:44px;height:44px;flex-shrink:0;border-radius:50%;overflow:hidden;border:1.5px solid rgba(204,68,255,.4);}
-.ov-voss-txt{font-size:11px;color:var(--text-mid);line-height:1.5;font-style:italic;}
-.ov-voss-txt strong{color:var(--text-bright);font-style:normal;}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#cc44ff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Fuel">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet">
+  <title>Fuel Reactor — Space Crew</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --accent:#cc44ff;
+      --bg-deep:#06060f;--bg-panel:#0d0d1e;--bg-inset:#111122;--bg-raised:#161630;
+      --border-dim:rgba(80,80,160,0.18);--border-glow:rgba(100,100,220,0.4);
+      --text-bright:#eeeef8;--text-mid:#8888aa;--text-dim:#44445a;
+      --green:#44dd88;--red:#ff4455;--r8:8px;--r10:10px;--r12:12px;
+    }
+    html{min-height:100%;width:100%;}
+    body{min-height:100%;width:100%;overflow-x:hidden;overflow-y:auto;
+      background:radial-gradient(ellipse 70% 50% at 10% 70%,rgba(204,68,255,0.055) 0%,transparent 100%),
+        radial-gradient(ellipse 55% 65% at 88% 15%,rgba(160,40,255,0.065) 0%,transparent 100%),#06060f;
+      color:var(--text-bright);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+      -webkit-tap-highlight-color:transparent;}
+    @view-transition{navigation:auto;}
+    @keyframes vt-up{from{opacity:0;transform:translateY(10px);}}
+    @keyframes vt-down{to{opacity:0;transform:translateY(-8px);}}
+    ::view-transition-old(root){animation:.22s ease vt-down;}
+    ::view-transition-new(root){animation:.28s ease vt-up;}
+    #bg-stars{position:fixed;inset:0;pointer-events:none;z-index:0;}
+    #app{position:relative;z-index:1;padding:10px;width:100%;max-width:540px;margin:0 auto;padding-bottom:env(safe-area-inset-bottom,20px);}
+    .glass{background:rgba(6,6,22,0.52);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:0.5px solid rgba(204,68,255,0.12);border-radius:var(--r12);box-shadow:0 8px 32px rgba(0,0,0,0.35),inset 0 1px 0 rgba(255,255,255,0.03);}
+    .aria-bar{display:flex;align-items:center;gap:10px;padding:7px 10px;margin-bottom:7px;}
+    .aria-wrap{width:48px;height:48px;flex-shrink:0;cursor:pointer;animation:aria-bob 2.2s ease-in-out infinite;}
+    @keyframes aria-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+    .aria-wrap.aria-happy{animation:aria-bounce .55s ease forwards;}
+    @keyframes aria-bounce{0%,100%{transform:scale(1) translateY(0)}35%{transform:scale(1.18) translateY(-6px)}65%{transform:scale(.96) translateY(1px)}}
+    .aria-wrap.aria-sad{animation:aria-wag .4s ease forwards;}
+    @keyframes aria-wag{0%,100%{transform:rotate(0)}30%{transform:rotate(-9deg)}70%{transform:rotate(9deg)}}
+    .aria-bubble{flex:1;position:relative;background:rgba(204,68,255,0.04);border:0.5px solid rgba(204,68,255,0.12);border-radius:var(--r10);padding:6px 10px;min-height:36px;}
+    .aria-bubble::before{content:'';position:absolute;left:-7px;top:50%;transform:translateY(-50%);border:4px solid transparent;border-right-color:rgba(204,68,255,0.12);}
+    .aria-name{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:1px;}
+    .aria-msg{font-size:11px;color:var(--text-bright);line-height:1.4;}
+    .hud{padding:9px 12px;margin-bottom:7px;}
+    #lv-name{font-family:'Orbitron',monospace;font-size:9px;letter-spacing:.1em;font-weight:600;text-transform:uppercase;margin-bottom:3px;background:linear-gradient(90deg,var(--accent) 0%,#eeb4ff 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+    #lv-flavor{font-size:11px;color:var(--text-mid);font-style:italic;line-height:1.35;}
+    .power-wrap{margin-bottom:7px;}
+    .power-meta{display:flex;justify-content:space-between;font-size:9px;color:var(--text-dim);letter-spacing:.07em;text-transform:uppercase;margin-bottom:3px;}
+    .power-track{height:7px;background:var(--bg-inset);border:0.5px solid rgba(68,221,136,0.1);border-radius:4px;overflow:hidden;}
+    .power-fill{height:100%;width:0%;border-radius:4px;background:var(--green);box-shadow:0 0 10px rgba(68,221,136,0.45);}
+    .power-fill.charging{background:linear-gradient(90deg,var(--accent),var(--green),var(--accent));background-size:200%;animation:shimmer .7s linear infinite;}
+    .power-fill.maxed{background:linear-gradient(90deg,#22aa66,var(--green),#aaffd4,var(--green),#22aa66);background-size:300%;animation:shimmer-max 1.2s linear infinite;box-shadow:0 0 8px 2px rgba(68,221,136,0.4);}
+    @keyframes shimmer{0%{background-position:200%}100%{background-position:0%}}
+    @keyframes shimmer-max{0%{background-position:300%}100%{background-position:0%}}
+    .problem-panel{padding:12px;margin-bottom:7px;}
+    .fuel-panel{display:flex;flex-direction:column;gap:9px;margin-bottom:12px;}
+    .fb-row{display:flex;align-items:center;gap:9px;}
+    .fb-lbl{font-family:'Orbitron',monospace;font-size:9px;font-weight:600;letter-spacing:.08em;width:72px;flex-shrink:0;}
+    .fb-lbl.h2c{color:#cc44ff;}.fb-lbl.plc{color:#ff9060;}.fb-lbl.coc{color:#4499ff;}
+    .fb-track{flex:1;height:26px;background:var(--bg-inset);border:0.5px solid var(--border-dim);border-radius:6px;overflow:hidden;}
+    .fb-fill{height:100%;width:0%;border-radius:6px;transition:width .35s ease;}
+    .h2-fill{background:linear-gradient(90deg,rgba(204,68,255,.88),rgba(204,68,255,.28));}
+    .pl-fill{background:linear-gradient(90deg,rgba(255,144,96,.88),rgba(255,144,96,.28));}
+    .co-fill{background:linear-gradient(90deg,rgba(68,153,255,.88),rgba(68,153,255,.28));}
+    .fb-row.unk .fb-fill{transition:width .1s ease;}
+    .fb-pct{font-family:'Orbitron',monospace;font-size:15px;font-weight:600;color:var(--text-bright);width:34px;text-align:right;flex-shrink:0;}
+    .fb-pct.unknown{color:var(--text-dim);font-size:20px;}
+    .fb-row.given .fb-track{border-color:var(--accent);box-shadow:0 0 8px rgba(204,68,255,.2);}
+    .fb-row.unk .fb-track{border-color:rgba(204,68,255,.35);}
+    .fb-row.correct .fb-track{border-color:var(--green)!important;box-shadow:0 0 14px rgba(68,221,136,.45)!important;animation:correct-pulse .7s ease;}
+    @keyframes correct-pulse{0%,100%{box-shadow:0 0 14px rgba(68,221,136,.45)}50%{box-shadow:0 0 30px rgba(68,221,136,.8)}}
+    .fb-row.wrong-flash .fb-track{animation:fb-wrong .38s ease;}
+    @keyframes fb-wrong{50%{box-shadow:0 0 10px rgba(255,68,85,.6);border-color:var(--red)!important;}}
+    .total-row{display:flex;align-items:center;justify-content:space-between;padding:7px 11px;background:var(--bg-inset);border:0.5px solid var(--border-dim);border-radius:var(--r8);}
+    .total-lbl{font-size:9px;color:var(--text-dim);letter-spacing:.07em;text-transform:uppercase;}
+    .total-val{font-family:'Orbitron',monospace;font-size:20px;font-weight:600;color:var(--text-bright);}
+    .total-val.full{color:var(--green);text-shadow:0 0 12px rgba(68,221,136,.5);}
+    .total-target{font-size:9px;color:var(--text-dim);letter-spacing:.06em;}
+    .question-box{background:var(--bg-inset);border:0.5px solid var(--border-dim);border-radius:var(--r10);padding:9px 12px;text-align:center;}
+    .question-text{font-size:12.5px;color:var(--text-mid);line-height:1.6;}
+    .question-text strong{color:var(--text-bright);font-weight:600;}
+    .answer-section{padding:11px;margin-bottom:7px;}
+    .attempts-row{display:flex;gap:8px;justify-content:center;margin-bottom:10px;}
+    .att-dot{width:12px;height:12px;border-radius:50%;border:1.5px solid var(--border-glow);background:transparent;transition:background .18s,border-color .18s,box-shadow .18s;}
+    .att-dot.wrong{background:var(--red);border-color:var(--red);box-shadow:0 0 8px rgba(255,68,85,.5);}
+    .att-dot.correct{background:var(--green);border-color:var(--green);box-shadow:0 0 8px rgba(68,221,136,.5);}
+    .answer-display{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;background:var(--bg-inset);border-radius:var(--r10);border:0.5px solid var(--border-dim);margin-bottom:9px;}
+    .answer-prompt{font-size:10px;color:var(--text-dim);letter-spacing:.04em;}
+    .answer-digits{font-family:'Orbitron',monospace;font-size:26px;font-weight:600;color:var(--text-bright);min-width:64px;text-align:right;letter-spacing:.05em;transition:color .12s;}
+    .answer-digits.empty{color:var(--text-dim);}.answer-digits.correct{color:var(--green);text-shadow:0 0 12px rgba(68,221,136,.5);}.answer-digits.wrong{color:var(--red);}
+    .feedback-msg{text-align:center;font-size:13px;font-weight:600;min-height:18px;margin-bottom:7px;letter-spacing:.03em;opacity:0;transition:opacity .18s;}
+    .feedback-msg.show{opacity:1;}.feedback-msg.correct{color:var(--green);}.feedback-msg.wrong{color:var(--red);}
+    .hint-row{display:flex;align-items:flex-start;gap:8px;margin-bottom:9px;flex-wrap:wrap;}
+    .hint-btn{font-size:10px;color:var(--text-dim);cursor:pointer;text-decoration:underline;border:none;background:none;flex-shrink:0;}
+    .hint-box{font-size:11px;color:var(--text-mid);background:rgba(6,6,22,.6);backdrop-filter:blur(8px);border:0.5px solid rgba(204,68,255,.14);border-radius:var(--r8);padding:6px 10px;display:none;flex:1;line-height:1.5;}
+    .hint-box.show{display:block;}
+    .numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}
+    .np-btn{height:clamp(44px,11vw,54px);border:0.5px solid var(--border-glow);border-radius:var(--r10);background:var(--bg-raised);color:var(--text-bright);font-size:19px;font-weight:500;cursor:pointer;touch-action:manipulation;transition:background .1s,box-shadow .1s,transform .07s;-webkit-tap-highlight-color:transparent;}
+    .np-btn:active{background:rgba(204,68,255,.1);box-shadow:0 0 10px rgba(204,68,255,.28);transform:scale(0.93);}
+    .np-btn.np-confirm{background:rgba(68,221,136,.1);border-color:rgba(68,221,136,.35);color:var(--green);font-size:21px;}
+    .np-btn.np-confirm:active{background:rgba(68,221,136,.22);}
+    .np-btn.np-back{font-size:21px;color:var(--text-mid);}
+    .level-nav{display:flex;gap:6px;align-items:center;justify-content:space-between;}
+    .nav-btn{font-size:12px;padding:6px 12px;border:0.5px solid var(--border-glow);border-radius:var(--r8);background:transparent;color:var(--text-bright);cursor:pointer;white-space:nowrap;}
+    .nav-btn:active{background:rgba(204,68,255,.08);}
+    .dots{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;flex:1;}
+    .dot{width:10px;height:10px;border-radius:50%;border:1px solid var(--border-glow);background:transparent;cursor:pointer;}
+    .dot.active{background:var(--accent);border-color:var(--accent);box-shadow:0 0 7px rgba(204,68,255,.7);}
+    .dot.solved{background:var(--green);border-color:var(--green);box-shadow:0 0 7px rgba(68,221,136,.6);}
+    .nav-back{font-size:11px;color:var(--text-dim);text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-bottom:8px;transition:color .18s;}
+    .nav-back:hover{color:var(--accent);}
+    .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0);pointer-events:none;z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;transition:background .3s;}
+    .modal-bg.show{background:rgba(0,0,0,.65);pointer-events:all;}
+    .modal-card{background:rgba(6,6,22,.88);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--green);border-radius:var(--r12);padding:22px 24px;text-align:center;max-width:300px;width:100%;opacity:0;transform:scale(.82);transition:opacity .3s,transform .3s;pointer-events:none;box-shadow:0 0 50px rgba(68,221,136,.18),0 24px 60px rgba(0,0,0,.7);}
+    .modal-bg.show .modal-card{opacity:1;transform:scale(1);pointer-events:all;}
+    .modal-title{font-size:16px;font-weight:500;color:var(--green);margin-bottom:7px;}
+    .modal-body{font-size:13px;color:var(--text-mid);line-height:1.6;margin-bottom:16px;}
+    .modal-next{font-size:13px;padding:8px 20px;border:0.5px solid var(--green);border-radius:var(--r8);background:rgba(68,221,136,.08);color:var(--green);cursor:pointer;font-weight:500;}
+    .modal-next:active{background:rgba(68,221,136,.18);}
+    .modal-home{display:block;margin-top:10px;font-size:11px;color:var(--text-dim);text-decoration:none;}
+    .ov-voss{display:flex;align-items:center;gap:10px;background:var(--bg-panel);border:1px solid rgba(204,68,255,.35);border-radius:var(--r12);padding:10px 13px;max-width:300px;width:90%;animation:ov-voss-in .45s ease;margin-top:8px;}
+    @keyframes ov-voss-in{from{transform:translateY(18px);opacity:0}to{transform:none;opacity:1}}
+    .ov-voss-face{width:44px;height:44px;flex-shrink:0;border-radius:50%;overflow:hidden;border:1.5px solid rgba(204,68,255,.4);}
+    .ov-voss-txt{font-size:11px;color:var(--text-mid);line-height:1.5;font-style:italic;}
+    #cel-canvas{position:fixed;inset:0;pointer-events:none;z-index:199;display:none;}
+    #cel-canvas.active{display:block;}
+  </style>
 </head>
 <body>
+<canvas id="bg-stars"></canvas>
 <canvas id="cel-canvas"></canvas>
 <div id="app">
   <a class="nav-back" href="mission_select.html">← Fleet Commander</a>
-  <!-- ARIA companion -->
-  <div class="aria-bar">
+  <div class="aria-bar glass">
     <div class="aria-wrap" id="aria-wrap" onclick="ariaTap()">
       <svg viewBox="-2 0 60 70" xmlns="http://www.w3.org/2000/svg">
         <rect x="-2" y="32" width="12" height="8" rx="4" fill="#1e1e42"/>
@@ -180,169 +145,105 @@ input[type=range].fs.c-slider::-webkit-slider-thumb{background:var(--silver);  b
         <rect x="12" y="10" width="32" height="14" rx="6" fill="rgba(0,8,28,.5)"/>
         <circle cx="20" cy="17" r="4.5" fill="white"/><circle cx="21" cy="18" r="2.8" fill="#111"/><circle cx="20.3" cy="15.8" r=".9" fill="white"/>
         <circle cx="36" cy="17" r="4.5" fill="white"/><circle cx="37" cy="18" r="2.8" fill="#111"/><circle cx="36.3" cy="15.8" r=".9" fill="white"/>
-        <path d="M22,25 Q28,29 34,25" stroke="var(--aria-color)" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <path d="M22,25 Q28,29 34,25" stroke="#cc44ff" stroke-width="2" fill="none" stroke-linecap="round"/>
         <rect x="26" y="2" width="4" height="8" rx="2" fill="#242454"/>
-        <circle cx="28" cy="2" r="3.2" fill="var(--aria-color)"/>
-        <rect x="13" y="35" width="30" height="17" rx="5" fill="var(--aria-chest)"/>
-        <circle cx="21" cy="42" r="2.3" fill="var(--aria-color)" opacity=".9"/>
+        <circle cx="28" cy="2" r="3.2" fill="#cc44ff"/>
+        <rect x="13" y="35" width="30" height="17" rx="5" fill="rgba(204,68,255,.18)"/>
+        <circle cx="21" cy="42" r="2.3" fill="#cc44ff" opacity=".9"/>
         <circle cx="28" cy="42" r="2.3" fill="rgba(255,255,255,.35)"/>
-        <circle cx="35" cy="42" r="2.3" fill="var(--aria-color)" opacity=".9"/>
-        <rect x="16" y="48" width="24" height="2.5" rx="1.25" fill="var(--aria-color)" opacity=".4"/>
+        <circle cx="35" cy="42" r="2.3" fill="#cc44ff" opacity=".9"/>
+        <rect x="16" y="48" width="24" height="2.5" rx="1.25" fill="#cc44ff" opacity=".4"/>
         <rect x="13" y="56" width="12" height="12" rx="5" fill="#1e1e42"/>
         <rect x="31" y="56" width="12" height="12" rx="5" fill="#1e1e42"/>
       </svg>
     </div>
     <div class="aria-bubble">
       <span class="aria-name">ARIA</span>
-      <span class="aria-msg" id="aria-msg">Balance all 3 fuel lines for ignition!</span>
+      <span class="aria-msg" id="aria-msg">Find the missing fuel level — the reactor needs it!</span>
     </div>
   </div>
-
-  <div class="hud">
-    <div class="hud-main">
-      <div class="lbl" id="lv-id">Level 11 — Ignition Sequence</div>
-      <div class="hud-name" id="lv-ratio">H : P : C = 1 : 1 : 1</div>
-      <div class="hud-flavor" id="lv-flavor">Standard start-up. Equal pressure across all three fuel lines.</div>
-    </div>
-    <div class="hud-tgt">
-      <div class="lbl">Target</div>
-      <div class="hud-num" id="tgt">9</div>
-      <div style="font-size:10px;color:var(--t3);">units</div>
-    </div>
+  <div class="hud glass">
+    <div id="lv-name">Level 1 — Cold Start</div>
+    <div id="lv-flavor">Reactor cold start. All three fuels must total 100%.</div>
   </div>
-
-  <div class="reactor-wrap">
-    <div class="core-col">
-      <svg width="120" height="120" viewBox="0 0 120 120" style="display:block;">
-        <circle cx="60" cy="60" r="54" fill="none" stroke="#888" stroke-width="0.5" opacity="0.15"/>
-        <!-- Volume ring: circumference ~252. Driven by JS stroke-dasharray. -->
-        <circle cx="60" cy="60" r="40" fill="none" id="vring"
-          stroke="#97C459" stroke-width="7" stroke-linecap="round"
-          stroke-dasharray="0 252" stroke-dashoffset="62"/>
-        <circle cx="60" cy="60" r="28" id="cbody" fill="#111122" stroke="#9f60ff" stroke-width="1.5"/>
-        <!-- Supply pipes grow from centre outward as sliders fill -->
-        <line id="ph" x1="60" y1="60" x2="60" y2="60" stroke="#00AAAA" stroke-width="3" stroke-linecap="round"/>
-        <line id="pp" x1="60" y1="60" x2="60" y2="60" stroke="#9900CC" stroke-width="3" stroke-linecap="round"/>
-        <line id="pc" x1="60" y1="60" x2="60" y2="60" stroke="#707070" stroke-width="3" stroke-linecap="round"/>
-        <!-- Node endpoints at pipe tips -->
-        <circle cx="60" cy="16" r="7" fill="#4488ff"/>
-        <circle cx="18" cy="88" r="7" fill="#cc44ff"/>
-        <circle cx="102" cy="88" r="7" fill="#999aaa"/>
-        <text x="60" y="9" text-anchor="middle" font-size="8" fill="#4488ff" font-family="sans-serif" font-weight="600">H</text>
-        <text x="10" y="101" text-anchor="middle" font-size="8" fill="#cc44ff" font-family="sans-serif" font-weight="600">P</text>
-        <text x="110" y="101" text-anchor="middle" font-size="8" fill="#999aaa" font-family="sans-serif" font-weight="600">C</text>
-        <text id="cvol" x="60" y="57" text-anchor="middle" font-size="13" font-weight="500" fill="#9f60ff" font-family="sans-serif">0</text>
-        <text id="ctgt" x="60" y="70" text-anchor="middle" font-size="9" fill="#44445a" font-family="sans-serif">/ 9</text>
-      </svg>
-      <!-- Countdown bar sits directly below core — FIX 3 -->
-      <div class="cd-track"><div class="cd-fill" id="cdf"></div></div>
-      <div class="cd-lbl" id="cdl">hold steady 2s</div>
-    </div>
-
-    <div class="sliders-col">
-      <div class="sr">
-        <div class="sdot" style="background:#4488ff;"></div>
-        <span class="slbl" style="color:#4488ff;">H</span>
-        <input type="range" class="fs h-slider" id="vh" min="0" max="13" step="1" value="0">
-        <span class="sval" id="bh">0</span>
-        <button class="vb" id="vnh">↓</button>
+  <div class="power-wrap">
+    <div class="power-meta"><span>Ship power grid</span><span id="power-pct">0%</span></div>
+    <div class="power-track"><div class="power-fill" id="power-fill"></div></div>
+  </div>
+  <div class="problem-panel glass">
+    <div class="fuel-panel">
+      <div class="fb-row given" id="fb-h2">
+        <div class="fb-lbl h2c">HYDROGEN</div>
+        <div class="fb-track"><div class="fb-fill h2-fill" id="fill-h2"></div></div>
+        <div class="fb-pct" id="val-h2">—</div>
       </div>
-      <div class="sr">
-        <div class="sdot" style="background:#cc44ff;"></div>
-        <span class="slbl" style="color:#cc44ff;">P</span>
-        <input type="range" class="fs p-slider" id="vp" min="0" max="13" step="1" value="0">
-        <span class="sval" id="bp">0</span>
-        <button class="vb" id="vnp">↓</button>
+      <div class="fb-row given" id="fb-pl">
+        <div class="fb-lbl plc">PLASMA</div>
+        <div class="fb-track"><div class="fb-fill pl-fill" id="fill-pl"></div></div>
+        <div class="fb-pct" id="val-pl">—</div>
       </div>
-      <div class="sr">
-        <div class="sdot" style="background:#999aaa;"></div>
-        <span class="slbl" style="color:#999aaa;">C</span>
-        <input type="range" class="fs c-slider" id="vc" min="0" max="13" step="1" value="0">
-        <span class="sval" id="bc">0</span>
-        <button class="vb" id="vnc">↓</button>
+      <div class="fb-row unk" id="fb-co">
+        <div class="fb-lbl coc">COOLANT</div>
+        <div class="fb-track"><div class="fb-fill co-fill" id="fill-co"></div></div>
+        <div class="fb-pct unknown" id="val-co">?</div>
       </div>
-      <div style="display:flex;justify-content:flex-end;margin-top:2px;">
-        <button class="vb" id="vna">Vent All ↓</button>
+      <div class="total-row">
+        <span class="total-lbl">Total</span>
+        <span class="total-val" id="total-val">—</span>
+        <span class="total-target">TARGET: 100%</span>
       </div>
     </div>
-  </div>
-
-  <!-- Needle = ratio accuracy only. Volume shown in core ring. FIX 2 -->
-  <div class="needle-sec">
-    <div class="needle-meta">
-      <span>Ratio needle — keep centred in green</span>
-      <span id="nst">—</span>
-    </div>
-    <div class="needle-track">
-      <div class="needle-green"></div>
-      <div class="needle-bar" id="nbar" style="left:calc(50% - 2px);"></div>
-    </div>
-    <div class="needle-note"><span>H heavy</span><span>balanced</span><span>P/C heavy</span></div>
-  </div>
-
-  <div class="rp">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
-      <span style="font-size:10px;font-weight:500;color:var(--t1);">Ratio visualizer</span>
-      <span class="rm no" id="rmatch">—</span>
-    </div>
-    <div class="rrow">
-      <span class="rlbl" style="color:var(--t2);font-weight:500;">Target</span>
-      <div class="rblocks" id="rtgt"></div>
-    </div>
-    <div class="rrow">
-      <span class="rlbl" style="color:var(--t3);">Current</span>
-      <div class="rblocks" id="rcur"><div class="rb e"></div></div>
+    <div class="question-box">
+      <div class="question-text" id="question-text">Loading…</div>
     </div>
   </div>
-
-  <!-- Proportion panel — shows each component as % of total -->
-  <div class="prop-sec">
-    <div class="prop-hdr"><span>Proportion of total</span><span id="prop-match" style="color:var(--text-dim)">—</span></div>
-    <div class="prop-sublbl">Target</div>
-    <div class="prop-bar" id="ptgt-bar">
-      <div class="pb-h" id="ptgt-h"><span class="pb-lbl">H</span></div>
-      <div class="pb-p" id="ptgt-p"><span class="pb-lbl">P</span></div>
-      <div class="pb-c" id="ptgt-c"><span class="pb-lbl">C</span></div>
+  <div class="answer-section glass">
+    <div class="attempts-row">
+      <div class="att-dot" id="att-0"></div>
+      <div class="att-dot" id="att-1"></div>
+      <div class="att-dot" id="att-2"></div>
     </div>
-    <div class="prop-pcts">
-      <span class="pp-h" id="ptgt-ph">H: —</span>
-      <span class="pp-p" id="ptgt-pp">P: —</span>
-      <span class="pp-c" id="ptgt-pc">C: —</span>
+    <div class="answer-display">
+      <span class="answer-prompt" id="answer-prompt">Enter Coolant %:</span>
+      <span class="answer-digits empty" id="answer-digits">—</span>
     </div>
-    <div class="prop-sublbl" style="margin-top:5px;">Current</div>
-    <div class="prop-bar" id="pcur-bar">
-      <div class="pb-empty" id="pcur-empty"></div>
+    <div class="feedback-msg" id="feedback-msg"></div>
+    <div class="hint-row">
+      <button class="hint-btn" id="hint-btn" onclick="toggleHint()">Show hint</button>
+      <div class="hint-box" id="hint-box"></div>
     </div>
-    <div class="prop-pcts">
-      <span class="pp-h" id="pcur-ph">H: 0%</span>
-      <span class="pp-p" id="pcur-pp">P: 0%</span>
-      <span class="pp-c" id="pcur-pc">C: 0%</span>
+    <div class="numpad">
+      <button class="np-btn" onclick="numPress('7')">7</button>
+      <button class="np-btn" onclick="numPress('8')">8</button>
+      <button class="np-btn" onclick="numPress('9')">9</button>
+      <button class="np-btn" onclick="numPress('4')">4</button>
+      <button class="np-btn" onclick="numPress('5')">5</button>
+      <button class="np-btn" onclick="numPress('6')">6</button>
+      <button class="np-btn" onclick="numPress('1')">1</button>
+      <button class="np-btn" onclick="numPress('2')">2</button>
+      <button class="np-btn" onclick="numPress('3')">3</button>
+      <button class="np-btn np-back" onclick="numPress('⌫')">⌫</button>
+      <button class="np-btn" onclick="numPress('0')">0</button>
+      <button class="np-btn np-confirm" onclick="numPress('✓')">✓</button>
     </div>
   </div>
-
-  <div class="ticker" id="ticker">
-    <div class="tki" id="tki" style="background:var(--bg2);color:var(--t3);">—</div>
-    <div class="tkt" id="tkt">Adjust the three fuel lines to begin the ignition sequence.</div>
-  </div>
-
-  <div class="lnav">
-    <button class="nb" id="bprev">← Prev</button>
+  <div class="level-nav">
+    <button class="nav-btn" id="btn-prev">← Prev</button>
     <div class="dots" id="dots"></div>
-    <button class="nb" id="bnxt">Next →</button>
+    <button class="nav-btn" id="btn-next">Next →</button>
   </div>
 </div>
-
-<div class="moverlay" id="moverlay">
-  <div class="mcard">
-    <div class="mttl" id="mttl">Jump initiated</div>
-    <div class="mbdy" id="mbdy"></div>
-    <button class="mbtn" id="mbtn">Next mission →</button>
-    <a href="mission_select.html" class="mbtn sec">← Fleet Commander</a>
+<div class="modal-bg" id="modal">
+  <div class="modal-card">
+    <div class="modal-title" id="mc-title">Reactor Online</div>
+    <div class="modal-body" id="mc-body"></div>
+    <button class="modal-next" id="mc-next">Next Level →</button>
+    <a href="mission_select.html" class="modal-home">← Fleet Commander</a>
     <div class="ov-voss" id="ov-voss">
       <div class="ov-voss-face">
         <svg viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg">
           <circle cx="22" cy="22" r="22" fill="#12103a"/>
-          <path d="M6,44 Q8,30 22,28 Q36,30 38,44 Z" fill="#180830"/>
+          <path d="M6,44 Q8,30 22,28 Q36,30 38,44 Z" fill="#102030"/>
           <path d="M15,31 L22,28 L29,31 L22,35 Z" fill="#cc44ff" opacity=".65"/>
           <ellipse cx="22" cy="17" rx="11" ry="12" fill="#d4a870"/>
           <path d="M11,13 Q12,4 22,4 Q32,4 33,13 Q28,7 22,7 Q16,7 11,13 Z" fill="#2a2a2a"/>
@@ -355,390 +256,130 @@ input[type=range].fs.c-slider::-webkit-slider-thumb{background:var(--silver);  b
           <circle cx="26" cy="33.25" r=".9" fill="#e8c840"/>
         </svg>
       </div>
-      <div class="ov-voss-txt" id="ov-voss-txt">"Fuel reactor balanced — jump initiated!"</div>
+      <div class="ov-voss-txt" id="ov-voss-txt">"Reactor stable!"</div>
     </div>
   </div>
 </div>
-
 <script>
-const LV=[
-  {id:11,n:"Ignition Sequence",r:[1,1,1],tv:9,f:"Equal split — each fuel is exactly 1-in-3. H=33%, P=33%, C=34% of total."},
-  {id:12,n:"Plasma Heavy",r:[1,2,1],tv:12,f:"Plasma takes up half the total (50%). Hydrogen and Coolant share the other half — 25% each."},
-  {id:13,n:"The Safety Buffer",r:[2,2,4],tv:16,f:"Coolant alone is half the total (50%). H and P split the remaining 50% equally — 25% each."},
-  {id:14,n:"Efficient Burn",r:[3,1,2],tv:18,f:"Hydrogen is half the total (50%). Coolant is one-third (33%). Plasma is just one-sixth (17%)."},
-  {id:15,n:"The Triad Boss",r:[2,3,5],tv:30,f:"Every 10 units: 2 parts H (20%), 3 parts P (30%), 5 parts C (50%). Half the tank is always Coolant."}
+const LEVELS=[
+  {id:1,name:"Cold Start",       q_type:'find_co',h2:60,plasma:20,coolant:null,answer:20,
+   question:"Hydrogen is <strong>60%</strong> and Plasma is <strong>20%</strong>. All three fuels must add up to <strong>100%</strong>. What is Coolant?",
+   hint:"Add the two known numbers first. Then ask: what must I add to reach 100?",
+   flavor:"Reactor cold start. All three fuels must total 100%."},
+  {id:2,name:"Plasma Heavy",     q_type:'find_co',h2:30,plasma:45,coolant:null,answer:25,
+   question:"Hydrogen is <strong>30%</strong> and Plasma is <strong>45%</strong>. All three must total <strong>100%</strong>. What is Coolant?",
+   hint:"Add the two known numbers. How far is that total from 100?",
+   flavor:"Entering plasma zone. Coolant must compensate."},
+  {id:3,name:"Find the Plasma",  q_type:'find_pl',h2:40,plasma:null,coolant:35,answer:25,
+   question:"Hydrogen is <strong>40%</strong> and Coolant is <strong>35%</strong>. All three must total <strong>100%</strong>. What is Plasma?",
+   hint:"Add the two known numbers. What's missing to reach 100?",
+   flavor:"Plasma feed sensor offline. Calculate from the other readings."},
+  {id:4,name:"Hydrogen Unknown", q_type:'find_h2',h2:null,plasma:50,coolant:15,answer:35,
+   question:"Plasma is <strong>50%</strong> and Coolant is <strong>15%</strong>. All three must total <strong>100%</strong>. What is Hydrogen?",
+   hint:"Add the two known numbers. How far away from 100 are they?",
+   flavor:"Hydrogen gauge broken! Work out the correct level."},
+  {id:5,name:"Balanced Reactor", q_type:'find_co',h2:25,plasma:40,coolant:null,answer:35,
+   question:"Hydrogen is <strong>25%</strong> and Plasma is <strong>40%</strong>. All three must total <strong>100%</strong>. What is Coolant?",
+   hint:"Add the two known numbers. What brings the total up to exactly 100?",
+   flavor:"Steady burn mode. All three must balance to exactly 100%."},
 ];
-
-const TOL=0.65, HOLD=2000, TMIN=3;
-let cur=0, solved=new Set(), vts=[], rLock=false, sLock=false;
-let hStart=null, hRaf=null, cdActive=false, lastCK='', dT=null;
-
-/* ── Audio ── */
-let ambiCtx=null, reactorOsc=null, reactorOsc2=null, reactorGain=null, ambientStarted=false, lastThermal=false;
-
-function startAmbient(){
-  if(ambientStarted)return; ambientStarted=true;
-  ambiCtx=new(window.AudioContext||window.webkitAudioContext)();
-  const f=ambiCtx.createBiquadFilter();
-  f.type='lowpass'; f.frequency.value=220;
-  reactorGain=ambiCtx.createGain(); reactorGain.gain.value=0;
-  // Primary rumble
-  reactorOsc=ambiCtx.createOscillator();
-  reactorOsc.type='sawtooth'; reactorOsc.frequency.value=55;
-  reactorOsc.connect(f);
-  // Sub-harmonic layer
-  reactorOsc2=ambiCtx.createOscillator();
-  reactorOsc2.type='sine'; reactorOsc2.frequency.value=28;
-  reactorOsc2.connect(f);
-  f.connect(reactorGain); reactorGain.connect(ambiCtx.destination);
-  reactorOsc.start(); reactorOsc2.start();
-}
-function updateAmbient(tot,tgt,thermal){
-  if(!ambientStarted||!ambiCtx)return;
-  if(ambiCtx.state==='suspended')ambiCtx.resume();
-  const frac=Math.min(tot/Math.max(tgt,1),1.2);
-  const t=ambiCtx.currentTime;
-  const gain=thermal?0.22:Math.min(frac*0.12,0.12);
-  const freq=thermal?80+frac*25:50+frac*18;
-  reactorGain.gain.setTargetAtTime(gain,t,0.4);
-  reactorOsc.frequency.setTargetAtTime(freq,t,0.6);
-  reactorOsc2.frequency.setTargetAtTime(freq/2,t,0.6);
-  if(thermal&&!lastThermal) playAlarm();
-  lastThermal=thermal;
-}
-function playAlarm(){
-  if(!ambiCtx)return;
-  [880,660].forEach((f,i)=>{
-    const o=ambiCtx.createOscillator(),g=ambiCtx.createGain();
-    o.type='square'; o.frequency.value=f;
-    const t=ambiCtx.currentTime+i*0.18;
-    g.gain.setValueAtTime(0.1,t);
-    g.gain.exponentialRampToValueAtTime(0.001,t+0.15);
-    o.connect(g); g.connect(ambiCtx.destination);
-    o.start(t); o.stop(t+0.17);
-  });
-}
-function playWin(){
-  if(!ambiCtx)return;
-  if(ambiCtx.state==='suspended')ambiCtx.resume();
-  [523,659,784,1046].forEach((f,i)=>{
-    const o=ambiCtx.createOscillator(),g=ambiCtx.createGain();
-    o.type='sine'; o.frequency.value=f;
-    const t=ambiCtx.currentTime+i*0.13;
-    g.gain.setValueAtTime(0,t);
-    g.gain.linearRampToValueAtTime(0.22,t+0.04);
-    g.gain.exponentialRampToValueAtTime(0.001,t+0.55);
-    o.connect(g); g.connect(ambiCtx.destination);
-    o.start(t); o.stop(t+0.58);
-  });
-}
-
+const VOSS_QUIPS=['"Reactor singing at 100%!"','"Fuel mix perfect — by the stars!"','"That\'s precise math, Commander!"','"The reactor thanks you!"','"100% means the crew survives!"'];
+let cur=0,solved=new Set(),powerLevel=0;
+let answerStr='',attempts=0,levelDone=false,hintShown=false;
+let unkType='co',givenTotal=0;
 const $=id=>document.getElementById(id);
-const VH=$('vh'),VP=$('vp'),VC=$('vc');
-
-function lockUI(){
-  sLock=true;
-  ['vh','vp','vc','vnh','vnp','vnc','vna'].forEach(id=>{
-    const e=$(id);if(e){e.style.pointerEvents='none';e.style.opacity='.72';}
-  });
+let _ac=null;
+function _ctx(){if(!_ac)try{_ac=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}if(_ac&&_ac.state==='suspended')_ac.resume();return _ac;}
+function playChime(){const c=_ctx();if(!c)return;[523,784,1046].forEach((f,i)=>{try{const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=f;const t=c.currentTime+i*0.1;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(0.14,t+0.03);g.gain.exponentialRampToValueAtTime(0.001,t+0.4);o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+0.42);}catch(e){}});}
+function playError(){const c=_ctx();if(!c)return;try{const t=c.currentTime,o=c.createOscillator(),g=c.createGain();o.type='sawtooth';o.frequency.setValueAtTime(200,t);o.frequency.exponentialRampToValueAtTime(90,t+0.18);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(0.16,t+0.01);g.gain.exponentialRampToValueAtTime(0.001,t+0.22);o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+0.25);}catch(e){}}
+function animPower(from,to,dur,maxed){const start=Date.now(),pf=$('power-fill');pf.classList.remove('maxed');pf.classList.add('charging');(function tick(){const t=Math.min(1,(Date.now()-start)/dur),v=from+(to-from)*t;pf.style.width=Math.round(v*100)+'%';$('power-pct').textContent=Math.round(v*100)+'%';if(t<1)requestAnimationFrame(tick);else{pf.classList.remove('charging');if(maxed)pf.classList.add('maxed');}})();}
+function buildDots(){const c=$('dots');c.innerHTML='';LEVELS.forEach((l,i)=>{const d=document.createElement('div');d.className='dot'+(i===cur?' active':'')+(solved.has(i)?' solved':'');d.title=l.name;d.onclick=()=>{cur=i;loadLevel();};c.appendChild(d);});}
+function setBar(type,val,isGiven){
+  const row=$('fb-'+type),fill=$('fill-'+type),valEl=$('val-'+type);
+  if(isGiven){row.className='fb-row given';fill.style.width=val+'%';valEl.textContent=val;valEl.className='fb-pct';}
+  else{row.className='fb-row unk';fill.style.width='0%';valEl.textContent='?';valEl.className='fb-pct unknown';}
 }
-function unlockUI(){
-  sLock=false;
-  ['vh','vp','vc','vnh','vnp','vnc','vna'].forEach(id=>{
-    const e=$(id);if(e){e.style.pointerEvents='';e.style.opacity='';}
-  });
+function loadLevel(){
+  const lv=LEVELS[cur];
+  answerStr='';attempts=0;levelDone=false;hintShown=false;
+  $('lv-name').textContent=`Level ${lv.id} — ${lv.name}`;
+  $('lv-flavor').textContent=lv.flavor;
+  if(lv.q_type==='find_co'){setBar('h2',lv.h2,true);setBar('pl',lv.plasma,true);setBar('co',null,false);unkType='co';givenTotal=lv.h2+lv.plasma;$('answer-prompt').textContent='Enter Coolant %:';}
+  else if(lv.q_type==='find_pl'){setBar('h2',lv.h2,true);setBar('co',lv.coolant,true);setBar('pl',null,false);unkType='pl';givenTotal=lv.h2+lv.coolant;$('answer-prompt').textContent='Enter Plasma %:';}
+  else{setBar('pl',lv.plasma,true);setBar('co',lv.coolant,true);setBar('h2',null,false);unkType='h2';givenTotal=lv.plasma+lv.coolant;$('answer-prompt').textContent='Enter Hydrogen %:';}
+  $('total-val').textContent=givenTotal+' + ?';$('total-val').className='total-val';
+  $('question-text').innerHTML=lv.question;$('hint-box').innerHTML=lv.hint;
+  $('hint-box').classList.remove('show');$('hint-btn').textContent='Show hint';
+  clearFeedback();_resetDots();_renderDigits();buildDots();
+  if(cur===0)ariaSetMsg('Tap a number, then press ✓ to confirm!');else ariaReact('idle');
 }
-function cancelVent(){vts.forEach(clearInterval);vts=[];}
-
-function buildDots(){
-  const c=$('dots');c.innerHTML='';
-  LV.forEach((l,i)=>{
-    const d=document.createElement('div');
-    d.className='dot'+(i===cur?' active':'')+(solved.has(i)?' solved':'');
-    d.title=l.n;d.onclick=()=>{cur=i;load();};
-    c.appendChild(d);
-  });
+function _resetDots(){for(let i=0;i<3;i++){const d=$('att-'+i);if(d)d.className='att-dot';}}
+function _renderDigits(){const el=$('answer-digits');el.textContent=answerStr===''?'—':answerStr;el.className='answer-digits'+(answerStr===''?' empty':'');}
+function _renderPreview(){
+  const fill=$('fill-'+unkType),valEl=$('val-'+unkType),totalEl=$('total-val');
+  if(answerStr===''){fill.style.width='0%';valEl.textContent='?';valEl.className='fb-pct unknown';totalEl.textContent=givenTotal+' + ?';totalEl.className='total-val';return;}
+  const v=parseInt(answerStr);
+  if(!isNaN(v)){fill.style.width=Math.min(v,100)+'%';valEl.textContent=v;valEl.className='fb-pct';const rt=givenTotal+v;totalEl.textContent=rt+'%';totalEl.className='total-val'+(rt===100?' full':'');}
 }
-
-function buildTgt(r){
-  const el=$('rtgt');el.innerHTML='';
-  const sum=r[0]+r[1]+r[2],sc=Math.min(1,18/sum);
-  const h=Math.max(1,Math.round(r[0]*sc)),p=Math.max(1,Math.round(r[1]*sc)),c=Math.max(1,Math.round(r[2]*sc));
-  for(let i=0;i<h;i++){const b=document.createElement('div');b.className='rb hh';el.appendChild(b);}
-  let g=document.createElement('div');g.className='rb g';el.appendChild(g);
-  for(let i=0;i<p;i++){const b=document.createElement('div');b.className='rb ph';el.appendChild(b);}
-  g=document.createElement('div');g.className='rb g';el.appendChild(g);
-  for(let i=0;i<c;i++){const b=document.createElement('div');b.className='rb ch';el.appendChild(b);}
-}
-
-function buildCur(hv,pv,cv){
-  const tot=hv+pv+cv,el=$('rcur');
-  if(tot===0){if(lastCK==='e')return;lastCK='e';el.innerHTML='<div class="rb e"></div>';return;}
-  const sc=Math.min(1,18/tot);
-  const h=Math.max(hv>0?1:0,Math.round(hv*sc)),p=Math.max(pv>0?1:0,Math.round(pv*sc)),c=Math.max(cv>0?1:0,Math.round(cv*sc));
-  const k=`${h}${p}${c}`;if(k===lastCK)return;lastCK=k;
-  el.innerHTML='';
-  for(let i=0;i<h;i++){const b=document.createElement('div');b.className='rb h';el.appendChild(b);}
-  let g=document.createElement('div');g.className='rb g';el.appendChild(g);
-  for(let i=0;i<p;i++){const b=document.createElement('div');b.className='rb p';el.appendChild(b);}
-  g=document.createElement('div');g.className='rb g';el.appendChild(g);
-  for(let i=0;i<c;i++){const b=document.createElement('div');b.className='rb c';el.appendChild(b);}
-}
-
-/* ── Proportion bars ── */
-function buildPropTarget(r){
-  const s=r[0]+r[1]+r[2];
-  const hp=Math.round(r[0]/s*100),pp=Math.round(r[1]/s*100),cp=100-hp-pp;
-  $('ptgt-h').style.width=hp+'%'; $('ptgt-p').style.width=pp+'%'; $('ptgt-c').style.width=Math.max(0,cp)+'%';
-  $('ptgt-ph').textContent=`H: ${hp}%`; $('ptgt-pp').textContent=`P: ${pp}%`; $('ptgt-pc').textContent=`C: ${Math.max(0,cp)}%`;
-}
-function updatePropCur(hv,pv,cv,ok){
-  const tot=hv+pv+cv;
-  const bar=$('pcur-bar'); bar.innerHTML='';
-  $('prop-match').textContent=ok?'matched':'off';
-  $('prop-match').style.color=ok?'var(--green)':'var(--text-dim)';
-  if(tot===0){
-    const e=document.createElement('div');e.className='pb-empty';bar.appendChild(e);
-    $('pcur-ph').textContent='H: 0%'; $('pcur-pp').textContent='P: 0%'; $('pcur-pc').textContent='C: 0%';
-    return;
-  }
-  const hp=Math.round(hv/tot*100),pp2=Math.round(pv/tot*100),cp=100-hp-pp2;
-  if(hp>0){const d=document.createElement('div');d.className='pb-h';d.style.width=hp+'%';bar.appendChild(d);}
-  if(pp2>0){const d=document.createElement('div');d.className='pb-p';d.style.width=pp2+'%';bar.appendChild(d);}
-  if(cp>0){const d=document.createElement('div');d.className='pb-c';d.style.width=Math.max(0,cp)+'%';bar.appendChild(d);}
-  $('pcur-ph').textContent=`H: ${hp}%`; $('pcur-pp').textContent=`P: ${pp2}%`; $('pcur-pc').textContent=`C: ${Math.max(0,cp)}%`;
-}
-
-function rOk(hv,pv,cv,r){
-  const t=hv+pv+cv;if(t===0)return false;
-  const s=r[0]+r[1]+r[2];
-  return Math.abs(hv-t*r[0]/s)<=TOL
-      && Math.abs(pv-t*r[1]/s)<=TOL
-      && Math.abs(cv-t*r[2]/s)<=TOL;
-}
-
-/* FIX 2: needle = pure ratio accuracy, not volume.
-   Left = H-heavy, right = P/C-heavy, centre = balanced. */
-function updateNeedle(hv,pv,cv,r){
-  const t=hv+pv+cv;
-  if(t===0){$('nbar').style.left='calc(50% - 2px)';$('nst').textContent='—';return;}
-  const s=r[0]+r[1]+r[2];
-  const eH=t*r[0]/s, ePC=t*(r[1]+r[2])/s;
-  const errH=(hv-eH)/Math.max(eH,0.5);
-  const errPC=((pv+cv)-ePC)/Math.max(ePC,0.5);
-  const dev=(errPC-errH)*0.3;
-  const pct=Math.max(0.02,Math.min(0.98,0.5+dev));
-  $('nbar').style.left=`calc(${Math.round(pct*100)}% - 2px)`;
-  const inZone=pct>0.32&&pct<0.68;
-  $('nbar').style.background=inZone?'#639922':'var(--t1, #1a1a18)';
-  $('nst').textContent=inZone?'balanced':'off ratio';
-}
-
-/* Volume ring: circumference 2π×40≈252. stroke-dasharray drives arc fill. */
-function updateRing(tot,tgt,thermal){
-  const circ=252,dash=Math.round(Math.min(tot/tgt,1)*circ);
-  $('vring').setAttribute('stroke-dasharray',`${dash} ${circ}`);
-  $('vring').setAttribute('stroke',thermal?'#FF6600':'#97C459');
-  $('cbody').setAttribute('fill',thermal?'#FFF0E6':'#EEEDFE');
-  $('cbody').setAttribute('stroke',thermal?'#FF4400':'#7F77DD');
-  $('cvol').textContent=tot;
-  $('cvol').setAttribute('fill',thermal?'#CC2200':'#534AB7');
-  $('ctgt').textContent=`/ ${tgt}`;
-}
-
-/* Pipes grow from centre toward endpoint proportional to fill fraction */
-function updatePipes(hv,pv,cv,tgt){
-  const hf=Math.min(hv/tgt,1),pf=Math.min(pv/tgt,1),cf=Math.min(cv/tgt,1);
-  function lerp(a,b,t){return a+(b-a)*t;}
-  $('ph').setAttribute('x2',lerp(60,60,hf)); $('ph').setAttribute('y2',lerp(60,16,hf));
-  $('pp').setAttribute('x2',lerp(60,18,pf)); $('pp').setAttribute('y2',lerp(60,88,pf));
-  $('pc').setAttribute('x2',lerp(60,102,cf));$('pc').setAttribute('y2',lerp(60,88,cf));
-}
-
-function setTicker(ic,ibg,iclr,bdr,html){
-  $('tki').textContent=ic;$('tki').style.background=ibg;$('tki').style.color=iclr;
-  $('ticker').style.borderColor=bdr;$('tkt').innerHTML=html;
-}
-
-/* FIX 3: countdown sits directly below core, tracks green-zone hold */
-function startCD(){
-  if(cdActive)return;cdActive=true;hStart=Date.now();
-  const tick=()=>{
-    if(!cdActive)return;
-    const el=Date.now()-hStart,pct=Math.min(el/HOLD,1);
-    $('cdf').style.width=Math.round(pct*100)+'%';
-    $('cdl').textContent=pct>=1?'locked in!':'hold — '+(((HOLD-el)/1000)).toFixed(1)+'s';
-    if(pct>=1)triggerWin();else hRaf=requestAnimationFrame(tick);
-  };
-  hRaf=requestAnimationFrame(tick);
-}
-function stopCD(){
-  cdActive=false;cancelAnimationFrame(hRaf);
-  $('cdf').style.width='0%';$('cdl').textContent='hold steady 5s';
-}
-
-function triggerWin(){
-  if(rLock)return;rLock=true;cdActive=false;lockUI();
-  playWin();
-  if(navigator.vibrate)navigator.vibrate([40,30,80]);
-  const l=LV[cur],isLast=cur===LV.length-1;
-  $('mttl').textContent=isLast?'Lightspeed achieved!':`Level ${l.id} clear`;
-  $('mbdy').innerHTML=isLast
-    ?'The reactor held perfect balance. Jump complete — we are in deep space.'
-    :`<em>${l.n}</em> — fuel mix locked. Initiating burn sequence.`;
-  const btn=$('mbtn');
-  if(isLast){
-    btn.textContent='Replay mission';
-    btn.onclick=()=>{$('moverlay').classList.remove('show');cur=0;solved=new Set();load();};
-  } else {
-    btn.textContent='Next Level →';
-    btn.onclick=()=>{$('moverlay').classList.remove('show');cur++;load();};
-  }
+function showFeedback(msg,type){const el=$('feedback-msg');if(!el)return;el.textContent=msg;el.className='feedback-msg '+type;void el.offsetWidth;el.classList.add('show');}
+function clearFeedback(){const el=$('feedback-msg');if(!el)return;el.className='feedback-msg';el.textContent='';}
+function numPress(k){if(levelDone)return;clearFeedback();if(k==='⌫')answerStr=answerStr.slice(0,-1);else if(k==='✓'){submitAnswer();return;}else if(answerStr.length<3)answerStr+=k;_renderDigits();_renderPreview();}
+function submitAnswer(){if(levelDone||answerStr==='')return;parseInt(answerStr)===LEVELS[cur].answer?handleCorrect():handleWrong();}
+function handleCorrect(){
+  const lv=LEVELS[cur];levelDone=true;
+  $('fb-'+unkType).className='fb-row correct';
+  $('fill-'+unkType).style.width=lv.answer+'%';
+  $('val-'+unkType).textContent=lv.answer;$('val-'+unkType).className='fb-pct';
+  $('total-val').textContent='100%';$('total-val').className='total-val full';
+  const el=$('answer-digits');el.textContent=lv.answer;el.className='answer-digits correct';
+  for(let i=attempts;i<3;i++){const d=$('att-'+i);if(d)d.classList.add('correct');}
+  showFeedback('✓ Correct!','correct');playChime();if(navigator.vibrate)navigator.vibrate(50);
   solved.add(cur);buildDots();
+  const prev=powerLevel;powerLevel=Math.min(1,powerLevel+1/LEVELS.length);
+  animPower(prev,powerLevel,900,Math.round(powerLevel*100)===100);
   try{const p=JSON.parse(localStorage.getItem('spacecrew_progress_v1')||'{}');p.fuel=Math.max(p.fuel||0,solved.size);localStorage.setItem('spacecrew_progress_v1',JSON.stringify(p));}catch(e){}
-  ariaReact('correct');
-  launchCelebration();
-  if(document.getElementById('ov-voss-txt')) document.getElementById('ov-voss-txt').textContent = VOSS_QUIPS_FUEL[Math.floor(Math.random()*VOSS_QUIPS_FUEL.length)];
-  setTimeout(()=>$('moverlay').classList.add('show'),500);
+  ariaReact('correct');launchCelebration();
+  if(cur===LEVELS.length-1){
+    $('mc-title').textContent='Reactor Online';
+    $('mc-body').innerHTML='Fuel mix perfect. The reactor hums with power.<br><em>All levels complete. Mission accomplished!</em>';
+    const btn=$('mc-next');btn.textContent='Replay from start';
+    btn.onclick=()=>{$('modal').classList.remove('show');cur=0;solved=new Set();powerLevel=0;const pf=$('power-fill');pf.style.width='0%';pf.classList.remove('maxed','charging');$('power-pct').textContent='0%';loadLevel();};
+    if($('ov-voss-txt'))$('ov-voss-txt').textContent=VOSS_QUIPS[Math.floor(Math.random()*VOSS_QUIPS.length)];
+    setTimeout(()=>$('modal').classList.add('show'),1800);
+  }else{setTimeout(()=>{cur++;loadLevel();},1600);}
 }
-
-function load(){
-  const l=LV[cur];
-  rLock=false;unlockUI();cancelVent();stopCD();lastCK='';
-  VH.value=0;VP.value=0;VC.value=0;
-  const mx=l.tv+4;VH.max=mx;VP.max=mx;VC.max=mx;
-  $('lv-id').textContent=`Level ${l.id} — ${l.n}`;
-  $('lv-ratio').textContent=`H : P : C = ${l.r[0]} : ${l.r[1]} : ${l.r[2]}`;
-  $('lv-flavor').textContent=l.f;
-  $('tgt').textContent=l.tv;
-  document.getElementById('app').classList.remove('tflicker');
-  $('moverlay').classList.remove('show');
-  buildTgt(l.r);buildPropTarget(l.r);buildDots();
-  requestAnimationFrame(()=>upd(true));
+function handleWrong(){
+  const d=$('att-'+Math.min(attempts,2));if(d)d.classList.add('wrong');
+  attempts=Math.min(attempts+1,3);
+  $('answer-digits').className='answer-digits wrong';
+  $('fb-'+unkType).classList.add('wrong-flash');
+  setTimeout(()=>{$('fb-'+unkType).classList.remove('wrong-flash');},400);
+  setTimeout(()=>{answerStr='';_renderDigits();_renderPreview();},400);
+  showFeedback('✗ Wrong — try again!','wrong');playError();if(navigator.vibrate)navigator.vibrate([60,30,60]);
+  ariaReact('wrong');
+  if(attempts>=2&&!hintShown){hintShown=true;$('hint-box').classList.add('show');$('hint-btn').textContent='Hide hint';ariaSetMsg('Hint unlocked — think step by step!');}
 }
-
-function update(){clearTimeout(dT);dT=setTimeout(()=>upd(false),35);}
-
-function upd(force){
-  if(sLock&&!force)return;
-  const l=LV[cur];
-  const hv=parseInt(VH.value),pv=parseInt(VP.value),cv=parseInt(VC.value);
-  const tot=hv+pv+cv,tgt=l.tv;
-  $('bh').textContent=hv;$('bp').textContent=pv;$('bc').textContent=cv;
-
-  /* FIX 1: thermal floor — only fires above TMIN total units */
-  const thermal=(tot>=TMIN)&&((cv===0&&pv>0)||(cv>0&&pv/cv>2.0));
-
-  const ok=rOk(hv,pv,cv,l.r);
-  const vok=Math.abs(tot-tgt)<=TOL;
-  const over=tot>tgt+TOL;
-  const green=ok&&vok&&!over&&!thermal;
-
-  updateNeedle(hv,pv,cv,l.r);
-  updateRing(tot,tgt,thermal);
-  updatePipes(hv,pv,cv,tgt);
-  buildCur(hv,pv,cv);
-  updatePropCur(hv,pv,cv,rOk(hv,pv,cv,l.r));
-  updateAmbient(tot,tgt,thermal);
-
-  const app=document.getElementById('app');
-  app.classList.toggle('tflicker',thermal&&!green);
-  const badge=$('rmatch');
-
-  if(green&&!solved.has(cur)){
-    badge.textContent='locked';badge.className='rm yes';
-    setTicker('✓','rgba(68,221,136,0.12)','var(--green)','var(--green)','<strong>Green zone!</strong> Hold steady — jump countdown initiated.');
-    startCD();
-  } else {
-    if(!solved.has(cur))stopCD();
-    badge.className='rm no';
-    if(tot===0){
-      badge.textContent='—';
-      setTicker('—','var(--bg-raised)','var(--text-dim)','var(--border-dim)','Adjust the three fuel lines to begin ignition.');
-    } else if(over){
-      badge.textContent='over';
-      app.classList.add('doshake');setTimeout(()=>app.classList.remove('doshake'),250);
-      setTicker('!','rgba(255,68,85,0.12)','var(--red)','var(--red)','<strong>Over-pressure!</strong> Fuel exceeds capacity — vent to reduce.');
-    } else if(cv===0&&pv>0&&tot>=TMIN){
-      badge.textContent='hot';
-      setTicker('!','rgba(255,68,85,0.12)','var(--red)','var(--red)','<strong>No Coolant!</strong> Add Coolant before increasing Plasma or the reactor will melt.');
-    } else if(thermal){
-      badge.textContent='hot';
-      setTicker('!','rgba(255,68,85,0.12)','var(--red)','var(--red)','<strong>Thermal runaway!</strong> Plasma/Coolant ratio critical — increase Coolant now.');
-    } else if(ok&&!vok){
-      badge.textContent='ratio ok';badge.className='rm yes';
-      setTicker('→','rgba(68,221,136,0.12)','var(--green)','var(--green)','<strong>Ratio locked.</strong> Keep the balance and scale up to the target volume.');
-    } else if(!ok&&vok){
-      badge.textContent='off';
-      const s=l.r[0]+l.r[1]+l.r[2];
-      const eH=Math.round(tgt*l.r[0]/s),eP=Math.round(tgt*l.r[1]/s),eC=tgt-eH-eP;
-      setTicker('?','rgba(240,176,64,0.12)','var(--amber)','var(--amber)',`<strong>Volume correct, ratio off.</strong> Try H=${eH}, P=${eP}, C=${eC}.`);
-    } else {
-      badge.textContent='off';
-      const s=l.r[0]+l.r[1]+l.r[2];
-      const eH=Math.round(tot*l.r[0]/s),eP=Math.round(tot*l.r[1]/s),eC=Math.max(0,tot-eH-eP);
-      setTicker('~','var(--bg-raised)','var(--text-mid)','var(--border-dim)',
-        `At ${tot} units — try H=${eH}, P=${eP}, C=${eC}.`);
-    }
-  }
-}
-
-function ventOne(sl){if(sLock)return;sl.value=Math.max(0,parseInt(sl.value)-1);update();}
-function ventAll(){
-  if(sLock)return;cancelVent();
-  const t=()=>{
-    const h=parseInt(VH.value),p=parseInt(VP.value),c=parseInt(VC.value);
-    if(!h&&!p&&!c){cancelVent();return;}
-    if(h>0)VH.value=h-1;if(p>0)VP.value=p-1;if(c>0)VC.value=c-1;update();
-  };
-  vts.push(setInterval(t,60));
-}
-
-VH.addEventListener('input',()=>{startAmbient();cancelVent();update();});
-VP.addEventListener('input',()=>{startAmbient();cancelVent();update();});
-VC.addEventListener('input',()=>{startAmbient();cancelVent();update();});
-$('vnh').onclick=()=>ventOne(VH);
-$('vnp').onclick=()=>ventOne(VP);
-$('vnc').onclick=()=>ventOne(VC);
-$('vna').onclick=ventAll;
-$('bprev').onclick=()=>{if(cur>0){cur--;load();}};
-$('bnxt').onclick=()=>{if(cur<LV.length-1){cur++;load();}};
-
-/* ── Restore progress from previous session ── */
-try{
-  const _sv=JSON.parse(localStorage.getItem('spacecrew_progress_v1')||'{}');
-  const _n=_sv.fuel||0;
-  for(let i=0;i<_n&&i<LV.length;i++)solved.add(i);
-}catch(e){}
-load();
-if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
-
-// ══ ARIA companion ════════════════════════════════════════════════
-const ARIA_MSGS_FUEL={idle:["Balance all 3 fuel lines!","H:P:C — three gases, one ratio!","Check the target — adjust the sliders!","Lightspeed depends on you!"],correct:["⭐ Jump initiated!","Perfect fuel balance!","Three-way ratio mastered!","Reactor online — brilliant!"],wrong:["Off balance — adjust a slider!","One gas is too high!","Think: total parts = sum of ratio!","So close — tweak it a bit!"]};
-let _ariaTimerF=null;
-function ariaSetMsg(msg){const el=document.getElementById('aria-msg');if(!el)return;clearTimeout(_ariaTimerF);el.textContent='';let i=0;(function t(){if(i<msg.length){el.textContent+=msg[i++];_ariaTimerF=setTimeout(t,20);}})();}
-function ariaReact(type){const w=document.getElementById('aria-wrap');if(!w)return;const pool=ARIA_MSGS_FUEL[type]||ARIA_MSGS_FUEL.idle;ariaSetMsg(pool[Math.floor(Math.random()*pool.length)]);w.className='aria-wrap';void w.offsetWidth;if(type==='correct'){w.className='aria-wrap aria-happy';setTimeout(()=>{w.className='aria-wrap';},700);}else if(type==='wrong'){w.className='aria-wrap aria-sad';setTimeout(()=>{w.className='aria-wrap';},500);}}
-function ariaTap(){const w=document.getElementById('aria-wrap');if(!w)return;w.className='aria-wrap';void w.offsetWidth;const msgs=["I'm ARIA — your AI navigator!","3-part ratios: add all parts first!","If ratio is 1:1:1, each gas gets ⅓!","Fuel math = speed math!"];ariaSetMsg(msgs[Math.floor(Math.random()*msgs.length)]);w.style.transform='rotateY(360deg)';setTimeout(()=>{w.style.transform='';},500);}
-(function ariaIdle(){setTimeout(()=>{if(!$('moverlay').classList.contains('show'))ariaSetMsg(ARIA_MSGS_FUEL.idle[Math.floor(Math.random()*ARIA_MSGS_FUEL.idle.length)]);ariaIdle();},10000);})();
-
-// ══ Reactor pulse celebration ══════════════════════════════════════
-const VOSS_QUIPS_FUEL=['"Reactor balanced. Lightspeed achieved!"','"Three-way ratio perfected. Jump complete!"','"The reactor held balance. Deep space awaits!"','"That\'s the equilibrium we needed!"','"Fuel math done right. We\'re in deep space!"'];
-function launchCelebration(){
-  const canvas=document.getElementById('cel-canvas');if(!canvas)return;
-  canvas.width=window.innerWidth;canvas.height=window.innerHeight;canvas.classList.add('active');
-  const ctx=canvas.getContext('2d');const cx=canvas.width/2,cy=canvas.height/2;
-  const rings=[];for(let i=0;i<6;i++)setTimeout(()=>rings.push({r:10,life:1,d:.018,c:i%2===0?'#cc44ff':'#9f60ff'}),i*120);
-  const sparks=[];
-  for(let i=0;i<80;i++){const a=(i/80)*Math.PI*2,sp=1.5+Math.random()*5;sparks.push({x:cx,y:cy,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-.5,r:1.5+Math.random()*4,c:i%3===0?'#cc44ff':i%3===1?'#9f60ff':'#e8c840',life:1,d:.014+Math.random()*.012});}
-  (function frame(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    rings.forEach(rng=>{if(rng.life<=0)return;rng.r+=6;rng.life-=rng.d;ctx.save();ctx.globalAlpha=Math.max(0,rng.life*.6);ctx.strokeStyle=rng.c;ctx.lineWidth=2+rng.life*3;ctx.shadowBlur=16;ctx.shadowColor=rng.c;ctx.beginPath();ctx.arc(cx,cy,rng.r,0,Math.PI*2);ctx.stroke();ctx.restore();});
-    sparks.forEach(p=>{if(p.life<=0)return;p.x+=p.vx;p.y+=p.vy;p.vy+=.06;p.life-=p.d;ctx.save();ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.c;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();ctx.restore();});
-    const alive=rings.some(r=>r.life>0)||sparks.some(p=>p.life>0);
-    if(alive)requestAnimationFrame(frame);else{canvas.classList.remove('active');ctx.clearRect(0,0,canvas.width,canvas.height);}
-  })();
-}
+function toggleHint(){hintShown=!hintShown;$('hint-box').classList.toggle('show',hintShown);$('hint-btn').textContent=hintShown?'Hide hint':'Show hint';}
+$('btn-prev').onclick=()=>{if(cur>0){cur--;loadLevel();}};
+$('btn-next').onclick=()=>{if(cur<LEVELS.length-1){cur++;loadLevel();}};
+document.addEventListener('keydown',e=>{if($('modal').classList.contains('show'))return;if(e.key>='0'&&e.key<='9')numPress(e.key);else if(e.key==='Backspace')numPress('⌫');else if(e.key==='Enter')numPress('✓');});
+try{const sv=JSON.parse(localStorage.getItem('spacecrew_progress_v1')||'{}');const n=sv.fuel||0;for(let i=0;i<n&&i<LEVELS.length;i++)solved.add(i);powerLevel=solved.size/LEVELS.length;const pf=$('power-fill');pf.style.width=Math.round(powerLevel*100)+'%';$('power-pct').textContent=Math.round(powerLevel*100)+'%';if(Math.round(powerLevel*100)===100)pf.classList.add('maxed');}catch(e){}
+loadLevel();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+const ARIA_MSGS={
+  idle:["Find the missing fuel level!","Three fuels must total 100%!","Add what you know, count to 100!","You've got this, Commander!"],
+  correct:["⭐ Reactor fueled! Brilliant!","Perfect mix — 100% achieved!","The crew is warm and powered!","Math saves the day again!"],
+  wrong:["Not quite — check your addition!","What's left to reach 100?","Almost — count more carefully!","Try once more!"],
+};
+let _ariaT=null;
+function ariaSetMsg(msg){const el=$('aria-msg');if(!el)return;clearTimeout(_ariaT);el.textContent='';let i=0;(function t(){if(i<msg.length){el.textContent+=msg[i++];_ariaT=setTimeout(t,18);}})();}
+function ariaReact(type){const w=$('aria-wrap');if(!w)return;const pool=ARIA_MSGS[type]||ARIA_MSGS.idle;ariaSetMsg(pool[Math.floor(Math.random()*pool.length)]);w.className='aria-wrap';void w.offsetWidth;if(type==='correct'){w.className='aria-wrap aria-happy';setTimeout(()=>{w.className='aria-wrap';},700);}else if(type==='wrong'){w.className='aria-wrap aria-sad';setTimeout(()=>{w.className='aria-wrap';},500);}}
+function ariaTap(){const w=$('aria-wrap');if(!w)return;const msgs=["I'm ARIA — your AI navigator!","Three numbers must sum to 100!","Add the knowns, find the gap!","Math powers the reactor!"];ariaSetMsg(msgs[Math.floor(Math.random()*msgs.length)]);w.style.transform='rotateY(360deg)';setTimeout(()=>{w.style.transform='';},500);}
+(function idleLoop(){setTimeout(()=>{if(!$('modal').classList.contains('show'))ariaSetMsg(ARIA_MSGS.idle[Math.floor(Math.random()*ARIA_MSGS.idle.length)]);idleLoop();},12000);})();
+function launchCelebration(){const canvas=$('cel-canvas');if(!canvas)return;canvas.width=window.innerWidth;canvas.height=window.innerHeight;canvas.classList.add('active');const ctx=canvas.getContext('2d');const cols=['#cc44ff','#44dd88','#ff9060','#eeb4ff','#44ffcc'];const bubbles=[];for(let i=0;i<60;i++)bubbles.push({x:Math.random()*canvas.width,y:canvas.height+20+Math.random()*100,vy:-(1+Math.random()*3.5),vx:(Math.random()-.5)*1.5,r:5+Math.random()*18,c:cols[i%cols.length],life:1,d:.006+Math.random()*.008,wobble:Math.random()*Math.PI*2,ws:.04+Math.random()*.06});(function frame(){ctx.clearRect(0,0,canvas.width,canvas.height);let alive=false;bubbles.forEach(p=>{if(p.life<=0)return;alive=true;p.x+=p.vx+Math.sin(p.wobble)*0.8;p.y+=p.vy;p.wobble+=p.ws;p.life-=p.d;ctx.save();ctx.globalAlpha=Math.max(0,p.life*.7);ctx.strokeStyle=p.c;ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=Math.max(0,p.life*.2);ctx.fillStyle=p.c;ctx.fill();ctx.globalAlpha=Math.max(0,p.life*.5);ctx.fillStyle='rgba(255,255,255,.6)';ctx.beginPath();ctx.arc(p.x-p.r*.3,p.y-p.r*.35,p.r*.25,0,Math.PI*2);ctx.fill();ctx.restore();});if(alive)requestAnimationFrame(frame);else{canvas.classList.remove('active');ctx.clearRect(0,0,canvas.width,canvas.height);}})();}
 </script>
-<script src="./audio.js"></script>
+<script>
+(function(){const c=document.getElementById('bg-stars');if(!c)return;const ctx=c.getContext('2d');let W,H,stars,paused=false;function init(){W=c.width=window.innerWidth;H=c.height=window.innerHeight;stars=Array.from({length:55},()=>({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.1+0.2,vy:0.04+Math.random()*0.1,o:0.15+Math.random()*0.45}));}function draw(){ctx.clearRect(0,0,W,H);if(!paused)stars.forEach(s=>{ctx.globalAlpha=s.o;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();s.y+=s.vy;if(s.y>H+2){s.y=-2;s.x=Math.random()*W;}});ctx.globalAlpha=1;requestAnimationFrame(draw);}document.addEventListener('visibilitychange',()=>{paused=document.hidden;});window.addEventListener('resize',init);init();draw();})();
+</script>
 </body>
 </html>

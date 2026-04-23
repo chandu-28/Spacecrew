@@ -3,249 +3,133 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#06060f">
+  <meta name="theme-color" content="#00c8a8">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Med Bay">
+  <meta name="apple-mobile-web-app-title" content="MedBay">
   <link rel="manifest" href="./manifest.json">
-  <link rel="apple-touch-icon" href="./icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet">
   <title>Med Bay — Space Crew</title>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg-deep:#06060f; --bg-panel:#0d0d1e; --bg-inset:#111122; --bg-raised:#161630;
-      --border-dim:rgba(80,80,160,0.18); --border-glow:rgba(100,100,220,0.4);
-      --text-bright:#eeeef8; --text-mid:#8888aa; --text-dim:#44445a;
-      --cyan:#00d4d4; --blue:#4488ff; --purple:#9f60ff; --magenta:#cc44ff;
-      --amber:#f0b040; --green:#44dd88; --red:#ff4455; --teal:#00c8a8;
-      --r8:8px; --r10:10px; --r12:12px;
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --accent:#00c8a8;
+      --bg-deep:#06060f;--bg-panel:#0d0d1e;--bg-inset:#111122;--bg-raised:#161630;
+      --border-dim:rgba(80,80,160,0.18);--border-glow:rgba(100,100,220,0.4);
+      --text-bright:#eeeef8;--text-mid:#8888aa;--text-dim:#44445a;
+      --green:#44dd88;--red:#ff4455;--r8:8px;--r10:10px;--r12:12px;
     }
-    html { min-height:100%; width:100%; overflow-y:scroll; }
-    body {
-      min-height:100%; width:100%; overflow-x:hidden; overflow-y:auto;
-      background:var(--bg-deep); color:var(--text-bright);
-      font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      -webkit-tap-highlight-color:transparent;
-      overscroll-behavior-x:none;
-    }
-    #app {
-      padding:10px; width:100%; max-width:600px; margin:0 auto;
-      padding-bottom:env(safe-area-inset-bottom, 24px);
-    }
-
-    .nav-back {
-      font-size:11px; color:var(--text-dim); text-decoration:none;
-      display:inline-flex; align-items:center; gap:4px; margin-bottom:8px;
-    }
-
-    /* ── HUD ── */
-    .hud {
-      background:var(--bg-panel); border:0.5px solid var(--border-dim);
-      border-radius:var(--r12); padding:10px 12px; margin-bottom:8px;
-      display:flex; gap:10px; align-items:flex-start;
-    }
-    .hud-main { flex:1; min-width:0; }
-    .hud-lbl  { font-size:9px; color:var(--text-dim); letter-spacing:.08em; text-transform:uppercase; margin-bottom:2px; }
-    .hud-text { font-size:12px; color:var(--text-bright); font-weight:500; line-height:1.3; }
-    .hud-flavor { font-size:11px; color:var(--text-mid); font-style:italic; margin-top:2px; line-height:1.3; }
-    .hud-lvl .hud-num { font-size:22px; font-weight:500; color:var(--teal); line-height:1; }
-
-    /* ── Power bar ── */
-    .power-wrap { margin-bottom:10px; }
-    .power-meta { display:flex; justify-content:space-between; font-size:9px; color:var(--text-dim); letter-spacing:.07em; text-transform:uppercase; margin-bottom:3px; }
-    .power-track { height:8px; background:var(--bg-inset); border:0.5px solid var(--border-dim); border-radius:4px; overflow:hidden; }
-    .power-fill { height:100%; width:0%; border-radius:4px; background:var(--teal); transition:width .6s ease; }
-    .power-fill.maxed {
-      background:linear-gradient(90deg,#009878,var(--teal),#80ffe8,var(--teal),#009878);
-      background-size:300%; animation:shimmer 1.2s linear infinite;
-    }
-    @keyframes shimmer { 0%{background-position:300%} 100%{background-position:0%} }
-
-    /* ══ ARIA companion ══════════════════════════════════════════ */
-    :root{--aria-color:#00c8a8;--aria-chest:rgba(0,200,168,.2);}
-    .aria-bar{display:flex;align-items:center;gap:10px;background:var(--bg-panel);border:0.5px solid var(--border-dim);border-radius:var(--r12);padding:8px 10px;margin-bottom:8px;}
-    .aria-wrap{width:52px;height:52px;flex-shrink:0;cursor:pointer;animation:aria-bob 2.2s ease-in-out infinite;}
+    html{min-height:100%;width:100%;}
+    body{min-height:100%;width:100%;overflow-x:hidden;overflow-y:auto;
+      background:radial-gradient(ellipse 70% 50% at 10% 70%,rgba(0,200,168,0.055) 0%,transparent 100%),
+        radial-gradient(ellipse 55% 65% at 88% 15%,rgba(0,160,130,0.065) 0%,transparent 100%),#06060f;
+      color:var(--text-bright);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+      -webkit-tap-highlight-color:transparent;}
+    @view-transition{navigation:auto;}
+    @keyframes vt-up{from{opacity:0;transform:translateY(10px);}}
+    @keyframes vt-down{to{opacity:0;transform:translateY(-8px);}}
+    ::view-transition-old(root){animation:.22s ease vt-down;}
+    ::view-transition-new(root){animation:.28s ease vt-up;}
+    #bg-stars{position:fixed;inset:0;pointer-events:none;z-index:0;}
+    #app{position:relative;z-index:1;padding:10px;width:100%;max-width:540px;margin:0 auto;padding-bottom:env(safe-area-inset-bottom,20px);}
+    .glass{background:rgba(6,6,22,0.52);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:0.5px solid rgba(0,200,168,0.12);border-radius:var(--r12);box-shadow:0 8px 32px rgba(0,0,0,0.35),inset 0 1px 0 rgba(255,255,255,0.03);}
+    .aria-bar{display:flex;align-items:center;gap:10px;padding:7px 10px;margin-bottom:7px;}
+    .aria-wrap{width:48px;height:48px;flex-shrink:0;cursor:pointer;animation:aria-bob 2.2s ease-in-out infinite;}
     @keyframes aria-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
-    .aria-wrap.aria-happy{animation:aria-bounce .55s ease;}
-    @keyframes aria-bounce{0%,100%{transform:scale(1) translateY(0)}35%{transform:scale(1.2) translateY(-7px)}65%{transform:scale(.95) translateY(1px)}}
-    .aria-wrap.aria-sad{animation:aria-wag .4s ease;}
+    .aria-wrap.aria-happy{animation:aria-bounce .55s ease forwards;}
+    @keyframes aria-bounce{0%,100%{transform:scale(1) translateY(0)}35%{transform:scale(1.18) translateY(-6px)}65%{transform:scale(.96) translateY(1px)}}
+    .aria-wrap.aria-sad{animation:aria-wag .4s ease forwards;}
     @keyframes aria-wag{0%,100%{transform:rotate(0)}30%{transform:rotate(-9deg)}70%{transform:rotate(9deg)}}
-    .aria-bubble{flex:1;position:relative;background:rgba(255,255,255,.04);border:0.5px solid rgba(255,255,255,.1);border-radius:var(--r10);padding:7px 10px;min-height:38px;}
-    .aria-bubble::before{content:'';position:absolute;left:-8px;top:50%;transform:translateY(-50%);border:5px solid transparent;border-right-color:rgba(255,255,255,.1);}
-    .aria-name{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--aria-color);display:block;margin-bottom:2px;}
-    .aria-msg{font-size:11.5px;color:var(--text-bright);line-height:1.4;}
-    #cel-canvas{position:fixed;inset:0;pointer-events:none;z-index:99;display:none;}
-    #cel-canvas.active{display:block;}
-    .ov-voss{display:flex;align-items:center;gap:10px;background:var(--bg-panel);border:1px solid rgba(0,200,168,.35);border-radius:var(--r12);padding:10px 13px;max-width:320px;width:90%;animation:ov-voss-in .45s ease;}
+    .aria-bubble{flex:1;position:relative;background:rgba(0,200,168,0.04);border:0.5px solid rgba(0,200,168,0.12);border-radius:var(--r10);padding:6px 10px;min-height:36px;}
+    .aria-bubble::before{content:'';position:absolute;left:-7px;top:50%;transform:translateY(-50%);border:4px solid transparent;border-right-color:rgba(0,200,168,0.12);}
+    .aria-name{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:1px;}
+    .aria-msg{font-size:11px;color:var(--text-bright);line-height:1.4;}
+    .hud{padding:9px 12px;margin-bottom:7px;}
+    #lv-name{font-family:'Orbitron',monospace;font-size:9px;letter-spacing:.1em;font-weight:600;text-transform:uppercase;margin-bottom:3px;background:linear-gradient(90deg,var(--accent) 0%,#88ffe8 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+    #lv-flavor{font-size:11px;color:var(--text-mid);font-style:italic;line-height:1.35;}
+    .power-wrap{margin-bottom:7px;}
+    .power-meta{display:flex;justify-content:space-between;font-size:9px;color:var(--text-dim);letter-spacing:.07em;text-transform:uppercase;margin-bottom:3px;}
+    .power-track{height:7px;background:var(--bg-inset);border:0.5px solid rgba(68,221,136,0.1);border-radius:4px;overflow:hidden;}
+    .power-fill{height:100%;width:0%;border-radius:4px;background:var(--green);box-shadow:0 0 10px rgba(68,221,136,0.45);}
+    .power-fill.charging{background:linear-gradient(90deg,var(--accent),var(--green),var(--accent));background-size:200%;animation:shimmer .7s linear infinite;}
+    .power-fill.maxed{background:linear-gradient(90deg,#22aa66,var(--green),#aaffd4,var(--green),#22aa66);background-size:300%;animation:shimmer-max 1.2s linear infinite;box-shadow:0 0 8px 2px rgba(68,221,136,0.4);}
+    @keyframes shimmer{0%{background-position:200%}100%{background-position:0%}}
+    @keyframes shimmer-max{0%{background-position:300%}100%{background-position:0%}}
+    .problem-panel{padding:12px;margin-bottom:7px;}
+    /* Fraction display */
+    .med-display{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+    .frac-box{display:flex;flex-direction:column;align-items:center;gap:0;background:var(--bg-inset);border:2px solid var(--accent);border-radius:10px;padding:8px 14px;box-shadow:0 0 12px rgba(0,200,168,.2);}
+    .frac-num{font-family:'Orbitron',monospace;font-size:22px;font-weight:600;color:var(--accent);line-height:1;}
+    .frac-line{width:100%;height:2px;background:var(--accent);margin:3px 0;opacity:.7;}
+    .frac-den{font-family:'Orbitron',monospace;font-size:22px;font-weight:600;color:var(--accent);line-height:1;}
+    .med-op{font-family:'Orbitron',monospace;font-size:26px;font-weight:400;color:var(--text-mid);}
+    .med-box{width:clamp(68px,18vw,84px);height:72px;background:var(--bg-inset);border:2px solid var(--border-dim);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;}
+    .med-box.given{border-color:var(--accent);box-shadow:0 0 12px rgba(0,200,168,.2);}
+    .med-box.unk{border-color:rgba(0,200,168,.35);}
+    .med-box.correct{border-color:var(--green)!important;box-shadow:0 0 18px rgba(68,221,136,.45)!important;animation:correct-pulse .7s ease;}
+    @keyframes correct-pulse{0%,100%{box-shadow:0 0 18px rgba(68,221,136,.45)}50%{box-shadow:0 0 36px rgba(68,221,136,.8)}}
+    .med-box.wrong-flash{animation:med-wrong .38s ease;}
+    @keyframes med-wrong{50%{border-color:var(--red)!important;box-shadow:0 0 12px rgba(255,68,85,.5)!important;}}
+    .mb-lbl{font-size:8px;color:var(--text-dim);letter-spacing:.06em;text-transform:uppercase;}
+    .mb-val{font-family:'Orbitron',monospace;font-size:22px;font-weight:600;color:var(--text-bright);}
+    .mb-val.unknown{color:var(--text-dim);font-size:26px;}
+    .question-box{background:var(--bg-inset);border:0.5px solid var(--border-dim);border-radius:var(--r10);padding:9px 12px;text-align:center;}
+    .question-text{font-size:12.5px;color:var(--text-mid);line-height:1.6;}
+    .question-text strong{color:var(--text-bright);font-weight:600;}
+    .answer-section{padding:11px;margin-bottom:7px;}
+    .attempts-row{display:flex;gap:8px;justify-content:center;margin-bottom:10px;}
+    .att-dot{width:12px;height:12px;border-radius:50%;border:1.5px solid var(--border-glow);background:transparent;transition:background .18s,border-color .18s,box-shadow .18s;}
+    .att-dot.wrong{background:var(--red);border-color:var(--red);box-shadow:0 0 8px rgba(255,68,85,.5);}
+    .att-dot.correct{background:var(--green);border-color:var(--green);box-shadow:0 0 8px rgba(68,221,136,.5);}
+    .answer-display{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;background:var(--bg-inset);border-radius:var(--r10);border:0.5px solid var(--border-dim);margin-bottom:9px;}
+    .answer-prompt{font-size:10px;color:var(--text-dim);letter-spacing:.04em;}
+    .answer-digits{font-family:'Orbitron',monospace;font-size:26px;font-weight:600;color:var(--text-bright);min-width:64px;text-align:right;letter-spacing:.05em;transition:color .12s;}
+    .answer-digits.empty{color:var(--text-dim);}.answer-digits.correct{color:var(--green);text-shadow:0 0 12px rgba(68,221,136,.5);}.answer-digits.wrong{color:var(--red);}
+    .feedback-msg{text-align:center;font-size:13px;font-weight:600;min-height:18px;margin-bottom:7px;letter-spacing:.03em;opacity:0;transition:opacity .18s;}
+    .feedback-msg.show{opacity:1;}.feedback-msg.correct{color:var(--green);}.feedback-msg.wrong{color:var(--red);}
+    .hint-row{display:flex;align-items:flex-start;gap:8px;margin-bottom:9px;flex-wrap:wrap;}
+    .hint-btn{font-size:10px;color:var(--text-dim);cursor:pointer;text-decoration:underline;border:none;background:none;flex-shrink:0;}
+    .hint-box{font-size:11px;color:var(--text-mid);background:rgba(6,6,22,.6);backdrop-filter:blur(8px);border:0.5px solid rgba(0,200,168,.14);border-radius:var(--r8);padding:6px 10px;display:none;flex:1;line-height:1.5;}
+    .hint-box.show{display:block;}
+    .numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}
+    .np-btn{height:clamp(44px,11vw,54px);border:0.5px solid var(--border-glow);border-radius:var(--r10);background:var(--bg-raised);color:var(--text-bright);font-size:19px;font-weight:500;cursor:pointer;touch-action:manipulation;transition:background .1s,box-shadow .1s,transform .07s;-webkit-tap-highlight-color:transparent;}
+    .np-btn:active{background:rgba(0,200,168,.1);box-shadow:0 0 10px rgba(0,200,168,.28);transform:scale(0.93);}
+    .np-btn.np-confirm{background:rgba(68,221,136,.1);border-color:rgba(68,221,136,.35);color:var(--green);font-size:21px;}
+    .np-btn.np-confirm:active{background:rgba(68,221,136,.22);}
+    .np-btn.np-back{font-size:21px;color:var(--text-mid);}
+    .level-nav{display:flex;gap:6px;align-items:center;justify-content:space-between;}
+    .nav-btn{font-size:12px;padding:6px 12px;border:0.5px solid var(--border-glow);border-radius:var(--r8);background:transparent;color:var(--text-bright);cursor:pointer;white-space:nowrap;}
+    .nav-btn:active{background:rgba(0,200,168,.08);}
+    .dots{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;flex:1;}
+    .dot{width:10px;height:10px;border-radius:50%;border:1px solid var(--border-glow);background:transparent;cursor:pointer;}
+    .dot.active{background:var(--accent);border-color:var(--accent);box-shadow:0 0 7px rgba(0,200,168,.7);}
+    .dot.solved{background:var(--green);border-color:var(--green);box-shadow:0 0 7px rgba(68,221,136,.6);}
+    .nav-back{font-size:11px;color:var(--text-dim);text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-bottom:8px;transition:color .18s;}
+    .nav-back:hover{color:var(--accent);}
+    .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0);pointer-events:none;z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;transition:background .3s;}
+    .modal-bg.show{background:rgba(0,0,0,.65);pointer-events:all;}
+    .modal-card{background:rgba(6,6,22,.88);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--green);border-radius:var(--r12);padding:22px 24px;text-align:center;max-width:300px;width:100%;opacity:0;transform:scale(.82);transition:opacity .3s,transform .3s;pointer-events:none;box-shadow:0 0 50px rgba(68,221,136,.18),0 24px 60px rgba(0,0,0,.7);}
+    .modal-bg.show .modal-card{opacity:1;transform:scale(1);pointer-events:all;}
+    .modal-title{font-size:16px;font-weight:500;color:var(--green);margin-bottom:7px;}
+    .modal-body{font-size:13px;color:var(--text-mid);line-height:1.6;margin-bottom:16px;}
+    .modal-next{font-size:13px;padding:8px 20px;border:0.5px solid var(--green);border-radius:var(--r8);background:rgba(68,221,136,.08);color:var(--green);cursor:pointer;font-weight:500;}
+    .modal-next:active{background:rgba(68,221,136,.18);}
+    .modal-home{display:block;margin-top:10px;font-size:11px;color:var(--text-dim);text-decoration:none;}
+    .ov-voss{display:flex;align-items:center;gap:10px;background:var(--bg-panel);border:1px solid rgba(0,200,168,.35);border-radius:var(--r12);padding:10px 13px;max-width:300px;width:90%;animation:ov-voss-in .45s ease;margin-top:8px;}
     @keyframes ov-voss-in{from{transform:translateY(18px);opacity:0}to{transform:none;opacity:1}}
     .ov-voss-face{width:44px;height:44px;flex-shrink:0;border-radius:50%;overflow:hidden;border:1.5px solid rgba(0,200,168,.4);}
     .ov-voss-txt{font-size:11px;color:var(--text-mid);line-height:1.5;font-style:italic;}
-    .ov-voss-txt strong{color:var(--text-bright);font-style:normal;}
-
-    /* ── Game area ── */
-    .game-area {
-      display:flex; gap:10px; align-items:flex-start; margin-bottom:10px;
-    }
-
-    /* ── Syringe ── */
-    .syringe-wrap {
-      display:flex; flex-direction:column; align-items:center; gap:6px; flex-shrink:0;
-    }
-    .syringe-lbl { font-size:9px; color:var(--text-dim); letter-spacing:.08em; text-transform:uppercase; }
-
-    .syringe-outer {
-      width:clamp(52px,15vw,72px);
-      height:clamp(180px,50vw,280px);
-      background:var(--bg-inset);
-      border:2px solid var(--teal);
-      border-radius:6px 6px 3px 3px;
-      position:relative; overflow:hidden;
-    }
-    /* graduation marks */
-    .syringe-outer::before {
-      content:'';
-      position:absolute; top:0; right:0; bottom:0;
-      width:12px;
-      background:repeating-linear-gradient(
-        to bottom,
-        transparent,
-        transparent calc(10% - 1px),
-        rgba(0,200,168,0.18) calc(10% - 1px),
-        rgba(0,200,168,0.18) 10%
-      );
-    }
-    .syringe-fill {
-      position:absolute; bottom:0; left:0; right:0;
-      background:rgba(0,200,168,0.45);
-      transition:height .12s ease;
-      border-radius:0 0 2px 2px;
-    }
-    .syringe-fill.good { background:rgba(68,221,136,0.55); }
-    .syringe-fill.over { background:rgba(255,68,85,0.45); }
-    /* target line */
-    .syringe-target {
-      position:absolute; left:0; right:0; height:2px;
-      background:var(--teal); opacity:0.8; transition:bottom .3s;
-    }
-    .syringe-target::after {
-      content: attr(data-label);
-      position:absolute; left:calc(100% + 4px); top:-8px;
-      font-size:9px; color:var(--teal); white-space:nowrap;
-    }
-    /* value label inside syringe */
-    .syringe-val {
-      position:absolute; bottom:6px; left:0; right:0;
-      text-align:center; font-size:12px; font-weight:600;
-      color:var(--text-bright); pointer-events:none;
-    }
-    /* drag handle at top of fill */
-    .syringe-handle {
-      position:absolute; left:0; right:0; height:16px;
-      cursor:row-resize; touch-action:none;
-      display:flex; align-items:center; justify-content:center;
-    }
-    .syringe-handle::after {
-      content:'';
-      display:block; width:60%; height:3px;
-      background:var(--teal); border-radius:2px; opacity:0.7;
-    }
-
-    /* ── Fraction display panel ── */
-    .frac-panel {
-      flex:1; background:var(--bg-panel); border:0.5px solid var(--border-dim);
-      border-radius:var(--r12); padding:12px; display:flex; flex-direction:column; gap:10px;
-    }
-    .frac-panel-lbl { font-size:9px; color:var(--text-dim); letter-spacing:.08em; text-transform:uppercase; margin-bottom:2px; }
-
-    /* target fraction display */
-    .target-frac {
-      display:flex; flex-direction:column; align-items:center;
-      background:var(--bg-inset); border-radius:var(--r8); padding:10px;
-    }
-    .frac-row { display:flex; align-items:center; gap:8px; }
-    .frac-glyph {
-      display:inline-flex; flex-direction:column; align-items:center;
-      font-size:clamp(18px,6vw,26px); font-weight:600; color:var(--teal); line-height:1;
-    }
-    .frac-line { width:100%; height:2px; background:var(--teal); margin:2px 0; border-radius:1px; }
-    .frac-of { font-size:13px; color:var(--text-mid); }
-    .frac-total { font-size:clamp(18px,6vw,26px); font-weight:600; color:var(--text-bright); }
-    .frac-equals { font-size:13px; color:var(--text-mid); }
-    .frac-result { font-size:clamp(18px,6vw,26px); font-weight:600; color:var(--teal); }
-    .target-sub { font-size:10px; color:var(--text-dim); margin-top:4px; text-align:center; }
-
-    /* block visualiser */
-    .block-vis { margin-top:2px; }
-    .block-vis-lbl { font-size:9px; color:var(--text-dim); letter-spacing:.08em; text-transform:uppercase; margin-bottom:4px; }
-    .block-row { display:flex; gap:2px; flex-wrap:wrap; }
-    .block {
-      width:clamp(16px,calc((100% - 20px)/var(--n)),36px);
-      height:18px; border-radius:3px;
-      border:1px solid rgba(0,200,168,0.25);
-      background:transparent;
-      transition:background .2s;
-    }
-    .block.filled { background:rgba(0,200,168,0.45); }
-    .block.filled.good { background:rgba(68,221,136,0.55); }
-
-    /* current readout */
-    .cur-row {
-      display:flex; align-items:center; justify-content:space-between;
-      background:var(--bg-inset); border-radius:var(--r8); padding:8px 10px;
-    }
-    .cur-lbl { font-size:10px; color:var(--text-dim); }
-    .cur-val { font-size:16px; font-weight:600; color:var(--text-bright); font-variant-numeric:tabular-nums; }
-    .cur-match { font-size:11px; font-weight:600; }
-    .cur-match.yes { color:var(--green); }
-    .cur-match.no  { color:var(--text-dim); }
-
-    /* ── Slider ── */
-    .slider-wrap { margin-bottom:10px; }
-    .slider-lbl-row { display:flex; justify-content:space-between; font-size:10px; color:var(--text-dim); margin-bottom:4px; }
-    input[type=range] {
-      -webkit-appearance:none; appearance:none; width:100%; height:36px;
-      background:transparent; border-radius:4px; outline:none;
-      touch-action:manipulation; cursor:pointer;
-    }
-    input[type=range]::-webkit-slider-runnable-track {
-      height:4px; border-radius:2px; background:var(--bg-inset);
-      border:0.5px solid var(--border-dim);
-    }
-    input[type=range]::-webkit-slider-thumb {
-      -webkit-appearance:none; width:22px; height:22px;
-      border-radius:50%; background:var(--teal);
-      box-shadow:0 0 6px rgba(0,200,168,0.5); cursor:pointer; margin-top:-9px;
-    }
-    input[type=range].good::-webkit-slider-thumb { background:var(--green); box-shadow:0 0 6px rgba(68,221,136,0.5); }
-
-    /* ── Overlay ── */
-    .overlay {
-      display:none; position:fixed; inset:0;
-      background:rgba(6,6,15,0.88); z-index:100;
-      flex-direction:column; align-items:center; justify-content:center; gap:12px;
-    }
-    .overlay.show { display:flex; }
-    .ov-icon  { font-size:44px; }
-    .ov-title { font-size:20px; font-weight:500; color:var(--text-bright); text-align:center; padding:0 20px; }
-    .ov-sub   { font-size:13px; color:var(--text-mid); text-align:center; padding:0 24px; line-height:1.5; }
-    .ov-btn {
-      padding:12px 32px; background:var(--teal); color:#fff;
-      border:none; border-radius:var(--r10); font-size:14px; font-weight:600;
-      cursor:pointer; letter-spacing:.04em; margin-top:4px;
-    }
-    .ov-btn:active { background:#009878; }
-    .ov-btn.sec {
-      background:transparent; border:0.5px solid var(--border-glow);
-      color:var(--text-mid); margin-top:0;
-    }
+    #cel-canvas{position:fixed;inset:0;pointer-events:none;z-index:199;display:none;}
+    #cel-canvas.active{display:block;}
   </style>
 </head>
 <body>
+<canvas id="bg-stars"></canvas>
+<canvas id="cel-canvas"></canvas>
 <div id="app">
   <a class="nav-back" href="mission_select.html">← Fleet Commander</a>
-
-  <!-- ARIA companion -->
-  <div class="aria-bar">
+  <div class="aria-bar glass">
     <div class="aria-wrap" id="aria-wrap" onclick="ariaTap()">
       <svg viewBox="-2 0 60 70" xmlns="http://www.w3.org/2000/svg">
         <rect x="-2" y="32" width="12" height="8" rx="4" fill="#1e1e42"/>
@@ -253,486 +137,226 @@
         <rect x="8" y="28" width="40" height="30" rx="10" fill="#1e1e42"/>
         <ellipse cx="28" cy="18" rx="16" ry="15" fill="#242454"/>
         <rect x="12" y="10" width="32" height="14" rx="6" fill="rgba(0,8,28,.5)"/>
-        <circle cx="20" cy="17" r="4.5" fill="white"/><circle id="aria-el" cx="21" cy="18" r="2.8" fill="#111"/><circle cx="20.3" cy="15.8" r=".9" fill="white"/>
-        <circle cx="36" cy="17" r="4.5" fill="white"/><circle id="aria-er" cx="37" cy="18" r="2.8" fill="#111"/><circle cx="36.3" cy="15.8" r=".9" fill="white"/>
-        <path d="M22,25 Q28,29 34,25" stroke="var(--aria-color)" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <circle cx="20" cy="17" r="4.5" fill="white"/><circle cx="21" cy="18" r="2.8" fill="#111"/><circle cx="20.3" cy="15.8" r=".9" fill="white"/>
+        <circle cx="36" cy="17" r="4.5" fill="white"/><circle cx="37" cy="18" r="2.8" fill="#111"/><circle cx="36.3" cy="15.8" r=".9" fill="white"/>
+        <path d="M22,25 Q28,29 34,25" stroke="#00c8a8" stroke-width="2" fill="none" stroke-linecap="round"/>
         <rect x="26" y="2" width="4" height="8" rx="2" fill="#242454"/>
-        <circle cx="28" cy="2" r="3.2" fill="var(--aria-color)"/>
-        <rect x="13" y="35" width="30" height="17" rx="5" fill="var(--aria-chest)"/>
-        <circle cx="21" cy="42" r="2.3" fill="var(--aria-color)" opacity=".9"/>
+        <circle cx="28" cy="2" r="3.2" fill="#00c8a8"/>
+        <rect x="13" y="35" width="30" height="17" rx="5" fill="rgba(0,200,168,.18)"/>
+        <circle cx="21" cy="42" r="2.3" fill="#00c8a8" opacity=".9"/>
         <circle cx="28" cy="42" r="2.3" fill="rgba(255,255,255,.35)"/>
-        <circle cx="35" cy="42" r="2.3" fill="var(--aria-color)" opacity=".9"/>
-        <rect x="16" y="48" width="24" height="2.5" rx="1.25" fill="var(--aria-color)" opacity=".4"/>
+        <circle cx="35" cy="42" r="2.3" fill="#00c8a8" opacity=".9"/>
+        <rect x="16" y="48" width="24" height="2.5" rx="1.25" fill="#00c8a8" opacity=".4"/>
         <rect x="13" y="56" width="12" height="12" rx="5" fill="#1e1e42"/>
         <rect x="31" y="56" width="12" height="12" rx="5" fill="#1e1e42"/>
       </svg>
     </div>
     <div class="aria-bubble">
       <span class="aria-name">ARIA</span>
-      <span class="aria-msg" id="aria-msg">Precise fractions heal the crew!</span>
+      <span class="aria-msg" id="aria-msg">Calculate the correct medicine dose — lives depend on it!</span>
     </div>
   </div>
-
-  <div class="hud">
-    <div class="hud-main">
-      <div class="hud-lbl">Mission 05 · Med Bay</div>
-      <div class="hud-text" id="hud-title">Synthesiser Online</div>
-      <div class="hud-flavor" id="hud-flavor">Loading…</div>
-    </div>
-    <div class="hud-lvl" style="text-align:right; flex-shrink:0;">
-      <div class="hud-lbl">Level</div>
-      <div class="hud-num" id="hud-level">26</div>
-    </div>
+  <div class="hud glass">
+    <div id="lv-name">Level 1 — Half Dose</div>
+    <div id="lv-flavor">Med bay online. Calculate the correct fraction of supplies.</div>
   </div>
-
   <div class="power-wrap">
-    <div class="power-meta">
-      <span>Treatments synthesised</span>
-      <span id="power-pct">0%</span>
+    <div class="power-meta"><span>Ship power grid</span><span id="power-pct">0%</span></div>
+    <div class="power-track"><div class="power-fill" id="power-fill"></div></div>
+  </div>
+  <div class="problem-panel glass">
+    <div class="med-display">
+      <div class="frac-box">
+        <div class="frac-num" id="frac-num">1</div>
+        <div class="frac-line"></div>
+        <div class="frac-den" id="frac-den">2</div>
+      </div>
+      <div class="med-op">×</div>
+      <div class="med-box given" id="box-total">
+        <div class="mb-lbl">TOTAL</div>
+        <div class="mb-val" id="val-total">80</div>
+      </div>
+      <div class="med-op">=</div>
+      <div class="med-box unk" id="box-result">
+        <div class="mb-lbl">DOSE</div>
+        <div class="mb-val unknown" id="val-result">?</div>
+      </div>
     </div>
-    <div class="power-track">
-      <div class="power-fill" id="power-fill"></div>
+    <div class="question-box">
+      <div class="question-text" id="question-text">Loading…</div>
     </div>
   </div>
-
-  <!-- Main game area -->
-  <div class="game-area" id="game-area">
-
-    <!-- Syringe column -->
-    <div class="syringe-wrap">
-      <div class="syringe-lbl">Dose</div>
-      <div class="syringe-outer" id="syringe">
-        <div class="syringe-fill" id="syr-fill"></div>
-        <div class="syringe-target" id="syr-target"></div>
-        <div class="syringe-val" id="syr-val">0</div>
-        <div class="syringe-handle" id="syr-handle"></div>
-      </div>
+  <div class="answer-section glass">
+    <div class="attempts-row">
+      <div class="att-dot" id="att-0"></div>
+      <div class="att-dot" id="att-1"></div>
+      <div class="att-dot" id="att-2"></div>
     </div>
-
-    <!-- Fraction info panel -->
-    <div class="frac-panel">
-      <div>
-        <div class="frac-panel-lbl">Target dose</div>
-        <div class="target-frac">
-          <div class="frac-row">
-            <div class="frac-glyph">
-              <span id="frac-num">1</span>
-              <div class="frac-line"></div>
-              <span id="frac-den">2</span>
-            </div>
-            <div class="frac-of">of</div>
-            <div class="frac-total" id="frac-total">80</div>
-            <div class="frac-equals">=</div>
-            <div class="frac-result" id="frac-result">40</div>
-          </div>
-          <div class="target-sub" id="target-sub">Fill the syringe to <strong id="target-ml">40</strong> ml</div>
-        </div>
-      </div>
-
-      <div class="block-vis">
-        <div class="block-vis-lbl">Fraction blocks</div>
-        <div class="block-row" id="block-row"></div>
-      </div>
-
-      <div class="cur-row">
-        <div>
-          <div class="cur-lbl">Current fill</div>
-          <div class="cur-val"><span id="cur-ml">0</span> ml</div>
-        </div>
-        <div class="cur-match no" id="cur-match">off target</div>
-      </div>
+    <div class="answer-display">
+      <span class="answer-prompt" id="answer-prompt">Enter the dose amount:</span>
+      <span class="answer-digits empty" id="answer-digits">—</span>
+    </div>
+    <div class="feedback-msg" id="feedback-msg"></div>
+    <div class="hint-row">
+      <button class="hint-btn" id="hint-btn" onclick="toggleHint()">Show hint</button>
+      <div class="hint-box" id="hint-box"></div>
+    </div>
+    <div class="numpad">
+      <button class="np-btn" onclick="numPress('7')">7</button>
+      <button class="np-btn" onclick="numPress('8')">8</button>
+      <button class="np-btn" onclick="numPress('9')">9</button>
+      <button class="np-btn" onclick="numPress('4')">4</button>
+      <button class="np-btn" onclick="numPress('5')">5</button>
+      <button class="np-btn" onclick="numPress('6')">6</button>
+      <button class="np-btn" onclick="numPress('1')">1</button>
+      <button class="np-btn" onclick="numPress('2')">2</button>
+      <button class="np-btn" onclick="numPress('3')">3</button>
+      <button class="np-btn np-back" onclick="numPress('⌫')">⌫</button>
+      <button class="np-btn" onclick="numPress('0')">0</button>
+      <button class="np-btn np-confirm" onclick="numPress('✓')">✓</button>
     </div>
   </div>
-
-  <!-- Slider -->
-  <div class="slider-wrap">
-    <div class="slider-lbl-row">
-      <span>0 ml</span>
-      <span id="slider-max-lbl">80 ml</span>
-    </div>
-    <input type="range" id="dose-slider" min="0" max="80" value="0" step="1">
+  <div class="level-nav">
+    <button class="nav-btn" id="btn-prev">← Prev</button>
+    <div class="dots" id="dots"></div>
+    <button class="nav-btn" id="btn-next">Next →</button>
   </div>
 </div>
-
-<canvas id="cel-canvas"></canvas>
-<!-- Level complete overlay -->
-<div class="overlay" id="overlay">
-  <div class="ov-icon">💉</div>
-  <div class="ov-title" id="ov-title">Treatment Synthesised</div>
-  <div class="ov-sub" id="ov-sub"></div>
-  <button class="ov-btn" id="ov-next">Next Level →</button>
-  <button class="ov-btn sec" id="ov-home">← Fleet Commander</button>
-  <div class="ov-voss" id="ov-voss">
-    <div class="ov-voss-face">
-      <svg viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="22" cy="22" r="22" fill="#12103a"/>
-        <path d="M6,44 Q8,30 22,28 Q36,30 38,44 Z" fill="#102020"/>
-        <path d="M15,31 L22,28 L29,31 L22,35 Z" fill="#00c8a8" opacity=".65"/>
-        <ellipse cx="22" cy="17" rx="11" ry="12" fill="#d4a870"/>
-        <path d="M11,13 Q12,4 22,4 Q32,4 33,13 Q28,7 22,7 Q16,7 11,13 Z" fill="#2a2a2a"/>
-        <ellipse cx="18" cy="17" rx="2" ry="2.2" fill="#2244cc"/>
-        <ellipse cx="26" cy="17" rx="2" ry="2.2" fill="#2244cc"/>
-        <path d="M18,25 Q22,28 26,25" stroke="#c4906a" stroke-width="1.2" fill="none"/>
-        <rect x="14" y="32" width="16" height="2.5" rx="1.25" fill="#00c8a8" opacity=".7"/>
-        <circle cx="18" cy="33.25" r=".9" fill="#e8c840"/>
-        <circle cx="22" cy="33.25" r=".9" fill="#e8c840"/>
-        <circle cx="26" cy="33.25" r=".9" fill="#e8c840"/>
-      </svg>
+<div class="modal-bg" id="modal">
+  <div class="modal-card">
+    <div class="modal-title" id="mc-title">Med Bay Clear</div>
+    <div class="modal-body" id="mc-body"></div>
+    <button class="modal-next" id="mc-next">Next Level →</button>
+    <a href="mission_select.html" class="modal-home">← Fleet Commander</a>
+    <div class="ov-voss" id="ov-voss">
+      <div class="ov-voss-face">
+        <svg viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="22" cy="22" r="22" fill="#12103a"/>
+          <path d="M6,44 Q8,30 22,28 Q36,30 38,44 Z" fill="#102030"/>
+          <path d="M15,31 L22,28 L29,31 L22,35 Z" fill="#00c8a8" opacity=".65"/>
+          <ellipse cx="22" cy="17" rx="11" ry="12" fill="#d4a870"/>
+          <path d="M11,13 Q12,4 22,4 Q32,4 33,13 Q28,7 22,7 Q16,7 11,13 Z" fill="#2a2a2a"/>
+          <ellipse cx="18" cy="17" rx="2" ry="2.2" fill="#2244cc"/>
+          <ellipse cx="26" cy="17" rx="2" ry="2.2" fill="#2244cc"/>
+          <path d="M18,25 Q22,28 26,25" stroke="#c4906a" stroke-width="1.2" fill="none"/>
+          <rect x="14" y="32" width="16" height="2.5" rx="1.25" fill="#00c8a8" opacity=".7"/>
+          <circle cx="18" cy="33.25" r=".9" fill="#e8c840"/>
+          <circle cx="22" cy="33.25" r=".9" fill="#e8c840"/>
+          <circle cx="26" cy="33.25" r=".9" fill="#e8c840"/>
+        </svg>
+      </div>
+      <div class="ov-voss-txt" id="ov-voss-txt">"Crew stabilised!"</div>
     </div>
-    <div class="ov-voss-txt" id="ov-voss-txt">"Crew vitals stable!"</div>
   </div>
 </div>
-
 <script>
-// ── Level data ──
-// Each level: fraction num/den of total ml = target
-// tolerance: ±(total/den * 0.4) ml
-
-const LEVELS = [
-  {
-    id: 26,
-    title: 'Unit Fractions',
-    flavor: 'Simple unit doses. Fill each syringe to the correct fraction of the total.',
-    tasks: [
-      { num:1, den:2, total:80  },  // 1/2 of 80 = 40ml
-      { num:1, den:4, total:80  },  // 1/4 of 80 = 20ml
-      { num:1, den:2, total:60  },  // 1/2 of 60 = 30ml
-    ]
-  },
-  {
-    id: 27,
-    title: 'Non-Unit Fractions',
-    flavor: 'More than one part of the whole. Remember: numerator counts the parts.',
-    tasks: [
-      { num:3, den:4, total:80  },  // 3/4 of 80 = 60ml
-      { num:2, den:5, total:100 },  // 2/5 of 100 = 40ml
-      { num:3, den:5, total:100 },  // 3/5 of 100 = 60ml
-    ]
-  },
-  {
-    id: 28,
-    title: 'Equivalent Doses',
-    flavor: 'Two syringes, same patient — different fractions, same amount. Prove they\'re equal.',
-    tasks: [
-      { num:1, den:2, total:80, hint:'Same as 2/4 of 80' },   // 1/2 = 40ml
-      { num:2, den:4, total:80, hint:'Same as 1/2 of 80' },   // 2/4 = 40ml — same as above
-      { num:2, den:3, total:90, hint:'Same as 4/6 of 90' },   // 2/3 = 60ml
-    ]
-  },
-  {
-    id: 29,
-    title: 'Split Doses',
-    flavor: 'One dose split across two syringes. Fill each so they add up to the full treatment.',
-    tasks: [
-      { num:1, den:3, total:90, hint:'1/3 + 2/3 = 1 full dose (90ml)' },  // 30ml
-      { num:2, den:3, total:90, hint:'The second part of the split dose' }, // 60ml
-      { num:1, den:6, total:120, hint:'1/6 + 5/6 = 1 full dose' },         // 20ml
-    ]
-  },
-  {
-    id: 30,
-    title: 'Mixed Doses',
-    flavor: 'Crew needs more than a full unit. Fill syringes with mixed amounts.',
-    tasks: [
-      { num:3, den:2, total:80, hint:'1 and 1/2 units = 3/2' },  // 120ml — note: total means max syringe
-      { num:5, den:4, total:80, hint:'1 and 1/4 units = 5/4' },  // 100ml
-      { num:7, den:4, total:80, hint:'1 and 3/4 units = 7/4' },  // 140ml
-    ]
-  }
+const LEVELS=[
+  {id:1,name:"Half Dose",     num:1,den:2,total:80, answer:40,
+   question:"Half of the <strong>80</strong> crew members need medicine. How many crew members is that?",
+   hint:"Divide the total into equal groups. How many groups does the bottom number say? Then take as many groups as the top number says.",
+   flavor:"Med bay online. Calculate the correct fraction of supplies."},
+  {id:2,name:"Quarter Stock",  num:1,den:4,total:60, answer:15,
+   question:"A quarter of <strong>60</strong> medical supplies need replacing. How many supplies is that?",
+   hint:"The bottom number (4) tells you how many equal groups to split into. The top number (1) tells you how many groups to take.",
+   flavor:"Supply audit underway. One quarter must be replaced."},
+  {id:3,name:"Three Quarters", num:3,den:4,total:60, answer:45,
+   question:"Three quarters of <strong>60</strong> patients need a check-up. How many patients is that?",
+   hint:"Split 60 into 4 equal groups first. Then count how many 3 groups make.",
+   flavor:"Radiation exposure check. Three quarters of crew need scanning."},
+  {id:4,name:"Two Thirds",     num:2,den:3,total:90, answer:60,
+   question:"Two thirds of <strong>90</strong> medicine packets are still good. How many packets is that?",
+   hint:"Split 90 into 3 equal groups first. Then count how many 2 groups make.",
+   flavor:"Inventory check complete. Calculate usable medicine."},
+  {id:5,name:"Three Fifths",   num:3,den:5,total:50, answer:30,
+   question:"Three fifths of <strong>50</strong> crew are cleared for duty. How many crew members is that?",
+   hint:"Split 50 into 5 equal groups first. Then count how many 3 groups make.",
+   flavor:"Final health clearance. Who is fit for the next mission?"},
 ];
-
-// ── State ──
-const SAVE_KEY   = 'spacecrew_progress_v1';
-const BASE_LEVEL = 26;
-const TOTAL      = LEVELS.length;
-const STABLE_NEEDED = 40;  // frames in tolerance to auto-win
-
-let levelIdx  = 0;
-let taskIdx   = 0;
-let task      = null;
-let targetMl  = 0;
-let maxMl     = 0;
-let tolerance = 0;
-let stableFrames = 0;
-let won = false;
-let dragging = false;
-let dragStartY = 0;
-let dragStartVal = 0;
-
-const slider    = document.getElementById('dose-slider');
-const syrFill   = document.getElementById('syr-fill');
-const syrTarget = document.getElementById('syr-target');
-const syrVal    = document.getElementById('syr-val');
-const syrHandle = document.getElementById('syr-handle');
-const syrOuter  = document.getElementById('syringe');
-
-// ── Persistence ──
-function loadSaved() {
-  try { const r=localStorage.getItem(SAVE_KEY); if(r) return JSON.parse(r).med||0; } catch(e){}
-  return 0;
+const VOSS_QUIPS=['"All crew medically cleared!"','"Fractions save lives out here!"','"Precise dosing — brilliant!"','"Med bay at full capacity!"','"Math is the best medicine!"'];
+let cur=0,solved=new Set(),powerLevel=0;
+let answerStr='',attempts=0,levelDone=false,hintShown=false;
+const $=id=>document.getElementById(id);
+let _ac=null;
+function _ctx(){if(!_ac)try{_ac=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}if(_ac&&_ac.state==='suspended')_ac.resume();return _ac;}
+function playChime(){const c=_ctx();if(!c)return;[523,784,1046].forEach((f,i)=>{try{const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=f;const t=c.currentTime+i*0.1;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(0.14,t+0.03);g.gain.exponentialRampToValueAtTime(0.001,t+0.4);o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+0.42);}catch(e){}});}
+function playError(){const c=_ctx();if(!c)return;try{const t=c.currentTime,o=c.createOscillator(),g=c.createGain();o.type='sawtooth';o.frequency.setValueAtTime(200,t);o.frequency.exponentialRampToValueAtTime(90,t+0.18);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(0.16,t+0.01);g.gain.exponentialRampToValueAtTime(0.001,t+0.22);o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+0.25);}catch(e){}}
+function animPower(from,to,dur,maxed){const start=Date.now(),pf=$('power-fill');pf.classList.remove('maxed');pf.classList.add('charging');(function tick(){const t=Math.min(1,(Date.now()-start)/dur),v=from+(to-from)*t;pf.style.width=Math.round(v*100)+'%';$('power-pct').textContent=Math.round(v*100)+'%';if(t<1)requestAnimationFrame(tick);else{pf.classList.remove('charging');if(maxed)pf.classList.add('maxed');}})();}
+function buildDots(){const c=$('dots');c.innerHTML='';LEVELS.forEach((l,i)=>{const d=document.createElement('div');d.className='dot'+(i===cur?' active':'')+(solved.has(i)?' solved':'');d.title=l.name;d.onclick=()=>{cur=i;loadLevel();};c.appendChild(d);});}
+function loadLevel(){
+  const lv=LEVELS[cur];
+  answerStr='';attempts=0;levelDone=false;hintShown=false;
+  $('lv-name').textContent=`Level ${lv.id} — ${lv.name}`;
+  $('lv-flavor').textContent=lv.flavor;
+  $('frac-num').textContent=lv.num;$('frac-den').textContent=lv.den;
+  $('val-total').textContent=lv.total;
+  $('box-result').className='med-box unk';$('val-result').textContent='?';$('val-result').className='mb-val unknown';
+  $('question-text').innerHTML=lv.question;$('hint-box').innerHTML=lv.hint;
+  $('hint-box').classList.remove('show');$('hint-btn').textContent='Show hint';
+  clearFeedback();_resetDots();_renderDigits();buildDots();
+  if(cur===0)ariaSetMsg('Tap a number, then press ✓ to confirm!');else ariaReact('idle');
 }
-function writeSaved(n) {
-  try {
-    const def={o2:0,fuel:0,nav:0,power:0,med:0};
-    const r=localStorage.getItem(SAVE_KEY);
-    const p=r?Object.assign(def,JSON.parse(r)):def;
-    p.med=Math.max(p.med||0,n);
-    localStorage.setItem(SAVE_KEY,JSON.stringify(p));
-  } catch(e){}
+function _resetDots(){for(let i=0;i<3;i++){const d=$('att-'+i);if(d)d.className='att-dot';}}
+function _renderDigits(){const el=$('answer-digits');el.textContent=answerStr===''?'—':answerStr;el.className='answer-digits'+(answerStr===''?' empty':'');}
+function _renderPreview(){
+  if(answerStr===''){$('val-result').textContent='?';$('val-result').className='mb-val unknown';return;}
+  const v=parseInt(answerStr);if(!isNaN(v)){$('val-result').textContent=v;$('val-result').className='mb-val';}
 }
-
-// ── Load task ──
-function loadTask() {
-  const lv = LEVELS[levelIdx];
-  task = lv.tasks[taskIdx];
-
-  // For mixed numbers (num > den), treat total as 1 unit = total ml
-  // Max syringe = ceil(num/den) * total
-  const ratio = task.num / task.den;
-  maxMl = Math.ceil(ratio) * task.total;
-  targetMl = Math.round(task.num / task.den * task.total);
-  // tolerance: half a block width
-  tolerance = Math.max(1, Math.round(task.total / task.den * 0.4));
-
-  slider.min = 0;
-  slider.max = maxMl;
-  slider.step = 1;
-  slider.value = 0;
-
-  document.getElementById('slider-max-lbl').textContent = maxMl + ' ml';
-
-  // fraction display
-  document.getElementById('frac-num').textContent    = task.num;
-  document.getElementById('frac-den').textContent    = task.den;
-  document.getElementById('frac-total').textContent  = task.total;
-  document.getElementById('frac-result').textContent = targetMl;
-  document.getElementById('target-ml').textContent   = targetMl;
-  document.getElementById('target-sub').innerHTML =
-    `Fill the syringe to <strong>${targetMl}</strong> ml` +
-    (task.hint ? `<br><em style="color:var(--text-dim)">${task.hint}</em>` : '');
-
-  buildBlocks();
-  updateSyringe(0);
-  stableFrames = 0;
-  won = false;
+function showFeedback(msg,type){const el=$('feedback-msg');if(!el)return;el.textContent=msg;el.className='feedback-msg '+type;void el.offsetWidth;el.classList.add('show');}
+function clearFeedback(){const el=$('feedback-msg');if(!el)return;el.className='feedback-msg';el.textContent='';}
+function numPress(k){if(levelDone)return;clearFeedback();if(k==='⌫')answerStr=answerStr.slice(0,-1);else if(k==='✓'){submitAnswer();return;}else if(answerStr.length<3)answerStr+=k;_renderDigits();_renderPreview();}
+function submitAnswer(){if(levelDone||answerStr==='')return;parseInt(answerStr)===LEVELS[cur].answer?handleCorrect():handleWrong();}
+function handleCorrect(){
+  const lv=LEVELS[cur];levelDone=true;
+  $('box-result').className='med-box correct';$('val-result').textContent=lv.answer;$('val-result').className='mb-val';
+  const el=$('answer-digits');el.textContent=lv.answer;el.className='answer-digits correct';
+  for(let i=attempts;i<3;i++){const d=$('att-'+i);if(d)d.classList.add('correct');}
+  showFeedback('✓ Correct!','correct');playChime();if(navigator.vibrate)navigator.vibrate(50);
+  solved.add(cur);buildDots();
+  const prev=powerLevel;powerLevel=Math.min(1,powerLevel+1/LEVELS.length);
+  animPower(prev,powerLevel,900,Math.round(powerLevel*100)===100);
+  try{const p=JSON.parse(localStorage.getItem('spacecrew_progress_v1')||'{}');p.med=Math.max(p.med||0,solved.size);localStorage.setItem('spacecrew_progress_v1',JSON.stringify(p));}catch(e){}
+  ariaReact('correct');launchCelebration();
+  if(cur===LEVELS.length-1){
+    $('mc-title').textContent='Med Bay Clear';
+    $('mc-body').innerHTML='All doses calculated correctly. The crew is healthy.<br><em>All fractions solved. Mission complete!</em>';
+    const btn=$('mc-next');btn.textContent='Replay from start';
+    btn.onclick=()=>{$('modal').classList.remove('show');cur=0;solved=new Set();powerLevel=0;const pf=$('power-fill');pf.style.width='0%';pf.classList.remove('maxed','charging');$('power-pct').textContent='0%';loadLevel();};
+    if($('ov-voss-txt'))$('ov-voss-txt').textContent=VOSS_QUIPS[Math.floor(Math.random()*VOSS_QUIPS.length)];
+    setTimeout(()=>$('modal').classList.add('show'),1800);
+  }else{setTimeout(()=>{cur++;loadLevel();},1600);}
 }
-
-// ── Block visualiser ──
-function buildBlocks() {
-  const row = document.getElementById('block-row');
-  row.innerHTML = '';
-  row.style.setProperty('--n', task.den);
-  // show den blocks, first num filled
-  for (let i = 0; i < task.den; i++) {
-    const b = document.createElement('div');
-    b.className = 'block' + (i < task.num ? ' filled' : '');
-    row.appendChild(b);
-  }
+function handleWrong(){
+  const d=$('att-'+Math.min(attempts,2));if(d)d.classList.add('wrong');
+  attempts=Math.min(attempts+1,3);
+  $('answer-digits').className='answer-digits wrong';
+  $('box-result').classList.add('wrong-flash');
+  setTimeout(()=>{$('box-result').classList.remove('wrong-flash');},400);
+  setTimeout(()=>{answerStr='';_renderDigits();_renderPreview();},400);
+  showFeedback('✗ Wrong — try again!','wrong');playError();if(navigator.vibrate)navigator.vibrate([60,30,60]);
+  ariaReact('wrong');
+  if(attempts>=2&&!hintShown){hintShown=true;$('hint-box').classList.add('show');$('hint-btn').textContent='Hide hint';ariaSetMsg('Hint unlocked — think step by step!');}
 }
-
-// ── Update syringe visual ──
-function updateSyringe(ml) {
-  const pct = ml / maxMl * 100;
-  syrFill.style.height = pct + '%';
-  syrHandle.style.bottom = pct + '%';
-  syrVal.textContent = ml;
-
-  const targetPct = targetMl / maxMl * 100;
-  syrTarget.style.bottom = targetPct + '%';
-  syrTarget.setAttribute('data-label', targetMl + ' ml');
-
-  const inTol = Math.abs(ml - targetMl) <= tolerance;
-  syrFill.className = 'syringe-fill' + (inTol ? ' good' : ml > maxMl * 0.98 ? ' over' : '');
-  slider.className  = inTol ? 'good' : '';
-
-  document.getElementById('cur-ml').textContent = ml;
-  const matchEl = document.getElementById('cur-match');
-  matchEl.textContent = inTol ? 'on target ✓' : 'off target';
-  matchEl.className   = 'cur-match ' + (inTol ? 'yes' : 'no');
-
-  // update blocks
-  const filledCount = Math.round(ml / task.total * task.den);
-  const blocks = document.querySelectorAll('#block-row .block');
-  blocks.forEach((b, i) => {
-    const shouldFill = i < Math.min(filledCount, task.den);
-    b.className = 'block' + (shouldFill ? ' filled' + (inTol ? ' good' : '') : '');
-  });
-
-}
-
-// ── Win ──
-function triggerWin() {
-  if (won) return;
-  won = true;
-  playWin();
-
-  taskIdx++;
-  const lv = LEVELS[levelIdx];
-  if (taskIdx < lv.tasks.length) {
-    // more tasks in this level
-    setTimeout(() => loadTask(), 600);
-    return;
-  }
-
-  // level done
-  taskIdx = 0;
-  const solved = levelIdx + 1;
-  writeSaved(solved);
-  updatePowerBar(solved);
-
-  const isLast = levelIdx >= TOTAL - 1;
-  document.getElementById('ov-title').textContent = lv.title + ' — Complete';
-  document.getElementById('ov-sub').textContent = isLast
-    ? 'All treatments synthesised. Med Bay mission complete!'
-    : `Level ${BASE_LEVEL + levelIdx} complete. ${TOTAL - solved} level${TOTAL-solved===1?'':'s'} remain.`;
-
-  const next = document.getElementById('ov-next');
-  if (isLast) {
-    next.textContent = 'Back to Fleet →';
-    next.onclick = () => { window.location.href = 'mission_select.html#med=' + solved; };
-  } else {
-    next.textContent = `Level ${BASE_LEVEL + solved} →`;
-    next.onclick = () => {
-      document.getElementById('overlay').classList.remove('show');
-      levelIdx++;
-      loadLevel();
-    };
-  }
-  ariaReact('correct');
-  launchCelebration();
-  document.getElementById('ov-voss-txt').textContent = VOSS_QUIPS_MED[Math.floor(Math.random()*VOSS_QUIPS_MED.length)];
-  setTimeout(() => document.getElementById('overlay').classList.add('show'), 400);
-}
-
-// ── Load full level ──
-function loadLevel() {
-  const lv = LEVELS[levelIdx];
-  document.getElementById('hud-title').textContent  = lv.title;
-  document.getElementById('hud-flavor').textContent = lv.flavor;
-  document.getElementById('hud-level').textContent  = BASE_LEVEL + levelIdx;
-  taskIdx = 0;
-  loadTask();
-}
-
-// ── Power bar ──
-function updatePowerBar(solved) {
-  const pct  = Math.round(solved / TOTAL * 100);
-  const fill = document.getElementById('power-fill');
-  fill.style.width = pct + '%';
-  fill.className   = 'power-fill' + (pct >= 100 ? ' maxed' : '');
-  document.getElementById('power-pct').textContent = pct + '%';
-}
-
-// ── Slider input ──
-slider.addEventListener('input', () => {
-  startAudio();
-  updateSyringe(parseInt(slider.value));
-});
-
-// ── Syringe drag (touch) ──
-function startAudio() {
-  if (!_ctx) _ctx = new (window.AudioContext||window.webkitAudioContext)();
-  if (_ctx.state === 'suspended') _ctx.resume();
-}
-
-syrOuter.addEventListener('touchstart', (e) => {
-  e.preventDefault();
-  startAudio();
-  dragging = true;
-  dragStartY   = e.touches[0].clientY;
-  dragStartVal = parseInt(slider.value);
-}, {passive:false});
-
-document.addEventListener('touchmove', (e) => {
-  if (!dragging) return;
-  e.preventDefault();
-  const dy   = dragStartY - e.touches[0].clientY;
-  const h    = syrOuter.getBoundingClientRect().height;
-  const dVal = Math.round(dy / h * maxMl);
-  const newV = Math.max(0, Math.min(maxMl, dragStartVal + dVal));
-  slider.value = newV;
-  updateSyringe(newV);
-}, {passive:false});
-
-document.addEventListener('touchend', () => { dragging = false; });
-
-// ── Audio ──
-let _ctx = null;
-function playWin() {
-  try {
-    startAudio();
-    const c=_ctx, notes=[523,659,784,1047];
-    notes.forEach((freq,i)=>{
-      const o=c.createOscillator(),g=c.createGain();
-      o.type='sine'; o.frequency.value=freq;
-      const t=c.currentTime+i*0.13;
-      g.gain.setValueAtTime(0,t);
-      g.gain.linearRampToValueAtTime(0.14,t+0.04);
-      g.gain.exponentialRampToValueAtTime(0.001,t+0.28);
-      o.connect(g); g.connect(c.destination);
-      o.start(t); o.stop(t+0.28);
-    });
-  }catch(e){}
-}
-
-// ── rAF loop for stable-hold detection ──
-function loop() {
-  if (!won) {
-    const ml = parseInt(slider.value);
-    const inTol = Math.abs(ml - targetMl) <= tolerance;
-    if (inTol) {
-      stableFrames++;
-      if (stableFrames >= STABLE_NEEDED) triggerWin();
-    } else {
-      stableFrames = 0;
-    }
-  }
-  requestAnimationFrame(loop);
-}
-
-// ══ ARIA companion ════════════════════════════════════════════════
-const ARIA_MSGS_MED={idle:["Drag the syringe to the right level!","Fractions tell you what fraction of the total!","Look at the target fraction — it's a clue!","You're healing the crew, Commander!"],correct:["⭐ Perfect dose!","Fraction nailed — crew recovering!","Medical precision achieved!","The crew will be fine thanks to you!"],wrong:[]};
-let _ariaTimerM=null;
-function ariaSetMsg(msg){const el=document.getElementById('aria-msg');if(!el)return;clearTimeout(_ariaTimerM);el.textContent='';let i=0;(function t(){if(i<msg.length){el.textContent+=msg[i++];_ariaTimerM=setTimeout(t,20);}})();}
-function ariaReact(type){const w=document.getElementById('aria-wrap');if(!w)return;const pool=ARIA_MSGS_MED[type]||ARIA_MSGS_MED.idle;if(!pool.length)return;ariaSetMsg(pool[Math.floor(Math.random()*pool.length)]);w.className='aria-wrap';void w.offsetWidth;if(type==='correct'){w.className='aria-wrap aria-happy';setTimeout(()=>{w.className='aria-wrap';},700);}else if(type==='wrong'){w.className='aria-wrap aria-sad';setTimeout(()=>{w.className='aria-wrap';},500);}}
-function ariaTap(){const w=document.getElementById('aria-wrap');if(!w)return;w.className='aria-wrap';void w.offsetWidth;const msgs=["I'm ARIA — your AI navigator!","½ of 20 = 10. Get the idea?","Numerator ÷ Denominator × Total!","Fractions save lives here!"];ariaSetMsg(msgs[Math.floor(Math.random()*msgs.length)]);w.style.transform='rotateY(360deg)';setTimeout(()=>{w.style.transform='';},500);}
-(function ariaIdle(){setTimeout(()=>{if(!document.getElementById('overlay').classList.contains('show'))ariaSetMsg(ARIA_MSGS_MED.idle[Math.floor(Math.random()*ARIA_MSGS_MED.idle.length)]);ariaIdle();},10000);})();
-
-// ══ Teal droplet celebration ══════════════════════════════════════
-const VOSS_QUIPS_MED=['"Crew vitals stable. Treatment successful!"','"Fraction precision saved the day!"','"Med Bay fully operational. Outstanding!"','"The right dose at the right fraction!"','"Crew is healthy thanks to your math!"'];
-function launchCelebration(){
-  const canvas=document.getElementById('cel-canvas');if(!canvas)return;
-  canvas.width=window.innerWidth;canvas.height=window.innerHeight;canvas.classList.add('active');
-  const ctx=canvas.getContext('2d');
-  const cols=['#00c8a8','#00d4d4','#44dd88','#c8ffee','#44ffcc'];
-  const drops=[];
-  for(let i=0;i<70;i++){const a=Math.random()*Math.PI*2,sp=1.5+Math.random()*4;drops.push({x:canvas.width/2+(Math.random()-.5)*100,y:canvas.height/2+(Math.random()-.5)*60,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1.5,r:3+Math.random()*8,c:cols[i%cols.length],life:1,d:.01+Math.random()*.012});}
-  (function frame(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);let alive=false;
-    drops.forEach(p=>{if(p.life<=0)return;alive=true;p.x+=p.vx;p.y+=p.vy;p.vy+=0.05;p.r*=.997;p.life-=p.d;
-      ctx.save();ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.c;
-      ctx.beginPath();ctx.ellipse(p.x,p.y,p.r,p.r*1.3,Math.atan2(p.vy,p.vx),0,Math.PI*2);ctx.fill();
-      ctx.fillStyle='rgba(255,255,255,.4)';ctx.beginPath();ctx.arc(p.x-p.r*.3,p.y-p.r*.3,p.r*.3,0,Math.PI*2);ctx.fill();
-      ctx.restore();});
-    if(alive)requestAnimationFrame(frame);else{canvas.classList.remove('active');ctx.clearRect(0,0,canvas.width,canvas.height);}
-  })();
-}
-
-// ── Home button ──
-document.getElementById('ov-home').addEventListener('click', () => {
-  window.location.href = 'mission_select.html#med=' + loadSaved();
-});
-
-// ── Init ──
-(function init() {
-  const saved = loadSaved();
-  levelIdx = Math.min(saved, TOTAL - 1);
-  updatePowerBar(saved);
-  loadLevel();
-  requestAnimationFrame(loop);
-})();
-if ('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js').catch(() => {}); }
+function toggleHint(){hintShown=!hintShown;$('hint-box').classList.toggle('show',hintShown);$('hint-btn').textContent=hintShown?'Hide hint':'Show hint';}
+$('btn-prev').onclick=()=>{if(cur>0){cur--;loadLevel();}};
+$('btn-next').onclick=()=>{if(cur<LEVELS.length-1){cur++;loadLevel();}};
+document.addEventListener('keydown',e=>{if($('modal').classList.contains('show'))return;if(e.key>='0'&&e.key<='9')numPress(e.key);else if(e.key==='Backspace')numPress('⌫');else if(e.key==='Enter')numPress('✓');});
+try{const sv=JSON.parse(localStorage.getItem('spacecrew_progress_v1')||'{}');const n=sv.med||0;for(let i=0;i<n&&i<LEVELS.length;i++)solved.add(i);powerLevel=solved.size/LEVELS.length;const pf=$('power-fill');pf.style.width=Math.round(powerLevel*100)+'%';$('power-pct').textContent=Math.round(powerLevel*100)+'%';if(Math.round(powerLevel*100)===100)pf.classList.add('maxed');}catch(e){}
+loadLevel();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+const ARIA_MSGS={
+  idle:["Calculate the fraction of the total!","Split the total into equal groups!","Fractions are just fair sharing!","You've got this, Commander!"],
+  correct:["⭐ Correct dose! Lives saved!","Perfect fraction — well done!","That's the right amount!","The crew is safe!"],
+  wrong:["Not quite — count the groups!","Split the total equally first!","Think about fair sharing!","Try once more!"],
+};
+let _ariaT=null;
+function ariaSetMsg(msg){const el=$('aria-msg');if(!el)return;clearTimeout(_ariaT);el.textContent='';let i=0;(function t(){if(i<msg.length){el.textContent+=msg[i++];_ariaT=setTimeout(t,18);}})();}
+function ariaReact(type){const w=$('aria-wrap');if(!w)return;const pool=ARIA_MSGS[type]||ARIA_MSGS.idle;ariaSetMsg(pool[Math.floor(Math.random()*pool.length)]);w.className='aria-wrap';void w.offsetWidth;if(type==='correct'){w.className='aria-wrap aria-happy';setTimeout(()=>{w.className='aria-wrap';},700);}else if(type==='wrong'){w.className='aria-wrap aria-sad';setTimeout(()=>{w.className='aria-wrap';},500);}}
+function ariaTap(){const w=$('aria-wrap');if(!w)return;const msgs=["I'm ARIA — your AI navigator!","Fractions = parts of a whole!","Divide first, then multiply!","Math keeps the crew healthy!"];ariaSetMsg(msgs[Math.floor(Math.random()*msgs.length)]);w.style.transform='rotateY(360deg)';setTimeout(()=>{w.style.transform='';},500);}
+(function idleLoop(){setTimeout(()=>{if(!$('modal').classList.contains('show'))ariaSetMsg(ARIA_MSGS.idle[Math.floor(Math.random()*ARIA_MSGS.idle.length)]);idleLoop();},12000);})();
+function launchCelebration(){const canvas=$('cel-canvas');if(!canvas)return;canvas.width=window.innerWidth;canvas.height=window.innerHeight;canvas.classList.add('active');const ctx=canvas.getContext('2d');const cols=['#00c8a8','#44dd88','#88ffe8','#00ffcc','#44ffcc'];const bubbles=[];for(let i=0;i<60;i++)bubbles.push({x:Math.random()*canvas.width,y:canvas.height+20+Math.random()*100,vy:-(1+Math.random()*3.5),vx:(Math.random()-.5)*1.5,r:5+Math.random()*18,c:cols[i%cols.length],life:1,d:.006+Math.random()*.008,wobble:Math.random()*Math.PI*2,ws:.04+Math.random()*.06});(function frame(){ctx.clearRect(0,0,canvas.width,canvas.height);let alive=false;bubbles.forEach(p=>{if(p.life<=0)return;alive=true;p.x+=p.vx+Math.sin(p.wobble)*0.8;p.y+=p.vy;p.wobble+=p.ws;p.life-=p.d;ctx.save();ctx.globalAlpha=Math.max(0,p.life*.7);ctx.strokeStyle=p.c;ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=Math.max(0,p.life*.2);ctx.fillStyle=p.c;ctx.fill();ctx.globalAlpha=Math.max(0,p.life*.5);ctx.fillStyle='rgba(255,255,255,.6)';ctx.beginPath();ctx.arc(p.x-p.r*.3,p.y-p.r*.35,p.r*.25,0,Math.PI*2);ctx.fill();ctx.restore();});if(alive)requestAnimationFrame(frame);else{canvas.classList.remove('active');ctx.clearRect(0,0,canvas.width,canvas.height);}})();}
 </script>
-<script src="./audio.js"></script>
+<script>
+(function(){const c=document.getElementById('bg-stars');if(!c)return;const ctx=c.getContext('2d');let W,H,stars,paused=false;function init(){W=c.width=window.innerWidth;H=c.height=window.innerHeight;stars=Array.from({length:55},()=>({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.1+0.2,vy:0.04+Math.random()*0.1,o:0.15+Math.random()*0.45}));}function draw(){ctx.clearRect(0,0,W,H);if(!paused)stars.forEach(s=>{ctx.globalAlpha=s.o;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();s.y+=s.vy;if(s.y>H+2){s.y=-2;s.x=Math.random()*W;}});ctx.globalAlpha=1;requestAnimationFrame(draw);}document.addEventListener('visibilitychange',()=>{paused=document.hidden;});window.addEventListener('resize',init);init();draw();})();
+</script>
 </body>
 </html>
